@@ -1,0 +1,155 @@
+import { API_URL } from '../config.js';
+import { authStore, type AuthState } from '../stores/auth.js';
+import { get } from 'svelte/store';
+
+interface RequestOptions extends RequestInit {
+	auth?: boolean;
+}
+
+async function request(endpoint: string, options: RequestOptions = {}) {
+	const { auth = true, ...fetchOptions } = options;
+
+	const headers: Record<string, string> = {
+		'Content-Type': 'application/json',
+		...(fetchOptions.headers as Record<string, string>)
+	};
+
+	if (auth) {
+		const { token } = get(authStore);
+		if (token) {
+			headers['Authorization'] = `Bearer ${token}`;
+		}
+	}
+
+	try {
+		const response = await fetch(`${API_URL}${endpoint}`, {
+			...fetchOptions,
+			headers
+		});
+
+		if (response.status === 401) {
+			// Only logout if on login page or token is missing
+			const currentAuth: AuthState = get(authStore);
+			if (endpoint.startsWith('/auth') || !currentAuth.token) {
+				authStore.logout();
+				if (typeof window !== 'undefined') {
+					window.location.href = '/';
+				}
+			}
+			const errorData = await response.json().catch(() => ({ error: 'Unauthorized' }));
+			throw new Error(errorData.error || 'Unauthorized');
+		}
+
+		if (!response.ok) {
+			const error = await response.json().catch(() => ({ error: 'Request failed' }));
+			throw new Error(error.error || 'Request failed');
+		}
+
+		return response.json();
+	} catch (error) {
+		// Network errors or other fetch errors
+		if (error instanceof Error) {
+			throw error;
+		}
+		throw new Error('Network error');
+	}
+}
+
+export const api = {
+	// Auth
+	register: (data: { email: string; password: string; fullName: string; role?: string }) =>
+		request('/auth/register', {
+			method: 'POST',
+			body: JSON.stringify(data),
+			auth: false
+		}),
+
+	login: (data: { email: string; password: string }) =>
+		request('/auth/login', {
+			method: 'POST',
+			body: JSON.stringify(data),
+			auth: false
+		}),
+
+	getProfile: () => request('/users/me'),
+
+	// Users (admin)
+	getUsers: () => request('/users'),
+	updateUserRole: (userId: number, role: string) =>
+		request(`/users/${userId}/role`, {
+			method: 'PATCH',
+			body: JSON.stringify({ role })
+		}),
+	toggleUserStatus: (userId: number) =>
+		request(`/users/${userId}/status`, { method: 'PATCH' }),
+
+	// Collaborations
+	sendInvite: (medicEmail: string) =>
+		request('/collaborations/invite', {
+			method: 'POST',
+			body: JSON.stringify({ medicEmail })
+		}),
+	getPendingInvites: () => request('/collaborations/pending'),
+	respondToInvite: (inviteId: number, action: 'accept' | 'reject') =>
+		request(`/collaborations/${inviteId}/respond`, {
+			method: 'PATCH',
+			body: JSON.stringify({ action })
+		}),
+	getMyCollaborations: () => request('/collaborations/my'),
+
+	// Treatments
+	createTreatment: (data: { pacientId: number; diagnosis: string; description?: string }) =>
+		request('/treatments', {
+			method: 'POST',
+			body: JSON.stringify(data)
+		}),
+	getTreatments: () => request('/treatments'),
+	getTreatmentDetails: (planId: number) => request(`/treatments/${planId}`),
+	updateTreatment: (planId: number, data: any) =>
+		request(`/treatments/${planId}`, {
+			method: 'PATCH',
+			body: JSON.stringify(data)
+		}),
+
+	// Medications
+	addMedication: (data: {
+		treatmentPlanId: number;
+		medicationName: string;
+		dosage: string;
+		frequency: string;
+		scheduleTimes: string[];
+		startDate: string;
+		endDate?: string;
+		instructions?: string;
+	}) =>
+		request('/medications', {
+			method: 'POST',
+			body: JSON.stringify(data)
+		}),
+	getMedicationsForPlan: (planId: number) => request(`/medications/plan/${planId}`),
+	updateMedication: (medicationId: number, data: any) =>
+		request(`/medications/${medicationId}`, {
+			method: 'PATCH',
+			body: JSON.stringify(data)
+		}),
+
+	// Logs
+	getTodayMedications: () => request('/logs/today'),
+	confirmMedication: (data: { medicationScheduleId: number; scheduledTime: string }) =>
+		request('/logs/confirm', {
+			method: 'POST',
+			body: JSON.stringify(data)
+		}),
+	snoozeMedication: (data: { medicationScheduleId: number; scheduledTime: string }) =>
+		request('/logs/snooze', {
+			method: 'POST',
+			body: JSON.stringify(data)
+		}),
+	getMedicationHistory: () => request('/logs/history'),
+
+	// Notifications
+	getNotifications: () => request('/notifications'),
+	markNotificationRead: (notificationId: number) =>
+		request(`/notifications/${notificationId}/read`, { method: 'PATCH' }),
+	markAllNotificationsRead: () => request('/notifications/read-all', { method: 'PATCH' })
+};

@@ -1,58 +1,146 @@
-# Svelte library
+# MediTrack
 
-Everything you need to build a Svelte library, powered by [`sv`](https://npmjs.com/package/sv).
+A gamified medication management platform for doctor-patient collaboration, built with SvelteKit.
 
-Read more about creating a library [in the docs](https://svelte.dev/docs/kit/packaging).
+## Features
 
-## Creating a project
+- 🏥 **Doctor-Patient Collaboration** - Secure invitations and treatment management
+- 💊 **Medication Tracking** - Schedule doses with reminders and confirmations
+- 🎮 **Gamification** - XP points, badges, and streak system to boost adherence
+- 💬 **Real-time Chat** - Direct messaging between doctors and patients
+- 🔔 **Smart Notifications** - Medication reminders with snooze functionality
+- 🔐 **Authentication** - JWT + OAuth2.0 Google login with MFA support
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Tech Stack
 
-```sh
-# create a new project in the current directory
-npx sv create
+**Frontend:**
+- SvelteKit 2.47 + Svelte 5
+- TailwindCSS 4
+- Socket.IO Client
+- TypeScript
 
-# create a new project in my-app
-npx sv create my-app
+**Backend:**
+- Node.js + Express + TypeScript
+- PostgreSQL 16 (Docker)
+- Redis 7 (Docker)
+- Socket.IO for real-time features
+- Node-cron for scheduled tasks
+- Passport.js for OAuth
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- Docker & Docker Compose
+- npm/pnpm/yarn
+
+### Installation
+
+1. **Clone repository**
+```bash
+git clone https://github.com/dvmizew/MediTrack.git
+cd MediTrack
 ```
 
-## Developing
+2. **Setup environment variables**
+```bash
+# Root directory
+cp .env.example .env
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+# Server directory
+cp server/.env.example server/.env
+```
 
-```sh
+Edit `.env` files with your configuration:
+- Database credentials
+- JWT secret
+- Google OAuth credentials (optional)
+
+3. **Start Docker containers**
+```bash
+docker-compose up -d
+```
+
+4. **Install dependencies**
+```bash
+# Frontend
+npm install
+
+# Backend
+cd server
+npm install
+```
+
+5. **Run application**
+```bash
+# Terminal 1 - Backend (port 3000)
+cd server
 npm run dev
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+# Terminal 2 - Frontend (port 5173)
+npm run dev
 ```
 
-Everything inside `src/lib` is part of your library, everything inside `src/routes` can be used as a showcase or preview app.
+Visit `http://localhost:5173`
 
-## Building
+## Test Accounts
 
-To build your library:
+The following test accounts are pre-configured for immediate use:
 
-```sh
-npm pack
+| Role | Email | Password | Description |
+|------|-------|----------|-------------|
+| **Admin** | `admin@meditrack.com` | `admin123` | Full system access, user management |
+| **Medic** | `medic@test.com` | `medic123` | Can accept invites, create treatment plans |
+| **Pacient** | `pacient@test.com` | `pacient123` | Can send invites, confirm doses, earn XP |
+
+### Testing Workflow
+
+1. Login as **Pacient** → Send invite to `medic@test.com`
+2. Login as **Medic** → Accept invitation
+3. As **Medic** → Create treatment plan with diagnosis
+4. As **Medic** → Add medication doses to plan
+5. As **Pacient** → Confirm doses and earn XP/badges!
+
+## Database Schema
+
+8 main tables:
+- **users** - User accounts (user_id, email, role, mfa_enabled)
+- **patient_profiles** - Patient stats (nivel_xp, current_streak, badges)
+- **doctor_patient** - Doctor-patient relationships
+- **treatment_plans** - Medical treatment plans (diagnoza, descriere)
+- **treatment_doses** - Medication schedules (ora, cantitate, frecventa)
+- **dose_confirmations** - Medication intake logs (rezultat, xp_earned)
+- **messages** - 1:1 user chat (sender_id, receiver_id, continut)
+- **notifications** - Alerts with status (sent/snoozed/ignored/read)
+
+## API Endpoints
+
+- `POST /auth/register` - Create account
+- `POST /auth/login` - Login
+- `GET /auth/google` - OAuth login
+- `GET /users/profile` - Get profile
+- `POST /collaborations/invite` - Send doctor-patient invite
+- `POST /treatments` - Create treatment plan
+- `POST /doses` - Add medication to plan
+- `POST /confirmations/confirm` - Confirm dose taken
+- `GET /messages/conversation/:userId` - Get chat history
+
+## Scripts
+
+```bash
+# Frontend
+npm run dev          # Development server
+npm run build        # Production build
+npm run preview      # Preview production build
+npm run check        # Type checking
+
+# Backend
+npm run dev          # Development with hot reload
+npm run build        # Compile TypeScript
+npm start            # Production server
 ```
 
-To create a production version of your showcase app:
+## License
 
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
-
-## Publishing
-
-Go into the `package.json` and give your package the desired name through the `"name"` option. Also consider adding a `"license"` field and point it to a `LICENSE` file which you can create from a template (one popular option is the [MIT license](https://opensource.org/license/mit/)).
-
-To publish your library to [npm](https://www.npmjs.com):
-
-```sh
-npm publish
-```
+MIT
