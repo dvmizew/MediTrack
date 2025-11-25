@@ -1,4 +1,5 @@
-import express, { Router } from 'express';
+import express, { Router, Request, Response } from 'express';
+import { logger } from '../config/logger.js';
 import { body, validationResult } from 'express-validator';
 import { query } from '../config/database.js';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth.js';
@@ -21,14 +22,14 @@ router.post(
     body('instructiuni').optional(),
     body('detaliiMedicament').notEmpty(),
   ],
-  async (req: AuthRequest, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const medicId = req.user!.userId;
+      const medicId = (req as AuthRequest).user!.userId;
       const {
         planId,
         medicationName,
@@ -66,19 +67,34 @@ router.post(
         [plan.rows[0].patient_id, `New medication added: ${medicationName}`, result.rows[0].dose_id]
       );
 
-      res.status(201).json(result.rows[0]);
+      const dose = result.rows[0];
+      res.status(201).json({
+        doseId: dose.dose_id,
+        planId: dose.plan_id,
+        medicationName: dose.medication_name,
+        cantitate: dose.cantitate,
+        ora: dose.ora,
+        frecventa: dose.frecventa,
+        startDate: dose.start_date,
+        endDate: dose.end_date,
+        instructiuni: dose.instructiuni,
+        detaliiMedicament: dose.detalii_medicament,
+        isActive: dose.is_active,
+        status: dose.status,
+        createdAt: dose.created_at
+      });
     } catch (error) {
-      console.error('Add dose error:', error);
+      logger.error('Add dose error', { error });
       res.status(500).json({ error: 'Failed to add dose' });
     }
   }
 );
 
 // Get doses for treatment plan
-router.get('/plan/:planId', authenticate, async (req: AuthRequest, res) => {
+router.get('/plan/:planId', authenticate, async (req: Request, res: Response) => {
   try {
     const { planId } = req.params;
-    const userId = req.user!.userId;
+    const userId = (req as AuthRequest).user!.userId;
 
     // Verify access to treatment plan
     const plan = await query(
@@ -95,9 +111,23 @@ router.get('/plan/:planId', authenticate, async (req: AuthRequest, res) => {
       [planId]
     );
 
-    res.json(result.rows);
+    res.json(result.rows.map((d: any) => ({
+      doseId: d.dose_id,
+      planId: d.plan_id,
+      medicationName: d.medication_name,
+      cantitate: d.cantitate,
+      ora: d.ora,
+      frecventa: d.frecventa,
+      startDate: d.start_date,
+      endDate: d.end_date,
+      instructiuni: d.instructiuni,
+      detaliiMedicament: d.detalii_medicament,
+      isActive: d.is_active,
+      status: d.status,
+      createdAt: d.created_at
+    })));
   } catch (error) {
-    console.error('Get doses error:', error);
+    logger.error('Get doses error', { error });
     res.status(500).json({ error: 'Failed to fetch doses' });
   }
 });
@@ -107,14 +137,14 @@ router.patch(
   '/:doseId',
   authenticate,
   authorize('medic'),
-  async (req: AuthRequest, res) => {
+  async (req: Request, res: Response) => {
     try {
       const { doseId } = req.params;
-      const medicId = req.user!.userId;
+      const medicId = (req as AuthRequest).user!.userId;
       const updates = req.body;
 
       // Verify medic owns the dose through treatment plan
-      const dose = await query(
+      const doseCheck = await query(
         `SELECT td.*, tp.patient_id 
          FROM treatment_doses td
          JOIN treatment_plans tp ON td.plan_id = tp.plan_id
@@ -122,7 +152,7 @@ router.patch(
         [doseId, medicId]
       );
 
-      if (dose.rows.length === 0) {
+      if (doseCheck.rows.length === 0) {
         return res.status(404).json({ error: 'Dose not found' });
       }
 
@@ -157,12 +187,27 @@ router.patch(
       await query(
         `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
          VALUES ($1, 'treatment_update', 'sent', 'Medication Updated', 'Your medication schedule has been updated', $2)`,
-        [dose.rows[0].patient_id, doseId]
+        [doseCheck.rows[0].patient_id, doseId]
       );
 
-      res.json(result.rows[0]);
+      const dose = result.rows[0];
+      res.json({
+        doseId: dose.dose_id,
+        planId: dose.plan_id,
+        medicationName: dose.medication_name,
+        cantitate: dose.cantitate,
+        ora: dose.ora,
+        frecventa: dose.frecventa,
+        startDate: dose.start_date,
+        endDate: dose.end_date,
+        instructiuni: dose.instructiuni,
+        detaliiMedicament: dose.detalii_medicament,
+        isActive: dose.is_active,
+        status: dose.status,
+        createdAt: dose.created_at
+      });
     } catch (error) {
-      console.error('Update dose error:', error);
+      logger.error('Update dose error', { error });
       res.status(500).json({ error: 'Failed to update dose' });
     }
   }

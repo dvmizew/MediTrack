@@ -1,4 +1,5 @@
-import express, { Router } from 'express';
+import express, { Router, Request, Response } from 'express';
+import { logger } from '../config/logger.js';
 import { body, validationResult } from 'express-validator';
 import { query } from '../config/database.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
@@ -10,14 +11,14 @@ router.post(
   '/invite',
   authenticate,
   [body('medicEmail').isEmail().normalizeEmail()],
-  async (req: AuthRequest, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const pacientId = req.user!.userId;
+      const pacientId = (req as AuthRequest).user!.userId;
       const { medicEmail } = req.body;
 
       // Find medic
@@ -64,18 +65,26 @@ router.post(
         [medic.user_id, result.rows[0].id]
       );
 
-      res.status(201).json(result.rows[0]);
+      const invite = result.rows[0];
+      res.status(201).json({
+        id: invite.id,
+        patientId: invite.patient_id,
+        doctorId: invite.doctor_id,
+        statusInvitatie: invite.status_invitatie,
+        invitedAt: invite.invited_at,
+        respondedAt: invite.responded_at
+      });
     } catch (error) {
-      console.error('Send invite error:', error);
+      logger.error('Send invite error', { error });
       res.status(500).json({ error: 'Failed to send invite' });
     }
   }
 );
 
 // Get pending invites (for medic)
-router.get('/pending', authenticate, async (req: AuthRequest, res) => {
+router.get('/pending', authenticate, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.userId;
+    const userId = (req as AuthRequest).user!.userId;
 
     const result = await query(
       `SELECT c.*, u.email as pacient_email, u.full_name as pacient_name
@@ -86,9 +95,18 @@ router.get('/pending', authenticate, async (req: AuthRequest, res) => {
       [userId]
     );
 
-    res.json(result.rows);
+    res.json(result.rows.map((c: any) => ({
+      id: c.id,
+      patientId: c.patient_id,
+      doctorId: c.doctor_id,
+      statusInvitatie: c.status_invitatie,
+      invitedAt: c.invited_at,
+      respondedAt: c.responded_at,
+      pacientEmail: c.pacient_email,
+      pacientName: c.pacient_name
+    })));
   } catch (error) {
-    console.error('Get pending invites error:', error);
+    logger.error('Get pending invites error', { error });
     res.status(500).json({ error: 'Failed to fetch invites' });
   }
 });
@@ -98,7 +116,7 @@ router.patch(
   '/:inviteId/respond',
   authenticate,
   [body('action').isIn(['accept', 'reject'])],
-  async (req: AuthRequest, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -107,7 +125,7 @@ router.patch(
 
       const { inviteId } = req.params;
       const { action } = req.body;
-      const medicId = req.user!.userId;
+      const medicId = (req as AuthRequest).user!.userId;
 
       const status = action === 'accept' ? 'accepted' : 'rejected';
 
@@ -134,19 +152,27 @@ router.patch(
         [result.rows[0].patient_id, notificationMessage, inviteId]
       );
 
-      res.json(result.rows[0]);
+      const collab = result.rows[0];
+      res.json({
+        id: collab.id,
+        patientId: collab.patient_id,
+        doctorId: collab.doctor_id,
+        statusInvitatie: collab.status_invitatie,
+        invitedAt: collab.invited_at,
+        respondedAt: collab.responded_at
+      });
     } catch (error) {
-      console.error('Respond to invite error:', error);
+      logger.error('Respond to invite error', { error });
       res.status(500).json({ error: 'Failed to respond to invite' });
     }
   }
 );
 
 // Get my collaborations
-router.get('/my', authenticate, async (req: AuthRequest, res) => {
+router.get('/my', authenticate, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.userId;
-    const role = req.user!.role;
+    const userId = (req as AuthRequest).user!.userId;
+    const role = (req as AuthRequest).user!.role;
 
     let queryText;
     if (role === 'medic') {
@@ -168,9 +194,22 @@ router.get('/my', authenticate, async (req: AuthRequest, res) => {
     }
 
     const result = await query(queryText, [userId]);
-    res.json(result.rows);
+    res.json(result.rows.map((c: any) => ({
+      id: c.id,
+      patientId: c.patient_id,
+      doctorId: c.doctor_id,
+      statusInvitatie: c.status_invitatie,
+      invitedAt: c.invited_at,
+      respondedAt: c.responded_at,
+      pacientEmail: c.pacient_email,
+      pacientName: c.pacient_name,
+      pacientAvatar: c.pacient_avatar,
+      medicEmail: c.medic_email,
+      medicName: c.medic_name,
+      medicAvatar: c.medic_avatar
+    })));
   } catch (error) {
-    console.error('Get collaborations error:', error);
+    logger.error('Get collaborations error', { error });
     res.status(500).json({ error: 'Failed to fetch collaborations' });
   }
 });

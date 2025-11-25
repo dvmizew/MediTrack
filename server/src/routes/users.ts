@@ -1,4 +1,5 @@
-import express, { Router } from 'express';
+import express, { Router, Request, Response } from 'express';
+import { logger } from '../config/logger.js';
 import { body, validationResult } from 'express-validator';
 import { query } from '../config/database.js';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth.js';
@@ -6,7 +7,7 @@ import { authenticate, authorize, AuthRequest } from '../middleware/auth.js';
 const router: Router = express.Router();
 
 // Get all users (admin only)
-router.get('/', authenticate, authorize('admin'), async (req, res) => {
+router.get('/', authenticate, authorize('admin'), async (req: Request, res: Response) => {
   try {
     const result = await query(`
       SELECT user_id, email, full_name, role, is_active, mfa_enabled, created_at 
@@ -14,9 +15,17 @@ router.get('/', authenticate, authorize('admin'), async (req, res) => {
       ORDER BY created_at DESC
     `);
 
-    res.json(result.rows);
+    res.json(result.rows.map((u: any) => ({
+      userId: u.user_id,
+      email: u.email,
+      fullName: u.full_name,
+      role: u.role,
+      isActive: u.is_active,
+      mfaEnabled: u.mfa_enabled,
+      createdAt: u.created_at
+    })));
   } catch (error) {
-    console.error('Get users error:', error);
+    logger.error('Get users error', { error });
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
@@ -27,7 +36,7 @@ router.patch(
   authenticate,
   authorize('admin'),
   [body('role').isIn(['admin', 'medic', 'pacient'])],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -46,9 +55,15 @@ router.patch(
         return res.status(404).json({ error: 'User not found' });
       }
 
-      res.json(result.rows[0]);
+      const user = result.rows[0];
+      res.json({
+        userId: user.user_id,
+        email: user.email,
+        fullName: user.full_name,
+        role: user.role
+      });
     } catch (error) {
-      console.error('Update role error:', error);
+      logger.error('Update role error', { error });
       res.status(500).json({ error: 'Failed to update role' });
     }
   }
@@ -59,7 +74,7 @@ router.patch(
   '/:userId/status',
   authenticate,
   authorize('admin'),
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const { userId } = req.params;
 
@@ -72,16 +87,21 @@ router.patch(
         return res.status(404).json({ error: 'User not found' });
       }
 
-      res.json(result.rows[0]);
+      const user = result.rows[0];
+      res.json({
+        userId: user.user_id,
+        email: user.email,
+        isActive: user.is_active
+      });
     } catch (error) {
-      console.error('Update status error:', error);
+      logger.error('Update status error', { error });
       res.status(500).json({ error: 'Failed to update status' });
     }
   }
 );
 
 // Get current user profile
-router.get('/me', authenticate, async (req: AuthRequest, res) => {
+router.get('/me', authenticate, async (req: Request, res: Response) => {
   try {
     const result = await query(
             `SELECT u.user_id, u.email, u.full_name, u.role, u.avatar_url, u.mfa_enabled, u.created_at,
@@ -89,7 +109,7 @@ router.get('/me', authenticate, async (req: AuthRequest, res) => {
        FROM users u
        LEFT JOIN patient_profiles p ON u.user_id = p.patient_id
        WHERE u.user_id = $1`,
-      [req.user!.userId]
+      [(req as AuthRequest).user!.userId]
     );
 
     if (result.rows.length === 0) {
@@ -112,7 +132,7 @@ router.get('/me', authenticate, async (req: AuthRequest, res) => {
       currentBadge: user.current_badge
     });
   } catch (error) {
-    console.error('Get profile error:', error);
+    logger.error('Get profile error', { error });
     res.status(500).json({ error: 'Failed to fetch profile' });
   }
 });

@@ -1,4 +1,5 @@
-import express, { Router } from 'express';
+import express, { Router, Request, Response } from 'express';
+import { logger } from '../config/logger.js';
 import { body, validationResult } from 'express-validator';
 import { query } from '../config/database.js';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth.js';
@@ -15,14 +16,14 @@ router.post(
     body('diagnosis').notEmpty(),
     body('description').optional(),
   ],
-  async (req: AuthRequest, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const medicId = req.user!.userId;
+      const medicId = (req as AuthRequest).user!.userId;
       const { pacientId, diagnosis, description } = req.body;
 
       // Verify collaboration
@@ -49,19 +50,29 @@ router.post(
         [pacientId, result.rows[0].plan_id]
       );
 
-      res.status(201).json(result.rows[0]);
+      const plan = result.rows[0];
+      res.status(201).json({
+        planId: plan.plan_id,
+        patientId: plan.patient_id,
+        doctorId: plan.doctor_id,
+        diagnoza: plan.diagnoza,
+        descriere: plan.descriere,
+        activ: plan.activ,
+        dataCreare: plan.data_creare,
+        updatedAt: plan.updated_at
+      });
     } catch (error) {
-      console.error('Create treatment plan error:', error);
+      logger.error('Create treatment plan error', { error });
       res.status(500).json({ error: 'Failed to create treatment plan' });
     }
   }
 );
 
 // Get treatment plans
-router.get('/', authenticate, async (req: AuthRequest, res) => {
+router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.userId;
-    const role = req.user!.role;
+    const userId = (req as AuthRequest).user!.userId;
+    const role = (req as AuthRequest).user!.role;
 
     let queryText;
     let params;
@@ -87,18 +98,31 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
     }
 
     const result = await query(queryText, params);
-    res.json(result.rows);
+    res.json(result.rows.map((tp: any) => ({
+      planId: tp.plan_id,
+      patientId: tp.patient_id,
+      doctorId: tp.doctor_id,
+      diagnoza: tp.diagnoza,
+      descriere: tp.descriere,
+      activ: tp.activ,
+      dataCreare: tp.data_creare,
+      updatedAt: tp.updated_at,
+      patientName: tp.patient_name,
+      patientEmail: tp.patient_email,
+      doctorName: tp.doctor_name,
+      doctorEmail: tp.doctor_email
+    })));
   } catch (error) {
-    console.error('Get treatment plans error:', error);
+    logger.error('Get treatment plans error', { error });
     res.status(500).json({ error: 'Failed to fetch treatment plans' });
   }
 });
 
 // Get treatment plan details
-router.get('/:planId', authenticate, async (req: AuthRequest, res) => {
+router.get('/:planId', authenticate, async (req: Request, res: Response) => {
   try {
     const { planId } = req.params;
-    const userId = req.user!.userId;
+    const userId = (req as AuthRequest).user!.userId;
 
     const result = await query(
       `SELECT tp.*, 
@@ -121,12 +145,38 @@ router.get('/:planId', authenticate, async (req: AuthRequest, res) => {
       [planId]
     );
 
+    const plan = result.rows[0];
     res.json({
-      ...result.rows[0],
-      medications: medications.rows,
+      planId: plan.plan_id,
+      patientId: plan.patient_id,
+      doctorId: plan.doctor_id,
+      diagnoza: plan.diagnoza,
+      descriere: plan.descriere,
+      activ: plan.activ,
+      dataCreare: plan.data_creare,
+      updatedAt: plan.updated_at,
+      doctorName: plan.doctor_name,
+      doctorEmail: plan.doctor_email,
+      patientName: plan.patient_name,
+      patientEmail: plan.patient_email,
+      medications: medications.rows.map((m: any) => ({
+        doseId: m.dose_id,
+        planId: m.plan_id,
+        medicationName: m.medication_name,
+        cantitate: m.cantitate,
+        ora: m.ora,
+        frecventa: m.frecventa,
+        startDate: m.start_date,
+        endDate: m.end_date,
+        instructiuni: m.instructiuni,
+        detaliiMedicament: m.detalii_medicament,
+        isActive: m.is_active,
+        status: m.status,
+        createdAt: m.created_at
+      }))
     });
   } catch (error) {
-    console.error('Get treatment plan error:', error);
+    logger.error('Get treatment plan error', { error });
     res.status(500).json({ error: 'Failed to fetch treatment plan' });
   }
 });
@@ -141,7 +191,7 @@ router.patch(
     body('description').optional(),
     body('isActive').optional().isBoolean(),
   ],
-  async (req: AuthRequest, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -149,16 +199,16 @@ router.patch(
       }
 
       const { planId } = req.params;
-      const medicId = req.user!.userId;
+      const medicId = (req as AuthRequest).user!.userId;
       const updates = req.body;
 
       // Verify ownership
-      const plan = await query(
+      const planCheck = await query(
         'SELECT patient_id FROM treatment_plans WHERE plan_id = $1 AND doctor_id = $2',
         [planId, medicId]
       );
 
-      if (plan.rows.length === 0) {
+      if (planCheck.rows.length === 0) {
         return res.status(404).json({ error: 'Treatment plan not found' });
       }
 
@@ -194,12 +244,22 @@ router.patch(
       await query(
         `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
          VALUES ($1, 'treatment_update', 'sent', 'Treatment Updated', 'Your treatment plan has been updated', $2)`,
-        [plan.rows[0].patient_id, planId]
+        [planCheck.rows[0].patient_id, planId]
       );
 
-      res.json(result.rows[0]);
+      const plan = result.rows[0];
+      res.json({
+        planId: plan.plan_id,
+        patientId: plan.patient_id,
+        doctorId: plan.doctor_id,
+        diagnoza: plan.diagnoza,
+        descriere: plan.descriere,
+        activ: plan.activ,
+        dataCreare: plan.data_creare,
+        updatedAt: plan.updated_at
+      });
     } catch (error) {
-      console.error('Update treatment plan error:', error);
+      logger.error('Update treatment plan error', { error });
       res.status(500).json({ error: 'Failed to update treatment plan' });
     }
   }

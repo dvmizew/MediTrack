@@ -1,4 +1,5 @@
-import express, { Router } from 'express';
+import express, { Router, Request, Response } from 'express';
+import { logger } from '../config/logger.js';
 import { body, validationResult } from 'express-validator';
 import { query } from '../config/database.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
@@ -15,9 +16,9 @@ const BADGE_THRESHOLDS = {
 };
 
 // Get today's doses for patient
-router.get('/today', authenticate, async (req: AuthRequest, res) => {
+router.get('/today', authenticate, async (req: Request, res: Response) => {
   try {
-    const patientId = req.user!.userId;
+    const patientId = (req as AuthRequest).user!.userId;
     
     const result = await query(
       `SELECT td.*, dc.confirm_id, dc.timestamp_confirmare, dc.rezultat, dc.snoozed_until
@@ -32,9 +33,26 @@ router.get('/today', authenticate, async (req: AuthRequest, res) => {
       [patientId]
     );
 
-    res.json(result.rows);
+    res.json(result.rows.map((d: any) => ({
+      doseId: d.dose_id,
+      planId: d.plan_id,
+      medicationName: d.medication_name,
+      cantitate: d.cantitate,
+      ora: d.ora,
+      frecventa: d.frecventa,
+      startDate: d.start_date,
+      endDate: d.end_date,
+      instructiuni: d.instructiuni,
+      detaliiMedicament: d.detalii_medicament,
+      isActive: d.is_active,
+      status: d.status,
+      confirmId: d.confirm_id,
+      timestampConfirmare: d.timestamp_confirmare,
+      rezultat: d.rezultat,
+      snoozedUntil: d.snoozed_until
+    })));
   } catch (error) {
-    console.error('Get today doses error:', error);
+    logger.error('Get today doses error', { error });
     res.status(500).json({ error: 'Failed to fetch doses' });
   }
 });
@@ -48,14 +66,14 @@ router.post(
     body('scheduledFor').isISO8601(),
     body('notes').optional(),
   ],
-  async (req: AuthRequest, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const patientId = req.user!.userId;
+      const patientId = (req as AuthRequest).user!.userId;
       const { doseId, scheduledFor, notes } = req.body;
 
       // Check if already confirmed
@@ -143,7 +161,7 @@ router.post(
         },
       });
     } catch (error) {
-      console.error('Confirm dose error:', error);
+      logger.error('Confirm dose error', { error });
       res.status(500).json({ error: 'Failed to confirm dose' });
     }
   }
@@ -157,7 +175,7 @@ router.post(
     body('doseId').isInt(),
     body('scheduledFor').isISO8601(),
   ],
-  async (req: AuthRequest, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -192,26 +210,36 @@ router.post(
         );
       }
 
-      // Update notification status
-      await query(
-        `UPDATE notifications 
+    // Update notification status
+    await query(
+      `UPDATE notifications 
          SET status_notif = 'snoozed' 
          WHERE user_id = $1 AND reference_id = $2 AND tip = 'reminder'`,
-        [req.user!.userId, doseId]
-      );
+      [(req as AuthRequest).user!.userId, doseId]
+    );
 
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error('Snooze dose error:', error);
-      res.status(500).json({ error: 'Failed to snooze dose' });
-    }
+    const snooze = result.rows[0];
+    res.json({
+      confirmId: snooze.confirm_id,
+      doseId: snooze.dose_id,
+      scheduledFor: snooze.scheduled_for,
+      timestampConfirmare: snooze.timestamp_confirmare,
+      rezultat: snooze.rezultat,
+      xpEarned: snooze.xp_earned,
+      notes: snooze.notes,
+      snoozedUntil: snooze.snoozed_until
+    });
+  } catch (error) {
+    logger.error('Snooze dose error', { error });
+    res.status(500).json({ error: 'Failed to snooze dose' });
+  }
   }
 );
 
 // Get dose confirmation history
-router.get('/history', authenticate, async (req: AuthRequest, res) => {
+router.get('/history', authenticate, async (req: Request, res: Response) => {
   try {
-    const patientId = req.user!.userId;
+    const patientId = (req as AuthRequest).user!.userId;
     
     const result = await query(
       `SELECT dc.*, td.medication_name, td.cantitate, td.ora
@@ -224,9 +252,21 @@ router.get('/history', authenticate, async (req: AuthRequest, res) => {
       [patientId]
     );
 
-    res.json(result.rows);
+    res.json(result.rows.map((d: any) => ({
+      confirmId: d.confirm_id,
+      doseId: d.dose_id,
+      scheduledFor: d.scheduled_for,
+      timestampConfirmare: d.timestamp_confirmare,
+      rezultat: d.rezultat,
+      xpEarned: d.xp_earned,
+      notes: d.notes,
+      snoozedUntil: d.snoozed_until,
+      medicationName: d.medication_name,
+      cantitate: d.cantitate,
+      ora: d.ora
+    })));
   } catch (error) {
-    console.error('Get history error:', error);
+    logger.error('Get history error', { error });
     res.status(500).json({ error: 'Failed to fetch history' });
   }
 });

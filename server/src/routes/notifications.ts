@@ -1,13 +1,14 @@
-import express, { Router } from 'express';
+import express, { Router, Request, Response } from 'express';
+import { logger } from '../config/logger.js';
 import { query } from '../config/database.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 
 const router: Router = express.Router();
 
 // Get notifications with filtering by status_notif
-router.get('/', authenticate, async (req: AuthRequest, res) => {
+router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.userId;
+    const userId = (req as AuthRequest).user!.userId;
     const { status } = req.query;
     
     let queryStr = `SELECT * FROM notifications WHERE user_id = $1`;
@@ -37,16 +38,16 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
 
     res.json(mapped);
   } catch (error) {
-    console.error('Get notifications error:', error);
+    logger.error('Get notifications error', { error });
     res.status(500).json({ error: 'Failed to fetch notifications' });
   }
 });
 
 // Mark notification as read
-router.patch('/:notificationId/read', authenticate, async (req: AuthRequest, res) => {
+router.patch('/:notificationId/read', authenticate, async (req: Request, res: Response) => {
   try {
     const { notificationId } = req.params;
-    const userId = req.user!.userId;
+    const userId = (req as AuthRequest).user!.userId;
 
     const result = await query(
       'UPDATE notifications SET status_notif = $1 WHERE notif_id = $2 AND user_id = $3 RETURNING *',
@@ -71,16 +72,16 @@ router.patch('/:notificationId/read', authenticate, async (req: AuthRequest, res
       isRead: n.status_notif === 'read'
     });
   } catch (error) {
-    console.error('Mark notification read error:', error);
+    logger.error('Mark notification read error', { error });
     res.status(500).json({ error: 'Failed to mark notification' });
   }
 });
 
 // Mark notification as snoozed
-router.patch('/:notificationId/snooze', authenticate, async (req: AuthRequest, res) => {
+router.patch('/:notificationId/snooze', authenticate, async (req: Request, res: Response) => {
   try {
     const { notificationId } = req.params;
-    const userId = req.user!.userId;
+    const userId = (req as AuthRequest).user!.userId;
 
     const result = await query(
       'UPDATE notifications SET status_notif = $1 WHERE notif_id = $2 AND user_id = $3 RETURNING *',
@@ -105,16 +106,16 @@ router.patch('/:notificationId/snooze', authenticate, async (req: AuthRequest, r
       isRead: n.status_notif === 'read'
     });
   } catch (error) {
-    console.error('Snooze notification error:', error);
+    logger.error('Snooze notification error', { error });
     res.status(500).json({ error: 'Failed to snooze notification' });
   }
 });
 
 // Mark notification as ignored
-router.patch('/:notificationId/ignore', authenticate, async (req: AuthRequest, res) => {
+router.patch('/:notificationId/ignore', authenticate, async (req: Request, res: Response) => {
   try {
     const { notificationId } = req.params;
-    const userId = req.user!.userId;
+    const userId = (req as AuthRequest).user!.userId;
 
     const result = await query(
       'UPDATE notifications SET status_notif = $1 WHERE notif_id = $2 AND user_id = $3 RETURNING *',
@@ -139,15 +140,15 @@ router.patch('/:notificationId/ignore', authenticate, async (req: AuthRequest, r
       isRead: n.status_notif === 'read'
     });
   } catch (error) {
-    console.error('Ignore notification error:', error);
+    logger.error('Ignore notification error', { error });
     res.status(500).json({ error: 'Failed to ignore notification' });
   }
 });
 
 // Mark all as read
-router.patch('/read-all', authenticate, async (req: AuthRequest, res) => {
+router.patch('/read-all', authenticate, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.userId;
+    const userId = (req as AuthRequest).user!.userId;
 
     await query(
       'UPDATE notifications SET status_notif = $1 WHERE user_id = $2 AND status_notif != $1',
@@ -156,7 +157,7 @@ router.patch('/read-all', authenticate, async (req: AuthRequest, res) => {
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Mark all read error:', error);
+    logger.error('Mark all read error', { error });
     res.status(500).json({ error: 'Failed to mark all notifications' });
   }
 });

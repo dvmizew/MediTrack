@@ -1,11 +1,15 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import passport from './config/passport.js';
 import { pool } from './config/database.js';
 import { redis } from './config/redis.js';
+import { logger, requestLoggerStream } from './config/logger.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import collaborationRoutes from './routes/collaborations.js';
@@ -29,13 +33,37 @@ const io = new Server(httpServer, {
   },
 });
 
-// Middleware
+// Core middleware
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
 }));
-app.use(express.json());
+app.use(helmet());
+app.use(express.json({ limit: '1mb' }));
 app.use(passport.initialize());
+
+// Request logging
+app.use(morgan('combined', { stream: requestLoggerStream }));
+
+// Global rate limiter (generic protection)
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300, // shared across all endpoints
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(globalLimiter);
+
+// Auth specific stricter limiter
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  message: 'Too many auth requests, try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/auth/login', authLimiter);
+app.use('/auth/register', authLimiter);
 
 // Routes
 app.use('/auth', authRoutes);
@@ -55,6 +83,31 @@ app.get('/health', (req, res) => {
 // Socket.io setup
 setupSocketHandlers(io);
 
+// Redis pub/sub for real-time notifications
+const subscriber = redis.duplicate();
+subscriber.subscribe('medication-reminder', (err) => {
+  if (err) {
+    logger.error('Failed to subscribe to medication-reminder channel', { err });
+  } else {
+    logger.info('Subscribed to medication-reminder channel');
+  }
+});
+
+subscriber.on('message', (channel, message) => {
+  try {
+    const data = JSON.parse(message);
+    if (channel === 'medication-reminder') {
+      // Emit to specific user room
+      io.to(`user:${data.userId}`).emit('notification', {
+        type: 'reminder',
+        ...data,
+      });
+    }
+  } catch (error) {
+    logger.error('Redis message handling error', { error });
+  }
+});
+
 // Start cron jobs
 startReminderCron();
 startStreakCheckCron();
@@ -63,17 +116,24 @@ startStreakCheckCron();
 const PORT = process.env.PORT || 3000;
 
 httpServer.listen(PORT, () => {
-  console.log(`✓ Server running on port ${PORT}`);
-  console.log(`✓ Environment: ${process.env.NODE_ENV}`);
+  logger.info(`Server running on port ${PORT}`);
+  logger.info(`Environment: ${process.env.NODE_ENV}`);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, shutting down gracefully...');
+  logger.info('SIGTERM received, initiating graceful shutdown');
   httpServer.close(() => {
-    console.log('HTTP server closed');
+    logger.info('HTTP server closed');
   });
-  await pool.end();
-  await redis.quit();
-  process.exit(0);
+  try {
+    await pool.end();
+    await redis.quit();
+  } catch (err) {
+    logger.error('Error during shutdown', { err });
+  } finally {
+    process.exit(0);
+  }
 });
+
+export { app }; // optional export for testing

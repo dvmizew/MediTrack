@@ -43,8 +43,9 @@ class SocketClient {
 		});
 
 		this.socket.on('notification', (data) => {
-			// Handle real-time notifications
+			// Handle real-time notifications and dispatch to components
 			console.log('Notification received:', data);
+			window.dispatchEvent(new CustomEvent('notification', { detail: data }));
 		});
 
 		this.socket.on('new-message', (message) => {

@@ -1,4 +1,5 @@
-import express, { Router } from 'express';
+import express, { Router, Request, Response } from 'express';
+import { logger } from '../config/logger.js';
 import { body, validationResult } from 'express-validator';
 import { query } from '../config/database.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
@@ -13,14 +14,14 @@ router.post(
     body('receiverId').isInt(),
     body('continut').notEmpty().trim(),
   ],
-  async (req: AuthRequest, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const senderId = req.user!.userId;
+      const senderId = (req as AuthRequest).user!.userId;
       const { receiverId, continut } = req.body;
 
       // Verify collaboration exists between sender and receiver
@@ -49,18 +50,26 @@ router.post(
         [receiverId, result.rows[0].message_id]
       );
 
-      res.status(201).json(result.rows[0]);
+      const msg = result.rows[0];
+      res.status(201).json({
+        messageId: msg.message_id,
+        senderId: msg.sender_id,
+        receiverId: msg.receiver_id,
+        continut: msg.continut,
+        timestampMesaj: msg.timestamp_mesaj,
+        isRead: msg.is_read
+      });
     } catch (error) {
-      console.error('Send message error:', error);
+      logger.error('Send message error', { error });
       res.status(500).json({ error: 'Failed to send message' });
     }
   }
 );
 
 // Get conversation with specific user
-router.get('/conversation/:userId', authenticate, async (req: AuthRequest, res) => {
+router.get('/conversation/:userId', authenticate, async (req: Request, res: Response) => {
   try {
-    const currentUserId = req.user!.userId;
+    const currentUserId = (req as AuthRequest).user!.userId;
     const { userId } = req.params;
     const otherUserId = parseInt(userId);
 
@@ -84,17 +93,28 @@ router.get('/conversation/:userId', authenticate, async (req: AuthRequest, res) 
       [currentUserId, otherUserId]
     );
 
-    res.json(result.rows);
+    res.json(result.rows.map((m: any) => ({
+      messageId: m.message_id,
+      senderId: m.sender_id,
+      receiverId: m.receiver_id,
+      continut: m.continut,
+      timestampMesaj: m.timestamp_mesaj,
+      isRead: m.is_read,
+      senderName: m.sender_name,
+      senderAvatar: m.sender_avatar,
+      receiverName: m.receiver_name,
+      receiverAvatar: m.receiver_avatar
+    })));
   } catch (error) {
-    console.error('Get conversation error:', error);
+    logger.error('Get conversation error', { error });
     res.status(500).json({ error: 'Failed to fetch conversation' });
   }
 });
 
 // Get all conversations (list of users chatted with)
-router.get('/conversations', authenticate, async (req: AuthRequest, res) => {
+router.get('/conversations', authenticate, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.userId;
+    const userId = (req as AuthRequest).user!.userId;
 
     const result = await query(
       `SELECT DISTINCT ON (other_user_id)
@@ -126,18 +146,26 @@ router.get('/conversations', authenticate, async (req: AuthRequest, res) => {
       [userId]
     );
 
-    res.json(result.rows);
+    res.json(result.rows.map((c: any) => ({
+      otherUserId: c.other_user_id,
+      otherUserName: c.other_user_name,
+      otherUserAvatar: c.other_user_avatar,
+      otherUserRole: c.other_user_role,
+      lastMessage: c.last_message,
+      lastMessageTime: c.last_message_time,
+      unreadCount: c.unread_count
+    })));
   } catch (error) {
-    console.error('Get conversations error:', error);
+    logger.error('Get conversations error', { error });
     res.status(500).json({ error: 'Failed to fetch conversations' });
   }
 });
 
 // Mark message as read
-router.patch('/:messageId/read', authenticate, async (req: AuthRequest, res) => {
+router.patch('/:messageId/read', authenticate, async (req: Request, res: Response) => {
   try {
     const { messageId } = req.params;
-    const userId = req.user!.userId;
+    const userId = (req as AuthRequest).user!.userId;
 
     const result = await query(
       'UPDATE messages SET is_read = true WHERE message_id = $1 AND receiver_id = $2 RETURNING *',
@@ -148,9 +176,17 @@ router.patch('/:messageId/read', authenticate, async (req: AuthRequest, res) => 
       return res.status(404).json({ error: 'Message not found' });
     }
 
-    res.json(result.rows[0]);
+    const msg = result.rows[0];
+    res.json({
+      messageId: msg.message_id,
+      senderId: msg.sender_id,
+      receiverId: msg.receiver_id,
+      continut: msg.continut,
+      timestampMesaj: msg.timestamp_mesaj,
+      isRead: msg.is_read
+    });
   } catch (error) {
-    console.error('Mark message read error:', error);
+    logger.error('Mark message read error', { error });
     res.status(500).json({ error: 'Failed to mark message' });
   }
 });

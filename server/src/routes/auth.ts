@@ -1,4 +1,5 @@
-import express, { Router } from 'express';
+import express, { Router, Request, Response } from 'express';
+import { logger } from '../config/logger.js';
 import bcrypt from 'bcrypt';
 import { body, validationResult } from 'express-validator';
 import { query } from '../config/database.js';
@@ -16,7 +17,7 @@ router.post(
     body('fullName').trim().notEmpty(),
     body('role').optional().isIn(['medic', 'pacient']),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -56,9 +57,17 @@ router.post(
         role: user.role,
       });
 
-      res.status(201).json({ token, user });
+      res.status(201).json({ 
+        token, 
+        user: {
+          userId: user.user_id,
+          email: user.email,
+          fullName: user.full_name,
+          role: user.role
+        }
+      });
     } catch (error) {
-      console.error('Register error:', error);
+      logger.error('Register error', { error });
       res.status(500).json({ error: 'Registration failed' });
     }
   }
@@ -71,7 +80,7 @@ router.post(
     body('email').isEmail().normalizeEmail(),
     body('password').notEmpty(),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -119,7 +128,7 @@ router.post(
         },
       });
     } catch (error) {
-      console.error('Login error:', error);
+      logger.error('Login error', { error });
       res.status(500).json({ error: 'Login failed' });
     }
   }
@@ -134,7 +143,7 @@ router.get(
 router.get(
   '/google/callback',
   passport.authenticate('google', { session: false, failureRedirect: '/login' }),
-  (req, res) => {
+  (req: Request, res: Response) => {
     try {
       const user = req.user as any;
       
@@ -148,7 +157,7 @@ router.get(
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
       res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
     } catch (error) {
-      console.error('Google callback error:', error);
+      logger.error('Google callback error', { error });
       res.redirect('/login?error=oauth_failed');
     }
   }
