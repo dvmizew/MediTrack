@@ -27,15 +27,7 @@ A gamified medication management platform for doctor-patient collaboration, buil
 - Node-cron for scheduled tasks
 - Passport.js for OAuth
 
-## Quick Start
-
-### Prerequisites
-
-- Node.js 18+
-- Docker & Docker Compose
-- npm/pnpm/yarn
-
-### Installation
+### Quick Start
 
 1. **Clone repository**
 ```bash
@@ -140,7 +132,3 @@ npm run dev          # Development with hot reload
 npm run build        # Compile TypeScript
 npm start            # Production server
 ```
-
-## License
-
-MIT
