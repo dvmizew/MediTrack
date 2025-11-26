@@ -35,6 +35,7 @@
 		"svelte": "^5.0.0"
 	},
 	"dependencies": {
+		"chart.js": "^4.5.1",
 		"date-fns": "^3.0.0",
 		"socket.io-client": "^4.7.2"
 	},
