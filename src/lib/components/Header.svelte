@@ -132,40 +132,40 @@
 				<div class="hidden md:flex items-center gap-1">
 					<a 
 					href="/dashboard" 
-					class={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+					class={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
 						isActive('/dashboard')
-							? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
-							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+							? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 scale-105'
+							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:scale-105'
 					}`}
 				>
 						Dashboard
 					</a>
 					<a 
 					href="/treatments" 
-					class={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+					class={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
 						isActive('/treatments')
-							? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
-							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+							? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 scale-105'
+							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:scale-105'
 					}`}
 				>
 						Tratamente
 					</a>
 					<a 
 					href="/chat" 
-					class={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+					class={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
 						isActive('/chat')
-							? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
-							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+							? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 scale-105'
+							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:scale-105'
 					}`}
 				>
 						Mesaje
 					</a>
 					<a 
 					href="/collaborations" 
-					class={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+					class={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
 						isActive('/collaborations')
-							? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
-							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+							? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 scale-105'
+							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:scale-105'
 					}`}
 				>
 						Colaborări
