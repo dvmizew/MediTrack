@@ -37,12 +37,12 @@
 </script>
 
 {#if $authStore.isAuthenticated}
-	<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+	<div class="min-h-screen bg-gray-50 dark:bg-gray-900 animate-fade-in">
 		<Header />
 		<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 			<div class="mb-8">
-				<h1 class="text-3xl font-bold text-gray-900 mb-2">📋 Planuri de Tratament</h1>
-				<p class="text-gray-600">
+				<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">📋 Planuri de Tratament</h1>
+				<p class="text-gray-600 dark:text-gray-400">
 					{#if $isMedic}
 						Gestionează planurile de tratament pentru pacienții tăi
 					{:else}
@@ -56,17 +56,17 @@
 					<div class="animate-spin rounded-full h-14 w-14 border-4 border-blue-600 border-t-transparent"></div>
 				</div>
 			{:else if error}
-				<div class="bg-red-50 border-2 border-red-200 rounded-xl p-6 flex items-start gap-3">
-					<svg class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6 flex items-start gap-3 animate-shake">
+					<svg class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
 					</svg>
-					<p class="text-red-800 font-medium">{error}</p>
+					<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
 				</div>
 			{:else if treatments.length === 0}
-				<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-16 text-center">
+				<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-16 text-center animate-scale-in">
 					<div class="max-w-sm mx-auto">
 						<svg
-							class="mx-auto h-20 w-20 text-gray-300 mb-4"
+							class="mx-auto h-20 w-20 text-gray-300 dark:text-gray-600 mb-4"
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
@@ -78,8 +78,8 @@
 								d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
 							/>
 						</svg>
-						<h3 class="text-xl font-semibold text-gray-900 mb-2">Niciun tratament încă</h3>
-						<p class="text-gray-500">
+						<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Niciun tratament încă</h3>
+						<p class="text-gray-500 dark:text-gray-400">
 							{#if $isMedic}
 								Începe prin a crea un plan de tratament pentru unul dintre pacienții tăi
 							{:else}
@@ -91,12 +91,12 @@
 			{:else}
 				<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 					{#each treatments as treatment}
-						<div
-							class="bg-white rounded-xl shadow-sm border-2 border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition cursor-pointer group"
-							onclick={() => viewDetails(treatment.plan_id)}
+					<div
+						class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-2 border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition cursor-pointer group"
+						onclick={() => viewDetails(treatment.plan_id)}
 						>
 							<div class="flex justify-between items-start mb-4">
-								<h3 class="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition">
+								<h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
 									{treatment.diagnoza}
 								</h3>
 								<span
@@ -111,13 +111,13 @@
 							</div>
 
 							{#if treatment.descriere}
-								<p class="text-gray-600 text-sm mb-4 line-clamp-2">{treatment.descriere}</p>
+								<p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">{treatment.descriere}</p>
 							{/if}
 
-							<div class="space-y-2 text-sm mb-4">
-								{#if $isMedic}
-									<div class="flex items-center text-gray-600">
-										<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<div class="space-y-2 text-sm mb-4">
+							{#if $isMedic}
+								<div class="flex items-center text-gray-600 dark:text-gray-400">
+									<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path
 												stroke-linecap="round"
 												stroke-linejoin="round"
@@ -127,8 +127,8 @@
 										</svg>
 										<span>{treatment.patient_name}</span>
 									</div>
-								{:else}
-									<div class="flex items-center text-gray-600">
+							{:else}
+								<div class="flex items-center text-gray-600 dark:text-gray-400">
 										<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path
 												stroke-linecap="round"
@@ -141,7 +141,7 @@
 									</div>
 								{/if}
 
-								<div class="flex items-center text-gray-500">
+								<div class="flex items-center text-gray-500 dark:text-gray-400">
 									<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path
 											stroke-linecap="round"
@@ -154,8 +154,8 @@
 								</div>
 							</div>
 
-							<div class="flex items-center justify-end pt-3 border-t border-gray-100">
-								<span class="text-sm text-blue-600 font-medium group-hover:underline">Vezi detalii →</span>
+						<div class="flex items-center justify-end pt-3 border-t border-gray-100 dark:border-gray-700">
+							<span class="text-sm text-blue-600 dark:text-blue-400 font-medium group-hover:underline">Vezi detalii →</span>
 							</div>
 						</div>
 					{/each}

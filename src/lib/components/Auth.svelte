@@ -40,23 +40,23 @@
 	}
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 px-4 py-8">
-	<div class="max-w-md w-full">
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 px-4 py-8 animate-fade-in">
+	<div class="max-w-md w-full animate-slide-up">
 		<!-- Logo & Title -->
 		<div class="text-center mb-6 md:mb-8">
-			<div class="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg mb-3 md:mb-4">
+			<div class="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg mb-3 md:mb-4 hover:scale-110 hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300 animate-bounce-gentle">
 				<svg class="w-8 h-8 md:w-9 md:h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
 				</svg>
 			</div>
-			<h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">MediTrack</h1>
+			<h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">MediTrack</h1>
 			<p class="text-sm md:text-base text-gray-600">{isRegister ? 'Creează cont nou' : 'Bine ai revenit!'}</p>
 		</div>
 
 		<!-- Card -->
-		<div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-8">
+		<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-6 md:p-8 hover:shadow-2xl transition-shadow duration-300">
 			{#if error}
-			<div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+			<div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm animate-shake">
 				{error}
 			</div>
 		{/if}
@@ -72,33 +72,33 @@
 						type="text"
 						bind:value={fullName}
 						required
-						class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-base"
+						class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 						placeholder="Ion Popescu"
 					/>
 				</div>
 			{/if}
 
 			<div>
-				<label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+				<label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
 				<input
 					id="email"
 					type="email"
 					bind:value={email}
 					required
-					class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-base"
+					class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 					placeholder="email@example.com"
 				/>
 			</div>
 
 			<div>
-				<label for="password" class="block text-sm font-medium text-gray-700 mb-2">Parolă</label>
+				<label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Parolă</label>
 				<input
 					id="password"
 					type="password"
 					bind:value={password}
 					required
 					minlength={6}
-					class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-base"
+					class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 					placeholder="••••••••"
 				/>
 			</div>
@@ -106,7 +106,7 @@
 			<button
 				type="submit"
 				disabled={loading}
-				class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 focus:ring-4 focus:ring-blue-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg touch-manipulation active:scale-95"
+				class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 hover:shadow-xl hover:shadow-blue-500/50 hover:scale-[1.02] focus:ring-4 focus:ring-blue-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg touch-manipulation active:scale-95"
 			>
 				{loading ? 'Se procesează...' : isRegister ? 'Creează cont' : 'Intră în cont'}
 			</button>
@@ -115,16 +115,16 @@
 		<div class="mt-5 md:mt-6">
 			<div class="relative">
 				<div class="absolute inset-0 flex items-center">
-					<div class="w-full border-t border-gray-200"></div>
+					<div class="w-full border-t border-gray-200 dark:border-gray-700"></div>
 				</div>
 				<div class="relative flex justify-center text-sm">
-					<span class="px-3 bg-white text-gray-500">sau</span>
+					<span class="px-3 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">sau</span>
 				</div>
 			</div>
 
 			<button
 				onclick={handleGoogleLogin}
-				class="mt-4 w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 text-gray-700 py-3 px-4 rounded-xl hover:bg-gray-50 hover:border-gray-300 focus:ring-4 focus:ring-gray-200 font-medium transition touch-manipulation active:scale-95"
+				class="mt-4 w-full flex items-center justify-center gap-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 py-3 px-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-lg hover:scale-[1.02] focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 font-medium transition-all duration-200 touch-manipulation active:scale-95"
 			>
 				<svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
 					<path
@@ -154,7 +154,7 @@
 					isRegister = !isRegister;
 					error = '';
 				}}
-				class="text-blue-600 hover:text-blue-700 text-sm font-semibold transition touch-manipulation"
+				class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:scale-105 text-sm font-semibold transition-all duration-200 touch-manipulation"
 			>
 				{isRegister ? 'Ai deja cont? Intră în cont' : 'Nu ai cont? Creează unul'}
 			</button>

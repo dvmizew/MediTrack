@@ -13,9 +13,9 @@
 </script>
 
 {#if $authStore.isAuthenticated}
-	<div class="min-h-screen bg-gray-50">
+	<div class="min-h-screen bg-gray-50 dark:bg-gray-900 animate-fade-in">
 		<Header />
-		<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+		<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-slide-up">
 			<Dashboard />
 		</main>
 	</div>

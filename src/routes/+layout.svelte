@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { navigating } from '$app/stores';
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import { socketClient } from '$lib/api/socket';
 	import { toastStore, type Toast } from '$lib/stores/notifications';
+	import { themeStore } from '$lib/stores/theme';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import { registerServiceWorker, setupInstallPrompt, setupNetworkDetection } from '$lib/pwa';
 	import './layout.css';
@@ -17,6 +19,9 @@
 	});
 
 	onMount(async () => {
+		// Initialize theme
+		themeStore.init();
+		
 		// Initialize PWA features
 		registerServiceWorker();
 		setupInstallPrompt();
