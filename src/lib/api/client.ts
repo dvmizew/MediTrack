@@ -73,6 +73,18 @@ export const api = {
 
 	getProfile: () => request('/users/me'),
 
+	updateProfile: (data: { fullName?: string; email?: string; avatarUrl?: string }) =>
+		request('/users/me', {
+			method: 'PATCH',
+			body: JSON.stringify(data)
+		}),
+
+	updatePassword: (data: { currentPassword: string; newPassword: string }) =>
+		request('/users/me/password', {
+			method: 'PATCH',
+			body: JSON.stringify(data)
+		}),
+
 	// Users (admin)
 	getUsers: () => request('/users'),
 	updateUserRole: (userId: number, role: string) =>

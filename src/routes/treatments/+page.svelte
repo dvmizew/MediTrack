@@ -3,7 +3,6 @@
 	import { goto } from '$app/navigation';
 	import { authStore, isMedic, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
-	import Header from '$lib/components/Header.svelte';
 
 	let treatments = $state<any[]>([]);
 	let loading = $state(true);
@@ -37,9 +36,7 @@
 </script>
 
 {#if $authStore.isAuthenticated}
-	<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-		<Header />
-		<main class="page-transition max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+	<main class="page-transition max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 			<div class="mb-8">
 				<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">📋 Planuri de Tratament</h1>
 				<p class="text-gray-600 dark:text-gray-400">
@@ -159,8 +156,7 @@
 							</div>
 						</div>
 					{/each}
-				</div>
-			{/if}
-		</main>
-	</div>
+			</div>
+		{/if}
+	</main>
 {/if}

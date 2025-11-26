@@ -7,6 +7,7 @@
 	import { toastStore, type Toast } from '$lib/stores/notifications';
 	import { themeStore } from '$lib/stores/theme';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
+	import Header from '$lib/components/Header.svelte';
 	import { registerServiceWorker, setupInstallPrompt, setupNetworkDetection } from '$lib/pwa';
 	import './layout.css';
 
@@ -51,4 +52,12 @@
 </script>
 
 <ToastContainer bind:toasts />
-{@render children()}
+
+{#if $authStore.isAuthenticated}
+	<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+		<Header />
+		{@render children()}
+	</div>
+{:else}
+	{@render children()}
+{/if}
