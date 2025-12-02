@@ -4,6 +4,10 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+
+// Load environment variables FIRST before any other imports that need them
+dotenv.config();
+
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import passport from './config/passport.js';
@@ -21,8 +25,6 @@ import notificationRoutes from './routes/notifications.js';
 import { setupSocketHandlers } from './socket/handlers.js';
 import { startReminderCron } from './cron/reminders.js';
 import { startStreakCheckCron } from './cron/streaks.js';
-
-dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);

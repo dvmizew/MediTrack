@@ -27,7 +27,7 @@ router.post(
       const { email, password, fullName, role = 'pacient' } = req.body;
 
       // Check if user exists
-      const existing = await query('SELECT id FROM users WHERE email = $1', [email]);
+      const existing = await query('SELECT user_id FROM users WHERE email = $1', [email]);
       if (existing.rows.length > 0) {
         return res.status(400).json({ error: 'Email already registered' });
       }
