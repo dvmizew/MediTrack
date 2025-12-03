@@ -163,5 +163,14 @@ export const api = {
 	getNotifications: () => request('/notifications'),
 	markNotificationRead: (notificationId: number) =>
 		request(`/notifications/${notificationId}/read`, { method: 'PATCH' }),
-	markAllNotificationsRead: () => request('/notifications/read-all', { method: 'PATCH' })
+	markAllNotificationsRead: () => request('/notifications/read-all', { method: 'PATCH' }),
+
+	// Messages
+	sendMessage: (data: { receiverId: number; continut: string }) =>
+		request('/messages/send', {
+			method: 'POST',
+			body: JSON.stringify(data)
+		}),
+	getConversation: (userId: number) => request(`/messages/conversation/${userId}`),
+	getMyConversations: () => request('/messages/my-conversations')
 };

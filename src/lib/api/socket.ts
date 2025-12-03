@@ -5,7 +5,7 @@ import { notificationStore } from '../stores/notifications';
 import { get } from 'svelte/store';
 
 class SocketClient {
-	private socket: Socket | null = null;
+	socket: Socket | null = null;
 	private reconnectAttempts = 0;
 	private maxReconnectAttempts = 5;
 
@@ -69,20 +69,20 @@ class SocketClient {
 		}
 	}
 
-	joinCollaboration(collaborationId: number) {
-		this.socket?.emit('join-collaboration', collaborationId);
+	joinConversation(otherUserId: number) {
+		this.socket?.emit('join-conversation', otherUserId);
 	}
 
-	sendMessage(collaborationId: number, message: string) {
-		this.socket?.emit('send-message', { collaborationId, message });
+	sendMessage(receiverId: number, message: string) {
+		this.socket?.emit('send-message', { receiverId, continut: message });
 	}
 
-	typing(collaborationId: number) {
-		this.socket?.emit('typing', collaborationId);
+	typing(otherUserId: number) {
+		this.socket?.emit('typing', otherUserId);
 	}
 
-	stopTyping(collaborationId: number) {
-		this.socket?.emit('stop-typing', collaborationId);
+	stopTyping(otherUserId: number) {
+		this.socket?.emit('stop-typing', otherUserId);
 	}
 
 	isConnected(): boolean {
