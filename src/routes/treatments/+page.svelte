@@ -37,15 +37,28 @@
 
 {#if $authStore.isAuthenticated}
 	<main class="page-transition max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-			<div class="mb-8">
-				<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">📋 Planuri de Tratament</h1>
-				<p class="text-gray-600 dark:text-gray-400">
-					{#if $isMedic}
-						Gestionează planurile de tratament pentru pacienții tăi
-					{:else}
-						Vezi și gestionează planurile tale de tratament
-					{/if}
-				</p>
+			<div class="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+				<div>
+					<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">📋 Planuri de Tratament</h1>
+					<p class="text-gray-600 dark:text-gray-400">
+						{#if $isMedic}
+							Gestionează planurile de tratament pentru pacienții tăi
+						{:else}
+							Vezi și gestionează planurile tale de tratament
+						{/if}
+					</p>
+				</div>
+				{#if $isMedic}
+					<button
+						onclick={() => goto('/treatments/new')}
+						class="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2 whitespace-nowrap flex-shrink-0"
+					>
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+						</svg>
+						Tratament Nou
+					</button>
+				{/if}
 			</div>
 
 			{#if loading}
