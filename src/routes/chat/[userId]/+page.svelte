@@ -216,7 +216,7 @@
 					<div class="flex items-center gap-4">
 						<button
 							onclick={() => goto('/chat')}
-							class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition touch-manipulation"
+							class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-110 transition-all duration-300 ease-in-out touch-manipulation"
 							aria-label="Înapoi"
 						>
 							<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -264,7 +264,7 @@
 					<p class="text-red-800 dark:text-red-400 font-medium mb-4">{error}</p>
 					<button
 						onclick={() => goto('/chat')}
-						class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+						class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:shadow-xl hover:shadow-red-500/50 hover:scale-105 active:scale-95 transition-all duration-300 ease-in-out"
 					>
 						Înapoi la Mesaje
 					</button>
@@ -321,7 +321,7 @@
 						<button
 							type="submit"
 							disabled={!newMessage.trim() || sending}
-							class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-blue-500/50 hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md"
+							class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-110 active:scale-95 transition-all duration-300 ease-in-out flex items-center justify-center gap-2 font-medium shadow-md"
 						>
 							{#if sending}
 								<svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">

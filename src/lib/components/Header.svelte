@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { fly, scale, fade } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
 	import { page } from '$app/stores';
 	import { authStore, isMedic, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
@@ -223,7 +225,10 @@
 						</button>
 
 					{#if showNotifications}
-						<div class="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-dropdown">
+						<div 
+							transition:fly={{ y: -10, duration: 300, easing: quintOut }}
+							class="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700"
+						>
 								<div class="p-4 border-b border-gray-200 flex justify-between items-center">
 									<h3 class="font-semibold text-gray-900 dark:text-gray-100">Notificări</h3>
 									{#if unreadCount > 0}
@@ -277,7 +282,10 @@
 							<span class="text-white text-sm font-medium">{$authStore.user.fullName.charAt(0).toUpperCase()}</span>
 						</div>
 					</button>						{#if showUserMenu}
-					<div class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 animate-dropdown dropdown-container">
+					<div 
+						transition:fly={{ y: -10, duration: 300, easing: quintOut }}
+						class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 dropdown-container"
+					>
 						<div class="p-4 border-b border-gray-200 dark:border-gray-700">
 							<p class="font-medium text-gray-900 dark:text-gray-100">{$authStore.user.fullName}</p>
 							<p class="text-sm text-gray-500 dark:text-gray-400 capitalize">{$authStore.user.role}</p>
@@ -341,9 +349,12 @@
 			{/if}
 		</div>
 
-		<!-- Mobile Menu -->
-		{#if showMobileMenu && $authStore.user}
-			<div class="md:hidden border-t border-gray-200 dark:border-gray-700 py-4">
+	<!-- Mobile Menu -->
+	{#if showMobileMenu && $authStore.user}
+		<div 
+			transition:fly={{ y: -20, duration: 300, easing: quintOut }}
+			class="md:hidden border-t border-gray-200 dark:border-gray-700 py-4"
+		>
 				<div class="flex flex-col gap-1">
 					<a 
 						href="/dashboard" 

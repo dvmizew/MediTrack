@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { fade, fly, slide } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import { socketClient } from '$lib/api/socket';
+	import { themeStore } from '$lib/stores/theme';
 	import { goto } from '$app/navigation';
 
 	let email = $state('');
@@ -11,6 +14,10 @@
 	let isRegister = $state(false);
 	let error = $state('');
 	let loading = $state(false);
+
+	onMount(() => {
+		themeStore.init();
+	});
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
@@ -40,7 +47,24 @@
 	}
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 px-4 py-8 animate-fade-in">
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 px-4 py-8 animate-fade-in relative">
+	<!-- Theme Toggle Button (Top Right) -->
+	<button
+		onclick={themeStore.toggle}
+		class="absolute top-4 right-4 p-3 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white dark:hover:bg-gray-800 hover:shadow-lg hover:scale-110 transition-all duration-300 ease-in-out group"
+		aria-label="Toggle theme"
+	>
+		{#if $themeStore === 'dark'}
+			<svg class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+			</svg>
+		{:else}
+			<svg class="w-5 h-5 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+			</svg>
+		{/if}
+	</button>
+
 	<div class="max-w-md w-full animate-slide-up">
 		<!-- Logo & Title -->
 		<div class="text-center mb-6 md:mb-8">
@@ -50,7 +74,15 @@
 				</svg>
 			</div>
 			<h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">MediTrack</h1>
-			<p class="text-sm md:text-base text-gray-600">{isRegister ? 'Creează cont nou' : 'Bine ai revenit!'}</p>
+			{#key isRegister}
+				<p 
+					in:fly={{ y: -10, duration: 300, easing: quintOut }}
+					out:fly={{ y: 10, duration: 200, easing: quintOut }}
+					class="text-sm md:text-base text-gray-600 dark:text-gray-400"
+				>
+					{isRegister ? 'Creează cont nou' : 'Bine ai revenit!'}
+				</p>
+			{/key}
 		</div>
 
 		<!-- Card -->
@@ -61,10 +93,10 @@
 			</div>
 		{/if}
 
-		<form onsubmit={handleSubmit} class="space-y-4 md:space-y-5">
+		<form onsubmit={handleSubmit}>
 			{#if isRegister}
-				<div>
-					<label for="fullName" class="block text-sm font-medium text-gray-700 mb-2">
+				<div transition:slide={{ duration: 500, easing: quintOut }} class="mb-4 md:mb-5">
+					<label for="fullName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 						Nume complet
 					</label>
 					<input
@@ -78,7 +110,7 @@
 				</div>
 			{/if}
 
-			<div>
+			<div class="mb-4 md:mb-5">
 				<label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
 				<input
 					id="email"
@@ -90,7 +122,7 @@
 				/>
 			</div>
 
-			<div>
+			<div class="mb-4 md:mb-5">
 				<label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Parolă</label>
 				<input
 					id="password"

@@ -71,7 +71,7 @@
 						</p>
 						<button
 							onclick={() => goto('/collaborations')}
-							class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/50 hover:scale-105 active:scale-95 font-medium shadow-lg transition-all duration-200"
+							class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-110 active:scale-95 font-medium shadow-lg transition-all duration-300 ease-in-out"
 						>
 							Vezi Colaborările
 						</button>
