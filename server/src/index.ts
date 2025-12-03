@@ -87,6 +87,9 @@ app.get('/health', (req, res) => {
 // Socket.io setup
 setupSocketHandlers(io);
 
+// Make io accessible in routes
+app.set('io', io);
+
 // Redis pub/sub for real-time notifications
 const subscriber = redis.duplicate();
 subscriber.subscribe('medication-reminder', (err) => {

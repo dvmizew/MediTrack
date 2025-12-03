@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { fly, scale } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
 	import { goto } from '$app/navigation';
 	import { authStore, isMedic, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
+	import { toastStore } from '$lib/stores/notifications';
 
 	let collaborations = $state<any[]>([]);
 	let pendingInvites = $state<any[]>([]);
@@ -10,6 +13,7 @@
 	let error = $state('');
 	let medicEmail = $state('');
 	let sending = $state(false);
+	let respondingToInvite = $state<number | null>(null);
 
 	onMount(async () => {
 		if (!$authStore.isAuthenticated) {
@@ -27,11 +31,17 @@
 				api.getMyCollaborations(),
 				api.getPendingInvites()
 			]);
-			collaborations = collabData;
-			pendingInvites = pendingData;
-		} catch (err: any) {
-			console.error('Failed to load data:', err);
-			error = err.message || 'Nu s-au putut încărca datele';
+		collaborations = collabData;
+		pendingInvites = pendingData;
+	} catch (err: any) {
+		console.error('Failed to load data:', err);
+		error = err.message || 'Nu s-au putut încărca datele';
+			toastStore.add({ 
+				type: 'error', 
+				title: 'Eroare la încărcare', 
+				message: error, 
+				duration: 4000 
+			});
 		} finally {
 			loading = false;
 		}
@@ -44,11 +54,25 @@
 			sending = true;
 			error = '';
 			await api.sendInvite(medicEmail);
+			
+			toastStore.add({ 
+				type: 'success', 
+				title: '✉️ Invitație trimisă!', 
+				message: `Am trimis invitația către ${medicEmail}`, 
+				duration: 4000 
+			});
+			
 			medicEmail = '';
 			await loadData();
 		} catch (err: any) {
 			console.error('Failed to send invite:', err);
 			error = err.message || 'Nu s-a putut trimite invitația';
+			toastStore.add({ 
+				type: 'error', 
+				title: 'Eroare la trimitere', 
+				message: error, 
+				duration: 4000 
+			});
 		} finally {
 			sending = false;
 		}
@@ -56,12 +80,38 @@
 
 	async function respondToInvite(inviteId: number, action: 'accept' | 'reject') {
 		try {
+			respondingToInvite = inviteId;
 			error = '';
 			await api.respondToInvite(inviteId, action);
+			
+			if (action === 'accept') {
+				toastStore.add({ 
+					type: 'success', 
+					title: '✅ Invitație acceptată!', 
+					message: 'Colaborarea a fost adăugată cu succes', 
+					duration: 4000 
+				});
+			} else {
+				toastStore.add({ 
+					type: 'info', 
+					title: '❌ Invitație refuzată', 
+					message: 'Invitația a fost respinsă', 
+					duration: 3000 
+				});
+			}
+			
 			await loadData();
 		} catch (err: any) {
 			console.error('Failed to respond to invite:', err);
 			error = err.message || 'Nu s-a putut răspunde la invitație';
+			toastStore.add({ 
+				type: 'error', 
+				title: 'Eroare la răspuns', 
+				message: error, 
+				duration: 4000 
+			});
+		} finally {
+			respondingToInvite = null;
 		}
 	}
 </script>
@@ -108,9 +158,24 @@
 						<button
 							type="submit"
 							disabled={sending || !medicEmail.trim()}
-							class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 hover:shadow-lg hover:shadow-blue-500/50 hover:scale-105 active:scale-95 font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all duration-200"
+							class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 hover:shadow-lg hover:shadow-blue-500/50 hover:scale-105 active:scale-95 font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all duration-200 min-w-[160px]"
 						>
-							{sending ? 'Se trimite...' : 'Trimite Invitația'}
+							{#if sending}
+								<span class="flex items-center justify-center gap-2">
+									<svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+										<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+										<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+									</svg>
+									Se trimite...
+								</span>
+							{:else}
+								<span class="flex items-center justify-center gap-2">
+									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+									</svg>
+									Trimite Invitația
+								</span>
+							{/if}
 						</button>
 					</form>
 				</div>
@@ -132,11 +197,11 @@
 							<div class="flex items-center justify-between p-5 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
 								<div class="flex items-center gap-4">
 									<div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
-										{invite.name?.charAt(0).toUpperCase() || '?'}
+										{$isMedic ? (invite.pacientName?.charAt(0).toUpperCase() || '?') : (invite.medicName?.charAt(0).toUpperCase() || '?')}
 									</div>
 								<div>
-									<p class="font-semibold text-gray-900 dark:text-gray-100">{invite.name}</p>
-									<p class="text-sm text-gray-500 dark:text-gray-400">{invite.email}</p>
+									<p class="font-semibold text-gray-900 dark:text-gray-100">{$isMedic ? invite.pacientName : invite.medicName}</p>
+									<p class="text-sm text-gray-500 dark:text-gray-400">{$isMedic ? invite.pacientEmail : invite.medicEmail}</p>
 									<p class="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
 											<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -149,19 +214,44 @@
 								<div class="flex gap-3">
 									<button
 										onclick={() => respondToInvite(invite.id, 'accept')}
-										class="px-5 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 hover:shadow-lg hover:shadow-green-500/50 hover:scale-105 active:scale-95 font-medium shadow-sm transition-all duration-200"
+										disabled={respondingToInvite === invite.id}
+										class="px-5 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 hover:shadow-lg hover:shadow-green-500/50 hover:scale-105 active:scale-95 font-medium shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px]"
 									>
-										✓ Acceptă
+										{#if respondingToInvite === invite.id}
+											<span class="flex items-center justify-center gap-1">
+												<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+													<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+													<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+												</svg>
+											</span>
+										{:else}
+											✓ Acceptă
+										{/if}
 									</button>
 									<button
 										onclick={() => respondToInvite(invite.id, 'reject')}
-										class="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/50 hover:scale-105 active:scale-95 font-medium shadow-sm transition-all duration-200"
+										disabled={respondingToInvite === invite.id}
+										class="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/50 hover:scale-105 active:scale-95 font-medium shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px]"
 									>
-										✕ Refuză
+										{#if respondingToInvite === invite.id}
+											<span class="flex items-center justify-center gap-1">
+												<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+													<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+													<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+												</svg>
+											</span>
+										{:else}
+											✕ Refuză
+										{/if}
 									</button>
 								</div>
 							{:else}
-								<span class="text-sm text-gray-600 dark:text-gray-400">În aşteptare...</span>
+								<span class="text-sm px-4 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-lg font-medium flex items-center gap-2">
+									<svg class="animate-pulse w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+										<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+									</svg>
+									În așteptare...
+								</span>
 								{/if}
 							</div>
 						{/each}
@@ -197,11 +287,11 @@
 							<div class="border-2 border-gray-200 dark:border-gray-700 dark:bg-gray-700/30 rounded-xl p-5 hover:border-green-300 dark:hover:border-green-600 hover:shadow-xl hover:shadow-green-500/10 hover:-translate-y-1 transition-all duration-300 group animate-scale-in">
 								<div class="flex items-center gap-4 mb-4">
 									<div class="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:scale-110 transition-transform duration-300">
-										{collab.name?.charAt(0).toUpperCase() || '?'}
+										{$isMedic ? (collab.pacientName?.charAt(0).toUpperCase() || '?') : (collab.medicName?.charAt(0).toUpperCase() || '?')}
 									</div>
 									<div class="flex-1">
-										<h3 class="font-semibold text-gray-900 dark:text-gray-100 text-lg">{collab.name}</h3>
-										<p class="text-sm text-gray-500 dark:text-gray-400">{collab.email}</p>
+										<h3 class="font-semibold text-gray-900 dark:text-gray-100 text-lg">{$isMedic ? collab.pacientName : collab.medicName}</h3>
+										<p class="text-sm text-gray-500 dark:text-gray-400">{$isMedic ? collab.pacientEmail : collab.medicEmail}</p>
 										<p class="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
 											<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -212,7 +302,7 @@
 								</div>
 								<div class="flex gap-3">
 									<button
-										onclick={() => goto(`/chat/${collab.user_id}`)}
+										onclick={() => goto(`/chat/${$isMedic ? collab.patientId : collab.doctorId}`)}
 										class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/50 hover:scale-105 active:scale-95 text-sm font-medium shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
 									>
 										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,7 +312,7 @@
 									</button>
 									{#if $isMedic}
 										<button
-											onclick={() => goto(`/treatments/new?pacientId=${collab.user_id}`)}
+											onclick={() => goto(`/treatments/new?pacientId=${collab.patientId}`)}
 											class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 hover:shadow-lg hover:shadow-green-500/50 hover:scale-105 active:scale-95 text-sm font-medium shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
 										>
 											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

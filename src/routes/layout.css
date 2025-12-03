@@ -117,3 +117,30 @@ button:disabled:hover, a:disabled:hover, [disabled]:hover {
 .animate-scale-in { animation: scale-in 0.3s ease-out; }
 .animate-shake { animation: shake 0.5s ease-in-out; }
 .animate-bounce-gentle { animation: bounce-gentle 2s ease-in-out infinite; }
+
+/* Mobile safe area support */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+	.safe-area-bottom {
+		padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+	}
+}
+
+/* Prevent mobile browser zoom on input focus */
+@media screen and (max-width: 640px) {
+	input, textarea, select {
+		font-size: 16px !important;
+	}
+}
+
+/* Improve mobile scrolling performance */
+.overflow-y-auto, .overflow-x-auto {
+	-webkit-overflow-scrolling: touch;
+	overscroll-behavior: contain;
+}
+
+/* Mobile viewport fix */
+@supports (height: 100dvh) {
+	.h-screen-mobile {
+		height: 100dvh;
+	}
+}

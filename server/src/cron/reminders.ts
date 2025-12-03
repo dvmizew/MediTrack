@@ -60,7 +60,7 @@ export const startReminderCron = () => {
         // Create notification with status_notif='sent'
         await query(
           `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
-           VALUES ($1, 'reminder', 'sent', 'Reminder Medicament', $2, $3)`,
+           VALUES ($1, 'reminder', 'sent', 'Memento medicament', $2, $3)`,
           [
             dose.patient_id,
             `Ia ${dose.medication_name} - ${dose.cantitate}`,

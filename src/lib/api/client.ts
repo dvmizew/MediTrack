@@ -87,6 +87,7 @@ export const api = {
 
 	// Users (admin)
 	getUsers: () => request('/users'),
+	getUserProfile: (userId: string) => request(`/users/${userId}`),
 	updateUserRole: (userId: number, role: string) =>
 		request(`/users/${userId}/role`, {
 			method: 'PATCH',
@@ -123,7 +124,7 @@ export const api = {
 			body: JSON.stringify(data)
 		}),
 
-	// Medications
+	// Medications (Doses)
 	addMedication: (data: {
 		treatmentPlanId: number;
 		medicationName: string;
@@ -134,36 +135,44 @@ export const api = {
 		endDate?: string;
 		instructions?: string;
 	}) =>
-		request('/medications', {
+		request('/doses', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		}),
-	getMedicationsForPlan: (planId: number) => request(`/medications/plan/${planId}`),
+	getMedicationsForPlan: (planId: number) => request(`/doses/plan/${planId}`),
 	updateMedication: (medicationId: number, data: any) =>
-		request(`/medications/${medicationId}`, {
+		request(`/doses/${medicationId}`, {
 			method: 'PATCH',
 			body: JSON.stringify(data)
 		}),
 
-	// Logs
-	getTodayMedications: () => request('/logs/today'),
+	// Logs (Confirmations)
+	getTodayMedications: () => request('/confirmations/today'),
 	confirmMedication: (data: { medicationScheduleId: number; scheduledTime: string }) =>
-		request('/logs/confirm', {
+		request('/confirmations/confirm', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		}),
 	snoozeMedication: (data: { medicationScheduleId: number; scheduledTime: string }) =>
-		request('/logs/snooze', {
+		request('/confirmations/snooze', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		}),
-	getMedicationHistory: () => request('/logs/history'),
+	getMedicationHistory: () => request('/confirmations/history'),
 
 	// Notifications
 	getNotifications: () => request('/notifications'),
 	markNotificationRead: (notificationId: number) =>
 		request(`/notifications/${notificationId}/read`, { method: 'PATCH' }),
 	markAllNotificationsRead: () => request('/notifications/read-all', { method: 'PATCH' }),
+	deleteNotification: (notificationId: number) =>
+		request(`/notifications/${notificationId}`, { method: 'DELETE' }),
+	deleteAllNotifications: () => request('/notifications', { method: 'DELETE' }),
+	sendReminder: (userId: number) =>
+		request('/notifications/send-reminder', {
+			method: 'POST',
+			body: JSON.stringify({ userId })
+		}),
 
 	// Messages
 	sendMessage: (data: { receiverId: number; continut: string }) =>
@@ -172,5 +181,5 @@ export const api = {
 			body: JSON.stringify(data)
 		}),
 	getConversation: (userId: number) => request(`/messages/conversation/${userId}`),
-	getMyConversations: () => request('/messages/my-conversations')
+	getMyConversations: () => request('/messages/conversations')
 };

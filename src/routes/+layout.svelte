@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { navigating } from '$app/stores';
+	import { navigating, page } from '$app/stores';
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import { socketClient } from '$lib/api/socket';
@@ -13,6 +13,9 @@
 
 	let { children } = $props();
 	let toasts = $state<Toast[]>([]);
+	
+	// Check if current route is a chat page
+	let isChatPage = $derived($page.url.pathname.startsWith('/chat'));
 
 	// Subscribe to toast store
 	toastStore.subscribe((value) => {
@@ -55,8 +58,17 @@
 
 {#if $authStore.isAuthenticated}
 	<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-		<Header />
-		{@render children()}
+		<!-- Fixed Header (hidden for chat pages) -->
+		{#if !isChatPage}
+			<div class="fixed top-0 left-0 right-0 z-50">
+				<Header />
+			</div>
+		{/if}
+		
+		<!-- Main Content with padding for fixed header (except chat pages) -->
+		<div class={isChatPage ? '' : 'pt-16'}>
+			{@render children()}
+		</div>
 	</div>
 {:else}
 	{@render children()}

@@ -15,6 +15,18 @@ const BADGE_THRESHOLDS = {
   diamond: 5000,
 };
 
+// Helper function to get Romanian badge names
+function getBadgeNameRo(badge: string): string {
+  const names: Record<string, string> = {
+    bronze: 'BRONZ',
+    silver: 'ARGINT',
+    gold: 'AUR',
+    platinum: 'PLATINĂ',
+    diamond: 'DIAMANT'
+  };
+  return names[badge] || badge.toUpperCase();
+}
+
 // Get today's doses for patient
 router.get('/today', authenticate, async (req: Request, res: Response) => {
   try {
@@ -140,8 +152,8 @@ router.post(
         
         await query(
           `INSERT INTO notifications (user_id, tip, status_notif, title, message) 
-           VALUES ($1, 'alert', 'sent', 'Badge Unlocked!', $2)`,
-          [patientId, `Congratulations! You earned the ${newBadge.toUpperCase()} badge!`]
+           VALUES ($1, 'alert', 'sent', 'Badge Deblocat!', $2)`,
+          [patientId, `Felicitări! Ai obținut badge-ul ${getBadgeNameRo(newBadge)}!`]
         );
       }
 

@@ -2,10 +2,12 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { authStore } from '$lib/stores/auth';
+	import { authStore, isMedic, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import { socketClient } from '$lib/api/socket';
 	import { toastStore } from '$lib/stores/notifications';
+	import { fly, scale } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
 
 	let otherUserId = $state(0);
 	let otherUser = $state<any>(null);
@@ -18,6 +20,9 @@
 	let messageInput: HTMLTextAreaElement | undefined = $state();
 	let isTyping = $state(false);
 	let typingTimeout: ReturnType<typeof setTimeout> | null = null;
+	let isConnected = $state(true);
+	let lastMessageSent = $state<string>('');
+	let showOptionsMenu = $state(false);
 
 	$effect(() => {
 		const userId = $page.params.userId;
@@ -36,6 +41,8 @@
 		// Connect socket if not connected
 		if (!socketClient.isConnected()) {
 			socketClient.connect();
+		} else {
+			isConnected = true;
 		}
 
 		// Join conversation room
@@ -47,12 +54,16 @@
 		window.addEventListener('new-message', handleNewMessage as EventListener);
 		window.addEventListener('user-typing', handleUserTyping as EventListener);
 		window.addEventListener('user-stop-typing', handleUserStopTyping as EventListener);
+		
+		// Close dropdown on click outside
+		window.addEventListener('click', handleClickOutside);
 	});
 
 	onDestroy(() => {
 		window.removeEventListener('new-message', handleNewMessage as EventListener);
 		window.removeEventListener('user-typing', handleUserTyping as EventListener);
 		window.removeEventListener('user-stop-typing', handleUserStopTyping as EventListener);
+		window.removeEventListener('click', handleClickOutside);
 		
 		if (typingTimeout) {
 			clearTimeout(typingTimeout);
@@ -72,6 +83,18 @@
 			if (!exists) {
 				messages = [...messages, message];
 				scrollToBottom();
+				
+				// Show notification for received messages (not sent by current user)
+				if (message.sender_id === otherUserId) {
+					// Play subtle sound effect
+					if (typeof Audio !== 'undefined') {
+						try {
+							const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt');
+							audio.volume = 0.15;
+							audio.play().catch(() => {});
+						} catch {}
+					}
+				}
 			}
 		}
 	}
@@ -90,6 +113,13 @@
 		}
 	}
 
+	function handleClickOutside(event: MouseEvent) {
+		const target = event.target as HTMLElement;
+		if (!target.closest('.dropdown-container')) {
+			showOptionsMenu = false;
+		}
+	}
+
 	async function loadConversation() {
 		try {
 			loading = true;
@@ -105,13 +135,35 @@
 
 			if (!otherUser) {
 				error = 'Nu ai o colaborare activă cu acest utilizator';
+				toastStore.add({
+					type: 'error',
+					title: '❌ Acces interzis',
+					message: 'Nu ai o colaborare activă cu acest utilizator',
+					duration: 4000
+				});
 				return;
+			}
+
+			// Success feedback
+			if (messages.length > 0) {
+				toastStore.add({
+					type: 'success',
+					title: '💬 Conversație încărcată',
+					message: `${messages.length} mesaje găsite`,
+					duration: 2000
+				});
 			}
 
 			scrollToBottom();
 		} catch (err: any) {
 			console.error('Failed to load conversation:', err);
 			error = err.message || 'Nu s-a putut încărca conversația';
+			toastStore.add({
+				type: 'error',
+				title: '❌ Eroare de încărcare',
+				message: error,
+				duration: 4000
+			});
 		} finally {
 			loading = false;
 		}
@@ -121,8 +173,21 @@
 		if (!newMessage.trim() || sending) return;
 
 		const messageText = newMessage.trim();
+		lastMessageSent = messageText;
 		newMessage = '';
 		sending = true;
+
+		// Optimistic UI update
+		const tempMessage = {
+			message_id: Date.now(),
+			sender_id: $authStore.user?.userId,
+			receiver_id: otherUserId,
+			continut: messageText,
+			timestamp_mesaj: new Date().toISOString(),
+			_pending: true
+		};
+		messages = [...messages, tempMessage];
+		scrollToBottom();
 
 		try {
 			// Send via socket for real-time delivery
@@ -132,10 +197,16 @@
 			});
 
 			// Also send via API as fallback
-			await api.sendMessage({
+			const sentMessage = await api.sendMessage({
 				receiverId: otherUserId,
 				continut: messageText
 			});
+
+			// Replace temp message with real one
+			messages = messages.filter(m => m.message_id !== tempMessage.message_id);
+			if (!messages.some(m => m.message_id === sentMessage.message_id)) {
+				messages = [...messages, sentMessage];
+			}
 
 			// Stop typing indicator
 			socketClient.socket?.emit('stop-typing', otherUserId);
@@ -143,11 +214,15 @@
 			scrollToBottom();
 		} catch (err: any) {
 			console.error('Failed to send message:', err);
+			
+			// Remove temp message on error
+			messages = messages.filter(m => m.message_id !== tempMessage.message_id);
+			
 			toastStore.add({
 				type: 'error',
-				title: 'Eroare',
-				message: 'Nu s-a putut trimite mesajul',
-				duration: 3000
+				title: '❌ Eroare de trimitere',
+				message: 'Nu s-a putut trimite mesajul. Verifică conexiunea.',
+				duration: 4000
 			});
 			// Restore message on error
 			newMessage = messageText;
@@ -205,66 +280,225 @@
 	function isMyMessage(message: any) {
 		return message.sender_id === $authStore.user?.userId;
 	}
+
+	function viewTreatments() {
+		showOptionsMenu = false;
+		if ($isMedic) {
+			goto(`/treatments?patientId=${otherUserId}`);
+		} else {
+			goto('/treatments');
+		}
+	}
+
+	function createTreatment() {
+		showOptionsMenu = false;
+		goto(`/treatments/new?pacientId=${otherUserId}`);
+	}	function viewProfile() {
+		showOptionsMenu = false;
+		// Navigate to user's profile
+		goto(`/profile/${otherUserId}`);
+	}
+
+	function viewReports() {
+		showOptionsMenu = false;
+		if ($isMedic) {
+			goto(`/admin/reports/user/${otherUserId}`);
+		} else {
+			goto('/dashboard');
+		}
+	}
+
+	async function sendReminder() {
+		showOptionsMenu = false;
+		try {
+			await api.sendReminder(otherUserId);
+			toastStore.add({
+				type: 'success',
+				title: '🔔 Reminder trimis',
+				message: `Reminder pentru medicație trimis către ${otherUser?.name}`,
+				duration: 2000
+			});
+		} catch (err: any) {
+			console.error('Failed to send reminder:', err);
+			toastStore.add({
+				type: 'error',
+				title: 'Eroare',
+				message: 'Nu s-a putut trimite reminder-ul',
+				duration: 2000
+			});
+		}
+	}
 </script>
 
 {#if $authStore.isAuthenticated}
-	<main class="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-		<!-- Header -->
-		<div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-			<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-				<div class="flex items-center justify-between h-16">
-					<div class="flex items-center gap-4">
-						<button
-							onclick={() => goto('/chat')}
-							class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-110 transition-all duration-300 ease-in-out touch-manipulation"
-							aria-label="Înapoi"
-						>
-							<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-							</svg>
-						</button>
-						
+	<main class="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
+		<!-- Header - Chat Style -->
+		<div class="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 shadow-lg flex-shrink-0 z-10">
+			<div class="w-full px-2 sm:px-4 md:px-6">
+				<div class="flex items-center justify-between h-14 sm:h-16">
+					<div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
 						{#if otherUser}
-							<div class="flex items-center gap-3">
-								<div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
-									{otherUser.name?.charAt(0).toUpperCase() || '?'}
+							<!-- Back button -->
+							<button
+								onclick={() => goto('/chat')}
+								class="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 active:scale-95 transition-all duration-200 flex-shrink-0"
+								aria-label="Înapoi"
+							>
+								<svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+								</svg>
+							</button>
+							
+							<!-- User profile button -->
+							<button 
+								onclick={() => viewProfile()}
+								class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 hover:bg-white/10 dark:hover:bg-black/20 rounded-xl p-1.5 sm:p-2 transition-all duration-200"
+							>
+								<!-- Avatar with online status -->
+								<div class="relative flex-shrink-0">
+									<div class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-lg ring-2 ring-white/50">
+										<span class="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-br from-blue-600 to-purple-600 bg-clip-text text-transparent">
+											{otherUser.name?.charAt(0).toUpperCase() || '?'}
+										</span>
+									</div>
+									<!-- Online status indicator -->
+									<div class="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 bg-green-400 border-2 border-white rounded-full shadow-md"></div>
 								</div>
-								<div>
-									<h2 class="font-semibold text-gray-900 dark:text-gray-100">{otherUser.name}</h2>
-									<p class="text-xs text-gray-500 dark:text-gray-400">{otherUser.email}</p>
+								
+								<!-- User info -->
+								<div class="min-w-0 flex-1 text-left">
+									<div class="flex items-center gap-1.5 sm:gap-2">
+										<h2 class="font-bold text-sm sm:text-base md:text-lg text-white truncate drop-shadow-sm">{otherUser.name}</h2>
+										<span class="px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold rounded-full flex-shrink-0 bg-white/20 backdrop-blur-sm text-white border border-white/30">
+											{otherUser.role === 'medic' ? '⚕️' : '🧑'}
+											<span class="hidden xs:inline ml-0.5">{otherUser.role === 'medic' ? 'Doctor' : 'Pacient'}</span>
+										</span>
+									</div>
+									<div class="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-white/90 mt-0.5">
+										<div class={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${isConnected ? 'bg-green-300 animate-pulse' : 'bg-red-400'} shadow-sm`}></div>
+										<span class="font-medium">{isConnected ? 'Activ' : 'Offline'}</span>
+										{#if isTyping}
+											<span class="text-white/80 italic">• scrie...</span>
+										{/if}
+									</div>
 								</div>
-							</div>
+							</button>
+						{:else}
+							<button
+								onclick={() => goto('/chat')}
+								class="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 active:scale-95 transition-all duration-200 flex-shrink-0"
+								aria-label="Înapoi"
+							>
+								<svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+								</svg>
+							</button>
 						{/if}
 					</div>
 
-					{#if isTyping}
-						<div class="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
-							<div class="flex gap-1">
-								<span class="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0ms;"></span>
-								<span class="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style="animation-delay: 150ms;"></span>
-								<span class="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style="animation-delay: 300ms;"></span>
+				<!-- Options Menu Button -->
+				<div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+					{#if otherUser}
+						<div class="relative dropdown-container">
+							<button
+								onclick={() => showOptionsMenu = !showOptionsMenu}
+								class="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 dark:hover:bg-black/20 active:scale-95 transition-all duration-200 touch-manipulation"
+								aria-label="Opțiuni"
+							>
+									<svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+									</svg>
+								</button>
+								
+								{#if showOptionsMenu}
+									<div 
+										transition:fly={{ y: -10, duration: 200, easing: quintOut }}
+										class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+									>
+										<div class="py-2">
+											{#if $isMedic}
+												<!-- Medic Options -->
+												<button
+													onclick={createTreatment}
+													class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+												>
+													<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+													</svg>
+													<span>Adaugă Tratament</span>
+												</button>
+												<button
+													onclick={viewTreatments}
+													class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+												>
+													<svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+													</svg>
+													<span>Tratamente Active</span>
+												</button>
+												<button
+													onclick={sendReminder}
+													class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+												>
+													<svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+													</svg>
+													<span>Trimite Reminder</span>
+												</button>
+												<button
+													onclick={viewReports}
+													class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+												>
+													<svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+													</svg>
+													<span>Rapoarte Pacient</span>
+												</button>
+											{:else}
+												<!-- Pacient Options -->
+												<button
+													onclick={viewTreatments}
+													class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+												>
+													<svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+													</svg>
+													<span>Tratamentele Mele</span>
+												</button>
+												<button
+													onclick={viewReports}
+													class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+												>
+													<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+												</svg>
+												<span>Progresul Meu</span>
+											</button>
+										{/if}
+									</div>
+								</div>
+							{/if}
 							</div>
-							<span>Scrie...</span>
-						</div>
-					{/if}
+						{/if}
+					</div>
 				</div>
 			</div>
 		</div>
 
 		{#if loading}
 			<div class="flex-1 flex items-center justify-center">
-				<div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+				<div class="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-3 sm:border-4 border-blue-500 border-t-transparent"></div>
 			</div>
 		{:else if error}
-			<div class="flex-1 flex items-center justify-center p-4">
-				<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6 max-w-md text-center">
-					<svg class="w-12 h-12 text-red-600 dark:text-red-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<div class="flex-1 flex items-center justify-center p-3 sm:p-4">
+				<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 max-w-md text-center mx-3">
+					<svg class="w-10 h-10 sm:w-12 sm:h-12 text-red-600 dark:text-red-400 mx-auto mb-2 sm:mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
 					</svg>
-					<p class="text-red-800 dark:text-red-400 font-medium mb-4">{error}</p>
+					<p class="text-sm sm:text-base text-red-800 dark:text-red-400 font-medium mb-3 sm:mb-4">{error}</p>
 					<button
 						onclick={() => goto('/chat')}
-						class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:shadow-xl hover:shadow-red-500/50 hover:scale-105 active:scale-95 transition-all duration-300 ease-in-out"
+						class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:shadow-xl hover:shadow-red-500/50 active:scale-95 sm:hover:scale-105 transition-all duration-200 touch-manipulation text-sm sm:text-base"
 					>
 						Înapoi la Mesaje
 					</button>
@@ -274,30 +508,44 @@
 			<!-- Messages Container -->
 			<div 
 				bind:this={messagesContainer}
-				class="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-4xl mx-auto w-full"
+				class="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 md:px-6 py-4 sm:py-6 space-y-3 sm:space-y-4 w-full"
+				style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;"
 			>
 				{#if messages.length === 0}
-					<div class="text-center py-12">
-						<svg class="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<div class="text-center py-8 sm:py-12 px-4">
+						<svg class="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 dark:text-gray-600 mx-auto mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
 						</svg>
-						<p class="text-gray-500 dark:text-gray-400">Niciun mesaj încă</p>
-						<p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Începe conversația trimițând un mesaj</p>
+						<p class="text-sm sm:text-base text-gray-500 dark:text-gray-400">Niciun mesaj încă</p>
 					</div>
 				{:else}
 					{#each messages as message (message.message_id)}
-						<div class={`flex ${isMyMessage(message) ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-							<div class={`max-w-xs sm:max-w-md lg:max-w-lg ${isMyMessage(message) ? 'order-2' : 'order-1'}`}>
-								<div class={`rounded-2xl px-4 py-2 shadow-sm ${
+						<div class={`flex ${isMyMessage(message) ? 'justify-end' : 'justify-start'} animate-fade-in px-1 sm:px-2`}>
+							<div class={`max-w-[80%] sm:max-w-[75%] md:max-w-md lg:max-w-lg ${isMyMessage(message) ? 'order-2' : 'order-1'}`}>
+								<div class={`rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 shadow-sm relative ${
 									isMyMessage(message) 
-										? 'bg-blue-600 text-white rounded-br-none' 
-										: 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-bl-none'
-								}`}>
-									<p class="text-sm sm:text-base whitespace-pre-wrap break-words">{message.continut}</p>
-								</div>
-								<p class={`text-xs text-gray-500 dark:text-gray-400 mt-1 ${isMyMessage(message) ? 'text-right' : 'text-left'}`}>
-									{formatTime(message.timestamp_mesaj)}
-								</p>
+											? message._pending 
+												? 'bg-blue-500 text-white rounded-br-none opacity-70' 
+												: 'bg-blue-600 text-white rounded-br-none'
+											: 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-bl-none'
+									}`}>
+										<p class="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.continut}</p>
+										{#if message._pending}
+											<span class="absolute -bottom-1 -right-1 w-4 h-4 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center">
+												<svg class="animate-spin h-3 w-3 text-blue-600" fill="none" viewBox="0 0 24 24">
+													<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+													<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+												</svg>
+											</span>
+										{/if}
+									</div>
+									<p class={`text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1 px-1 flex items-center gap-1 ${isMyMessage(message) ? 'justify-end' : 'justify-start'}`}>
+										{#if message._pending}
+											<span class="italic">Se trimite...</span>
+										{:else}
+											{formatTime(message.timestamp_mesaj)}
+										{/if}
+									</p>
 							</div>
 						</div>
 					{/each}
@@ -305,9 +553,9 @@
 			</div>
 
 			<!-- Message Input -->
-			<div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
-				<div class="max-w-4xl mx-auto">
-					<form onsubmit={(e) => { e.preventDefault(); sendMessage(); }} class="flex gap-3">
+			<div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 safe-area-bottom">
+				<div class="w-full px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+					<form onsubmit={(e) => { e.preventDefault(); sendMessage(); }} class="flex gap-2 items-end w-full">
 						<textarea
 							bind:this={messageInput}
 							bind:value={newMessage}
@@ -315,16 +563,16 @@
 							onkeypress={handleKeyPress}
 							placeholder="Scrie un mesaj..."
 							rows="1"
-							class="flex-1 resize-none rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-0 focus:outline-none transition"
-							style="max-height: 120px;"
+							class="flex-1 min-w-0 resize-none rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-0 focus:outline-none transition"
+							style="max-height: 100px; min-height: 40px;"
 						></textarea>
 						<button
 							type="submit"
 							disabled={!newMessage.trim() || sending}
-							class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-110 active:scale-95 transition-all duration-300 ease-in-out flex items-center justify-center gap-2 font-medium shadow-md"
+							class="flex-shrink-0 w-10 h-10 sm:w-auto sm:h-auto sm:px-5 sm:py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed hover:shadow-xl hover:shadow-blue-500/50 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md touch-manipulation"
 						>
 							{#if sending}
-								<svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+								<svg class="animate-spin h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24">
 									<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
 									<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 								</svg>
@@ -333,10 +581,10 @@
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
 								</svg>
 							{/if}
-							<span class="hidden sm:inline">Trimite</span>
+							<span class="hidden sm:inline text-sm">Trimite</span>
 						</button>
 					</form>
-					<p class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+					<p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-2 text-center hidden sm:block">
 						Apasă Enter pentru a trimite, Shift+Enter pentru linie nouă
 					</p>
 				</div>

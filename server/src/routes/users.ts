@@ -137,4 +137,41 @@ router.get('/me', authenticate, async (req: Request, res: Response) => {
   }
 });
 
+// Get user profile by ID (authenticated users can view other profiles)
+router.get('/:userId', authenticate, async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await query(
+      `SELECT u.user_id, u.email, u.full_name, u.role, u.avatar_url, u.created_at,
+              p.nivel_xp as total_xp, p.current_streak, p.longest_streak, p.current_badge
+       FROM users u
+       LEFT JOIN patient_profiles p ON u.user_id = p.patient_id
+       WHERE u.user_id = $1 AND u.is_active = true`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.rows[0];
+    res.json({
+      userId: user.user_id,
+      email: user.email,
+      fullName: user.full_name,
+      role: user.role,
+      avatarUrl: user.avatar_url,
+      createdAt: user.created_at,
+      totalXp: user.total_xp || 0,
+      currentStreak: user.current_streak || 0,
+      longestStreak: user.longest_streak || 0,
+      currentBadge: user.current_badge
+    });
+  } catch (error) {
+    logger.error('Get user profile error', { error, userId: req.params.userId });
+    res.status(500).json({ error: 'Failed to fetch user profile' });
+  }
+});
+
 export default router;

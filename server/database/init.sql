@@ -1,4 +1,4 @@
--- MediTrack Database Schema - Updated Structure
+-- MediTrack Database Schema
 
 -- ENUM Types
 CREATE TYPE user_role AS ENUM ('admin', 'medic', 'pacient');
@@ -162,7 +162,45 @@ CREATE TRIGGER update_treatment_plans_updated_at BEFORE UPDATE ON treatment_plan
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Initial admin user (password: admin123)
--- Note: This is a placeholder hash, replace with actual bcrypt hash
 INSERT INTO users (email, password_hash, full_name, role, mfa_enabled) 
-VALUES ('admin@meditrack.com', '$2b$10$rVqK4KKzqVqK4KKzqVqK4ufQJFGXh8fQJFGXh8fQJFGXh8fQJFGXh8', 'Admin User', 'admin', false)
+VALUES ('admin@meditrack.com', '$2b$10$IEHnky61cn5S91TjmW1icuIhhpAeRuUGxct9aoy1BCEfVmTQF3cti', 'Admin User', 'admin', false)
 ON CONFLICT (email) DO NOTHING;
+
+-- Sample doctors (password for all: medic123)
+INSERT INTO users (email, password_hash, full_name, role, phone_number, date_of_birth, mfa_enabled) VALUES
+('dr.ionescu@meditrack.com', '$2b$10$6fmynm8rzot7UDz/sxFckeJio3grIwnpjmJFlgr7pXPIzosR.P3ru', 'Dr. Alexandru Ionescu', 'medic', '+40721234567', '1975-03-15', false),
+('dr.popescu@meditrack.com', '$2b$10$6fmynm8rzot7UDz/sxFckeJio3grIwnpjmJFlgr7pXPIzosR.P3ru', 'Dr. Maria Popescu', 'medic', '+40722345678', '1980-07-22', false),
+('dr.radu@meditrack.com', '$2b$10$6fmynm8rzot7UDz/sxFckeJio3grIwnpjmJFlgr7pXPIzosR.P3ru', 'Dr. Andrei Radu', 'medic', '+40723456789', '1978-11-08', false),
+('dr.stan@meditrack.com', '$2b$10$6fmynm8rzot7UDz/sxFckeJio3grIwnpjmJFlgr7pXPIzosR.P3ru', 'Dr. Elena Stan', 'medic', '+40724567890', '1982-05-30', false),
+('dr.gheorghe@meditrack.com', '$2b$10$6fmynm8rzot7UDz/sxFckeJio3grIwnpjmJFlgr7pXPIzosR.P3ru', 'Dr. Mihai Gheorghe', 'medic', '+40725678901', '1976-09-12', false),
+('dr.marinescu@meditrack.com', '$2b$10$6fmynm8rzot7UDz/sxFckeJio3grIwnpjmJFlgr7pXPIzosR.P3ru', 'Dr. Ioana Marinescu', 'medic', '+40726789012', '1985-02-18', false)
+ON CONFLICT (email) DO NOTHING;
+
+-- Sample patients (password for all: pacient123)
+INSERT INTO users (email, password_hash, full_name, role, phone_number, date_of_birth, mfa_enabled) VALUES
+('ion.vasile@example.com', '$2b$10$Ev6rrNO/Hxm.SPg2jMHnq.HDCWh9LYaj9FN5h.CdHpwd41tN9tBE6', 'Ion Vasile', 'pacient', '+40731234567', '1990-06-15', false),
+('ana.mihai@example.com', '$2b$10$Ev6rrNO/Hxm.SPg2jMHnq.HDCWh9LYaj9FN5h.CdHpwd41tN9tBE6', 'Ana Mihai', 'pacient', '+40732345678', '1985-09-22', false),
+('george.popa@example.com', '$2b$10$Ev6rrNO/Hxm.SPg2jMHnq.HDCWh9LYaj9FN5h.CdHpwd41tN9tBE6', 'George Popa', 'pacient', '+40733456789', '1992-03-10', false),
+('maria.tudor@example.com', '$2b$10$Ev6rrNO/Hxm.SPg2jMHnq.HDCWh9LYaj9FN5h.CdHpwd41tN9tBE6', 'Maria Tudor', 'pacient', '+40734567890', '1988-12-05', false),
+('alex.costa@example.com', '$2b$10$Ev6rrNO/Hxm.SPg2jMHnq.HDCWh9LYaj9FN5h.CdHpwd41tN9tBE6', 'Alexandru Costa', 'pacient', '+40735678901', '1995-07-18', false),
+('elena.dumitrescu@example.com', '$2b$10$Ev6rrNO/Hxm.SPg2jMHnq.HDCWh9LYaj9FN5h.CdHpwd41tN9tBE6', 'Elena Dumitrescu', 'pacient', '+40736789012', '1991-11-25', false),
+('cristian.ion@example.com', '$2b$10$Ev6rrNO/Hxm.SPg2jMHnq.HDCWh9LYaj9FN5h.CdHpwd41tN9tBE6', 'Cristian Ion', 'pacient', '+40737890123', '1987-04-08', false),
+('diana.matei@example.com', '$2b$10$Ev6rrNO/Hxm.SPg2jMHnq.HDCWh9LYaj9FN5h.CdHpwd41tN9tBE6', 'Diana Matei', 'pacient', '+40738901234', '1993-08-14', false)
+ON CONFLICT (email) DO NOTHING;
+
+-- Create patient profiles for all sample patients
+INSERT INTO patient_profiles (patient_id, nivel_xp, current_streak, longest_streak, progres_total, current_badge)
+SELECT user_id,
+       FLOOR(RANDOM() * 500) + 100,  -- Random XP between 100-600
+       FLOOR(RANDOM() * 10),          -- Random current streak 0-10
+       FLOOR(RANDOM() * 20) + 5,      -- Random longest streak 5-25
+       FLOOR(RANDOM() * 80) + 20,     -- Random progress 20-100
+       CASE
+           WHEN FLOOR(RANDOM() * 5) = 0 THEN 'bronze'
+           WHEN FLOOR(RANDOM() * 5) = 1 THEN 'silver'
+           WHEN FLOOR(RANDOM() * 5) = 2 THEN 'gold'
+           WHEN FLOOR(RANDOM() * 5) = 3 THEN 'platinum'
+           ELSE 'diamond'
+       END
+FROM users WHERE role = 'pacient'
+ON CONFLICT (patient_id) DO NOTHING;

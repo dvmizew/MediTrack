@@ -63,8 +63,8 @@ router.post(
       // Notify patient
       await query(
         `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
-         VALUES ($1, 'reminder', 'sent', 'New Medication', $2, $3)`,
-        [plan.rows[0].patient_id, `New medication added: ${medicationName}`, result.rows[0].dose_id]
+         VALUES ($1, 'reminder', 'sent', 'Medicament nou', $2, $3)`,
+        [plan.rows[0].patient_id, `Medicament adăugat: ${medicationName}`, result.rows[0].dose_id]
       );
 
       const dose = result.rows[0];
@@ -186,7 +186,7 @@ router.patch(
       // Notify patient
       await query(
         `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
-         VALUES ($1, 'treatment_update', 'sent', 'Medication Updated', 'Your medication schedule has been updated', $2)`,
+         VALUES ($1, 'treatment_update', 'sent', 'Medicament actualizat', 'Programul de medicație a fost actualizat', $2)`,
         [doseCheck.rows[0].patient_id, doseId]
       );
 

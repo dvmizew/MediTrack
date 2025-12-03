@@ -13,7 +13,13 @@
 	let showNotifications = $state(false);
 	let showUserMenu = $state(false);
 	let showMobileMenu = $state(false);
+	let notificationFilter = $state<'all' | 'unread'>('all');
 	let unreadCount = $derived(notifications.filter((n) => !n.isRead).length);
+	let filteredNotifications = $derived(
+		notificationFilter === 'unread' 
+			? notifications.filter(n => !n.isRead)
+			: notifications
+	);
 
 	onMount(async () => {
 		await loadNotifications();
@@ -100,8 +106,67 @@
 		try {
 			await api.markAllNotificationsRead();
 			notifications = notifications.map((n) => ({ ...n, isRead: true }));
+			toastStore.add({ type: 'success', title: 'Succes', message: 'Notificări marcate ca citite', duration: 2000 });
 		} catch (error) {
 			console.error('Failed to mark all notifications:', error);
+			toastStore.add({ type: 'error', title: 'Eroare', message: 'Nu s-au putut marca notificările', duration: 2000 });
+		}
+	}
+
+	async function clearAllNotifications() {
+		if (!confirm('Sigur vrei să ștergi toate notificările?')) return;
+		try {
+			await api.deleteAllNotifications();
+			notifications = [];
+			toastStore.add({ type: 'success', title: 'Șterse', message: 'Toate notificările au fost șterse', duration: 2000 });
+		} catch (error) {
+			console.error('Failed to clear notifications:', error);
+			toastStore.add({ type: 'error', title: 'Eroare', message: 'Nu s-au putut șterge notificările', duration: 2000 });
+		}
+	}
+
+	async function deleteNotification(id: number, event?: MouseEvent) {
+		// Previne închiderea dropdown-ului
+		if (event) {
+			event.stopPropagation();
+		}
+		try {
+			await api.deleteNotification(id);
+			notifications = notifications.filter(n => n.id !== id);
+			// Nu mai afișăm toast - e prea obnoxious
+		} catch (error) {
+			console.error('Failed to delete notification:', error);
+			toastStore.add({ type: 'error', title: 'Eroare', message: 'Nu s-a putut șterge notificarea', duration: 2000 });
+		}
+	}
+
+	function handleNotificationClick(notification: any) {
+		// Mark as read
+		markAsRead(notification.id);
+		
+		// Navigate based on notification type
+		showNotifications = false;
+		
+		switch (notification.type) {
+			case 'medication':
+			case 'reminder':
+			case 'treatment_update':
+				window.location.href = '/treatments';
+				break;
+			case 'chat':
+				if (notification.referenceId) {
+					window.location.href = `/chat/${notification.referenceId}`;
+				} else {
+					window.location.href = '/chat';
+				}
+				break;
+			case 'invite':
+				window.location.href = '/collaborations';
+				break;
+			case 'alert':
+			default:
+				window.location.href = '/dashboard';
+				break;
 		}
 	}
 
@@ -112,11 +177,42 @@
 	}
 
 	function isActive(path: string) {
-		return $page.url.pathname === path || $page.url.pathname.startsWith(path + '/');
+		return $page.url.pathname === path;
+	}
+
+	function getNotificationIcon(type: string) {
+		switch (type) {
+			case 'medication':
+				return '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>';
+			case 'chat':
+				return '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>';
+			case 'invite':
+				return '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>';
+			case 'treatment_update':
+				return '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>';
+			case 'reminder':
+				return '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+			case 'alert':
+				return '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>';
+			default:
+				return '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+		}
+	}
+
+	function getNotificationColor(type: string) {
+		switch (type) {
+			case 'medication': return 'text-blue-600 dark:text-blue-400';
+			case 'chat': return 'text-green-600 dark:text-green-400';
+			case 'invite': return 'text-purple-600 dark:text-purple-400';
+			case 'treatment_update': return 'text-orange-600 dark:text-orange-400';
+			case 'reminder': return 'text-yellow-600 dark:text-yellow-400';
+			case 'alert': return 'text-red-600 dark:text-red-400';
+			default: return 'text-gray-600 dark:text-gray-400';
+		}
 	}
 </script>
 
-<header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 shadow-sm">
+<header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
 	<nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 		<div class="flex justify-between items-center h-16">
 			<!-- Logo -->
@@ -227,50 +323,160 @@
 					{#if showNotifications}
 						<div 
 							transition:fly={{ y: -10, duration: 300, easing: quintOut }}
-							class="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700"
+							class="absolute right-0 mt-2 w-full sm:w-96 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
 						>
-								<div class="p-4 border-b border-gray-200 flex justify-between items-center">
-									<h3 class="font-semibold text-gray-900 dark:text-gray-100">Notificări</h3>
-									{#if unreadCount > 0}
-										<button onclick={markAllAsRead} class="text-xs text-blue-600 hover:text-blue-700 font-medium">
-											Marchează tot
-										</button>
-									{/if}
-								</div>
-								<div class="max-h-96 overflow-y-auto">
-									{#if notifications.length === 0}
-										<div class="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
-											<svg class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-											</svg>
-											Nu ai notificări
-										</div>
-									{:else}
-										{#each notifications as notification}
-											<button
-												onclick={() => markAsRead(notification.id)}
-												class="w-full p-4 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 text-left transition"
-												class:bg-blue-50={!notification.isRead}
+							<!-- Header with actions -->
+							<div class="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900">
+								<div class="flex justify-between items-center mb-2 sm:mb-3">
+									<h3 class="font-bold text-gray-900 dark:text-gray-100 text-base sm:text-lg">Notificări</h3>
+									<div class="flex gap-1 sm:gap-2">
+										{#if notifications.length > 0}
+											<button 
+												onclick={clearAllNotifications}
+												class="text-xs px-2 py-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 font-medium"
+												title="Șterge toate"
 											>
-												<div class="flex gap-3">
-													<div class="flex-1 min-w-0">
-													<h4 class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">{notification.title}</h4>
-													<p class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{notification.message}</p>
-													<p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-															{new Date(notification.createdAt).toLocaleString('ro-RO')}
-														</p>
-													</div>
-													{#if !notification.isRead}
-														<div class="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-													{/if}
-												</div>
+												<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+												</svg>
 											</button>
-										{/each}
-									{/if}
+										{/if}
+										{#if unreadCount > 0}
+											<button 
+												onclick={markAllAsRead} 
+												class="text-[10px] sm:text-xs px-2 sm:px-3 py-1 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 font-medium whitespace-nowrap"
+											>
+												<span class="hidden sm:inline">Marchează tot</span>
+												<span class="sm:hidden">✓ Tot</span>
+											</button>
+										{/if}
+									</div>
+								</div>
+								
+								<!-- Filter tabs -->
+								<div class="flex gap-2">
+									<button
+										onclick={() => notificationFilter = 'all'}
+										class="flex-1 px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-medium rounded-lg transition-all duration-200 truncate"
+										class:bg-blue-600={notificationFilter === 'all'}
+										class:text-white={notificationFilter === 'all'}
+										class:text-gray-600={notificationFilter !== 'all'}
+										class:dark:text-gray-400={notificationFilter !== 'all'}
+										class:hover:bg-gray-100={notificationFilter !== 'all'}
+										class:dark:hover:bg-gray-700={notificationFilter !== 'all'}
+									>
+										Toate ({notifications.length})
+									</button>
+									<button
+										onclick={() => notificationFilter = 'unread'}
+										class="flex-1 px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-medium rounded-lg transition-all duration-200 relative truncate"
+										class:bg-blue-600={notificationFilter === 'unread'}
+										class:text-white={notificationFilter === 'unread'}
+										class:text-gray-600={notificationFilter !== 'unread'}
+										class:dark:text-gray-400={notificationFilter !== 'unread'}
+										class:hover:bg-gray-100={notificationFilter !== 'unread'}
+										class:dark:hover:bg-gray-700={notificationFilter !== 'unread'}
+									>
+										Necitite ({unreadCount})
+										{#if unreadCount > 0}
+											<span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+										{/if}
+									</button>
 								</div>
 							</div>
-						{/if}
-					</div>
+
+							<!-- Notifications list -->
+							<div class="max-h-[60vh] sm:max-h-[32rem] overflow-y-auto overflow-x-hidden">
+								{#if filteredNotifications.length === 0}
+									<div class="p-8 sm:p-12 text-center">
+										<div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+											<svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+											</svg>
+										</div>
+										<p class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium">
+											{notificationFilter === 'unread' ? 'Nu ai notificări necitite' : 'Nu ai notificări'}
+										</p>
+									</div>
+								{:else}
+								{#each filteredNotifications as notification, index (notification.id)}
+									<div
+										in:fly={{ x: -20, duration: 300, delay: index * 30, easing: quintOut }}
+										class="group relative border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200"
+									class:bg-blue-50={!notification.isRead}
+									class:dark:bg-blue-900={!notification.isRead}
+								>
+										<button
+											onclick={() => handleNotificationClick(notification)}
+											class="w-full p-3 sm:p-4 text-left flex gap-2 sm:gap-3 hover:scale-[1.01] active:scale-[0.99] transition-transform duration-200"
+											>
+												<!-- Icon -->
+												<div class="flex-shrink-0 mt-0.5 sm:mt-1">
+													<div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 flex items-center justify-center {getNotificationColor(notification.type)}">
+														<svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															{@html getNotificationIcon(notification.type)}
+														</svg>
+													</div>
+												</div>
+												
+												<!-- Content -->
+												<div class="flex-1 min-w-0 pr-6 sm:pr-8">
+													<div class="flex items-start justify-between gap-2">
+														<h4 class="font-semibold text-xs sm:text-sm text-gray-900 dark:text-gray-100 truncate">
+															{notification.title}
+														</h4>
+														{#if !notification.isRead}
+															<div class="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-600 rounded-full flex-shrink-0 mt-1.5"></div>
+														{/if}
+													</div>
+													<p class="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2 break-words">
+														{notification.message}
+													</p>
+													<div class="flex items-center justify-between mt-1.5 sm:mt-2">
+														<p class="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 truncate">
+															<svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+															</svg>
+															<span class="truncate">{new Date(notification.createdAt).toLocaleString('ro-RO', { 
+																day: 'numeric', 
+																month: 'short', 
+																hour: '2-digit', 
+																minute: '2-digit' 
+															})}</span>
+														</p>
+													</div>
+												</div>
+											</button>
+											
+										<!-- Delete button (appears on hover) -->
+										<button
+											onclick={(event) => deleteNotification(notification.id, event)}
+											class="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 p-1 sm:p-1.5 opacity-0 group-hover:opacity-100 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+											title="Șterge notificarea"
+										>
+											<svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+											</svg>
+										</button>
+										</div>
+									{/each}
+								{/if}
+							</div>
+							
+							<!-- Footer with settings link -->
+							{#if notifications.length > 0}
+								<div class="p-2 sm:p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+									<a 
+										href="/settings"
+										class="block text-center text-[10px] sm:text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200"
+									>
+										Setări notificări
+									</a>
+								</div>
+							{/if}
+						</div>
+					{/if}
+				</div>
 
 				<!-- User Menu (Desktop) -->
 				<div class="hidden md:block relative dropdown-container">

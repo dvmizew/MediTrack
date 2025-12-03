@@ -61,9 +61,20 @@ router.post(
       // Create notification for medic
       await query(
         `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
-         VALUES ($1, 'invite', 'sent', 'New Collaboration Invite', 'You have a new collaboration request', $2)`,
+         VALUES ($1, 'invite', 'sent', 'Invitație nouă de colaborare', 'Ai o nouă cerere de colaborare', $2)`,
         [medic.user_id, result.rows[0].id]
       );
+
+      // Send realtime notification via socket
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`user:${medic.user_id}`).emit('notification', {
+          type: 'invite',
+          title: 'Invitație nouă de colaborare',
+          message: 'Ai o nouă cerere de colaborare',
+          referenceId: result.rows[0].id
+        });
+      }
 
       const invite = result.rows[0];
       res.status(201).json({
@@ -85,15 +96,29 @@ router.post(
 router.get('/pending', authenticate, async (req: Request, res: Response) => {
   try {
     const userId = (req as AuthRequest).user!.userId;
+    const role = (req as AuthRequest).user!.role;
 
-    const result = await query(
-      `SELECT c.*, u.email as pacient_email, u.full_name as pacient_name
-       FROM doctor_patient c
-       JOIN users u ON c.patient_id = u.user_id
-       WHERE c.doctor_id = $1 AND c.status_invitatie = 'pending'
-       ORDER BY c.invited_at DESC`,
-      [userId]
-    );
+    let queryText;
+    if (role === 'medic') {
+      queryText = `
+        SELECT c.*, u.email as pacient_email, u.full_name as pacient_name
+        FROM doctor_patient c
+        JOIN users u ON c.patient_id = u.user_id
+        WHERE c.doctor_id = $1 AND c.status_invitatie = 'pending'
+        ORDER BY c.invited_at DESC
+      `;
+    } else {
+      // For patients, show medics they invited that are still pending
+      queryText = `
+        SELECT c.*, u.email as medic_email, u.full_name as medic_name
+        FROM doctor_patient c
+        JOIN users u ON c.doctor_id = u.user_id
+        WHERE c.patient_id = $1 AND c.status_invitatie = 'pending'
+        ORDER BY c.invited_at DESC
+      `;
+    }
+
+    const result = await query(queryText, [userId]);
 
     res.json(result.rows.map((c: any) => ({
       id: c.id,
@@ -103,7 +128,10 @@ router.get('/pending', authenticate, async (req: Request, res: Response) => {
       invitedAt: c.invited_at,
       respondedAt: c.responded_at,
       pacientEmail: c.pacient_email,
-      pacientName: c.pacient_name
+      pacientName: c.pacient_name,
+      medicEmail: c.medic_email,
+      medicName: c.medic_name,
+      created_at: c.invited_at
     })));
   } catch (error) {
     logger.error('Get pending invites error', { error });
@@ -143,14 +171,25 @@ router.patch(
 
       // Notify pacient
       const notificationMessage = action === 'accept' 
-        ? 'Your collaboration request was accepted' 
-        : 'Your collaboration request was declined';
+        ? 'Cererea ta de colaborare a fost acceptată' 
+        : 'Cererea ta de colaborare a fost refuzată';
 
       await query(
         `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
-         VALUES ($1, 'invite', 'sent', 'Invite Response', $2, $3)`,
+         VALUES ($1, 'invite', 'sent', 'Răspuns invitație', $2, $3)`,
         [result.rows[0].patient_id, notificationMessage, inviteId]
       );
+
+      // Send realtime notification via socket
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`user:${result.rows[0].patient_id}`).emit('notification', {
+          type: 'invite',
+          title: 'Răspuns invitație',
+          message: notificationMessage,
+          referenceId: inviteId
+        });
+      }
 
       const collab = result.rows[0];
       res.json({
@@ -177,7 +216,7 @@ router.get('/my', authenticate, async (req: Request, res: Response) => {
     let queryText;
     if (role === 'medic') {
       queryText = `
-        SELECT c.*, u.email as pacient_email, u.full_name as pacient_name, u.avatar_url as pacient_avatar
+        SELECT c.*, u.email as pacient_email, u.full_name as pacient_name, u.avatar_url as pacient_avatar, u.role as pacient_role
         FROM doctor_patient c
         JOIN users u ON c.patient_id = u.user_id
         WHERE c.doctor_id = $1 AND c.status_invitatie = 'accepted'
@@ -185,7 +224,7 @@ router.get('/my', authenticate, async (req: Request, res: Response) => {
       `;
     } else {
       queryText = `
-        SELECT c.*, u.email as medic_email, u.full_name as medic_name, u.avatar_url as medic_avatar
+        SELECT c.*, u.email as medic_email, u.full_name as medic_name, u.avatar_url as medic_avatar, u.role as medic_role
         FROM doctor_patient c
         JOIN users u ON c.doctor_id = u.user_id
         WHERE c.patient_id = $1 AND c.status_invitatie = 'accepted'
@@ -206,7 +245,13 @@ router.get('/my', authenticate, async (req: Request, res: Response) => {
       pacientAvatar: c.pacient_avatar,
       medicEmail: c.medic_email,
       medicName: c.medic_name,
-      medicAvatar: c.medic_avatar
+      medicAvatar: c.medic_avatar,
+      created_at: c.invited_at,
+      // Unified fields for easier frontend access
+      name: role === 'medic' ? c.pacient_name : c.medic_name,
+      email: role === 'medic' ? c.pacient_email : c.medic_email,
+      user_id: role === 'medic' ? c.patient_id : c.doctor_id,
+      role: role === 'medic' ? c.pacient_role : c.medic_role
     })));
   } catch (error) {
     logger.error('Get collaborations error', { error });

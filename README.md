@@ -52,10 +52,25 @@ cd ..
 npm run dev
 ```
 
+6. Reset database (drops everything and reseeds)
+```bash
+docker exec -i meditrack-db psql -U meditrack -d meditrack < server/database/reset.sql
+```
+
 ## Test Credentials
-Admin account:
-email: admin@meditrack.com
-password: admin123
+**Admin:**
+- email: admin@meditrack.com
+- password: admin123
+
+**Sample Medics** (all with password: medic123):
+- dr.ionescu@meditrack.com
+- dr.popescu@meditrack.com
+- dr.radu@meditrack.com
+
+**Sample Patients** (all with password: pacient123):
+- ion.vasile@example.com
+- ana.mihai@example.com
+- george.popa@example.com
 
 ## Important Env Vars
 DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
@@ -67,11 +82,3 @@ GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALLBACK_URL (optional)
 ## Scripts
 Frontend: dev, build, preview, test
 Backend: dev, build, start
-
-## Production Notes
-- Replace placeholder admin password hash in `init.sql` with a real bcrypt hash before deploying.
-- Ensure HTTPS for PWA to work (required for service workers)
-- Update `SOCKET_URL` and `API_URL` in `src/lib/config.ts`
-- Set strong JWT_SECRET.
-- Configure HTTPS and a reverse proxy (e.g. nginx) for 3000/5173.
-- Adjust rate limits in `server/src/index.ts` for expected traffic.

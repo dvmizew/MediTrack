@@ -46,7 +46,7 @@ router.post(
       // Notify pacient
       await query(
         `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
-         VALUES ($1, 'treatment_update', 'sent', 'New Treatment Plan', 'Your medic has created a new treatment plan', $2)`,
+         VALUES ($1, 'treatment_update', 'sent', 'Plan de tratament nou', 'Medicul tău a creat un plan de tratament nou', $2)`,
         [pacientId, result.rows[0].plan_id]
       );
 
@@ -243,7 +243,7 @@ router.patch(
       // Notify pacient
       await query(
         `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
-         VALUES ($1, 'treatment_update', 'sent', 'Treatment Updated', 'Your treatment plan has been updated', $2)`,
+         VALUES ($1, 'treatment_update', 'sent', 'Tratament actualizat', 'Planul tău de tratament a fost actualizat', $2)`,
         [planCheck.rows[0].patient_id, planId]
       );
 

@@ -46,7 +46,7 @@ router.post(
       // Create notification for receiver
       await query(
         `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
-         VALUES ($1, 'chat', 'sent', 'New Message', 'You have a new message', $2)`,
+         VALUES ($1, 'chat', 'sent', 'Mesaj nou', 'Ai un mesaj nou', $2)`,
         [receiverId, result.rows[0].message_id]
       );
 

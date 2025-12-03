@@ -162,4 +162,99 @@ router.patch('/read-all', authenticate, async (req: Request, res: Response) => {
   }
 });
 
+// Delete a notification
+router.delete('/:notificationId', authenticate, async (req: Request, res: Response) => {
+  try {
+    const { notificationId } = req.params;
+    const userId = (req as AuthRequest).user!.userId;
+
+    const result = await query(
+      'DELETE FROM notifications WHERE notif_id = $1 AND user_id = $2 RETURNING notif_id',
+      [notificationId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
+
+    res.json({ success: true, id: result.rows[0].notif_id });
+  } catch (error) {
+    logger.error('Delete notification error', { error });
+    res.status(500).json({ error: 'Failed to delete notification' });
+  }
+});
+
+// Delete all notifications
+router.delete('/', authenticate, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthRequest).user!.userId;
+
+    await query(
+      'DELETE FROM notifications WHERE user_id = $1',
+      [userId]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Delete all notifications error', { error });
+    res.status(500).json({ error: 'Failed to delete all notifications' });
+  }
+});
+
+// Send reminder to patient
+router.post('/send-reminder', authenticate, async (req: Request, res: Response) => {
+  try {
+    const medicId = (req as AuthRequest).user!.userId;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    // Verify the medic has a collaboration with this patient
+    const collabCheck = await query(
+      `SELECT * FROM doctor_patient 
+       WHERE medic_id = $1 AND pacient_id = $2 AND status = 'active'`,
+      [medicId, userId]
+    );
+
+    if (collabCheck.rows.length === 0) {
+      return res.status(403).json({ error: 'No active collaboration with this patient' });
+    }
+
+    // Create reminder notification
+    const result = await query(
+      `INSERT INTO notifications (user_id, tip, title, message, status_notif, created_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
+       RETURNING *`,
+      [
+        userId,
+        'reminder',
+        'Memento medicament',
+        'Medicul tău ți-a trimis un memento pentru medicație. Verifică tratamentele tale active.',
+        'sent'
+      ]
+    );
+
+    const notification = result.rows[0];
+
+    // Send via socket if available
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user:${userId}`).emit('notification', {
+        id: notification.notif_id,
+        type: 'reminder',
+        title: notification.title,
+        message: notification.message,
+        createdAt: notification.created_at
+      });
+    }
+
+    res.json({ success: true, notification });
+  } catch (error) {
+    logger.error('Send reminder error', { error });
+    res.status(500).json({ error: 'Failed to send reminder' });
+  }
+});
+
 export default router;
