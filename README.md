@@ -18,43 +18,56 @@ Infrastructure: Docker Compose (Postgres, Redis), PWA-ready
 
 ## Quick Start
 
-1. Clone
+### Automated Setup (Recommended)
 ```bash
 git clone https://github.com/dvmizew/MediTrack.git
 cd MediTrack
+./setup.sh
 ```
-2. Install dependencies
-```bash
-# Frontend
-npm install
 
-# Backend
-cd server
-npm install
-```
-3. Start infrastructure (Postgres + Redis with auto-seed)
+The script will:
+- Install all dependencies (frontend + backend)
+- Create `server/.env` with auto-generated JWT secret
+- Start Postgres + Redis containers
+- Auto-seed database with test users
+
+Then start the servers:
 ```bash
+# Terminal 1 - Backend
+cd server && npm run dev
+
+# Terminal 2 - Frontend
+npm run dev
+```
+
+Open http://localhost:5173
+
+### Manual Setup
+```bash
+# 1. Clone
+git clone https://github.com/dvmizew/MediTrack.git
+cd MediTrack
+
+# 2. Install dependencies
+npm install
+cd server && npm install && cd ..
+
+# 3. Setup environment
+cp .env.example server/.env
+sed -i "s/generate_random_32_char_secret_with_openssl_rand_base64_32/$(openssl rand -base64 32)/" server/.env
+
+# 4. Start infrastructure
 docker compose up -d
-```
-4. Environment variables
-```bash
-cp server/.env.example server/.env
-```
-Edit `server/.env` as needed: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, REDIS_URL, JWT_SECRET, FRONTEND_URL, optional Google OAuth vars.
+sleep 5
 
-5. Run servers
-```bash
-# Backend (port 3000)
-cd server
-npm run dev
-# Frontend (port 5173) in another terminal
-cd ..
+# 5. Start servers
+cd server && npm run dev &
 npm run dev
 ```
 
-6. Reset database (drops everything and reseeds)
+### Reset Database (if needed)
 ```bash
-docker exec -i meditrack-db psql -U meditrack -d meditrack < server/database/reset.sql
+docker exec -i meditrack-db psql -U meditrack -d meditrack < server/database/init.sql
 ```
 
 ## Test Credentials
@@ -72,12 +85,17 @@ docker exec -i meditrack-db psql -U meditrack -d meditrack < server/database/res
 - ana.mihai@example.com
 - george.popa@example.com
 
-## Important Env Vars
-DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
-REDIS_URL
-JWT_SECRET, JWT_EXPIRES_IN
-FRONTEND_URL
-GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALLBACK_URL (optional)
+## Environment Variables
+All required variables have defaults in `.env.example` that work with `docker-compose.yml`:
+- Database: `DB_HOST=localhost`, `DB_USER=meditrack`, `DB_PASSWORD=meditrack_dev_password`
+- Redis: `REDIS_URL=redis://localhost:6379`
+- JWT: `JWT_SECRET` (auto-generated in setup)
+- Frontend: `FRONTEND_URL=http://localhost:5173`
+
+Optional (leave empty to skip):
+- Google OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- SMTP: `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`
+- Web Push: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
 
 ## Scripts
 Frontend: dev, build, preview, test

@@ -6,9 +6,18 @@
 	import { themeStore } from '$lib/stores/theme';
 
 	let todayMedications = $state<any[]>([]);
+	let adherenceHistory = $state<any[]>([]);
 	let loading = $state(true);
 	let refreshInterval: ReturnType<typeof setInterval> | null = null;
 	let themeUnsubscribe: (() => void) | null = null;
+	let stats = $state({
+		total: 0,
+		taken: 0,
+		overdue: 0,
+		snoozed: 0,
+		upcomingLabel: '—',
+		adherence: 0
+	});
 	
 	// Chart references
 	let adherenceChartCanvas: HTMLCanvasElement;
@@ -78,6 +87,15 @@
 		try {
 			const data = await api.getTodayMedications();
 			todayMedications = data;
+			updateStats();
+			
+			// Load historical adherence data
+			const history = await api.getMedicationHistoryAdherence(7);
+			adherenceHistory = history.sort((a: any, b: any) => 
+				new Date(a.date).getTime() - new Date(b.date).getTime()
+			);
+			
+			updateCharts();
 		} catch (error) {
 			console.error('Failed to load medications:', error);
 		} finally {
@@ -85,18 +103,33 @@
 		}
 	}
 
-	async function confirmMedication(medication: any) {
-		try {
-			await api.confirmMedication({
-				medicationScheduleId: medication.id,
-				scheduledTime: new Date().toISOString()
-			});
-			await loadMedications();
-			await refreshUserStats();
-			updateCharts();
-		} catch (error) {
-			console.error('Failed to confirm medication:', error);
-		}
+	function updateStats() {
+		const now = new Date();
+		const total = todayMedications.length;
+		const taken = todayMedications.filter((m) => m.is_taken).length;
+		const overdue = todayMedications.filter(
+			(m) => !m.is_taken && m.scheduled_time && new Date(m.scheduled_time) < now
+		).length;
+		const snoozed = todayMedications.filter(
+			(m) => !m.is_taken && m.snoozed_until && new Date(m.snoozed_until) > now
+		).length;
+
+		const upcoming = todayMedications
+			.filter((m) => !m.is_taken && m.scheduled_time && new Date(m.scheduled_time) >= now)
+			.sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time))[0];
+
+		stats = {
+			total,
+			taken,
+			overdue,
+			snoozed,
+			upcomingLabel: upcoming
+				? `${new Date(upcoming.scheduled_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${
+						upcoming.medication_name || 'Doză următoare'
+				  }`
+				: 'Nicio doză programată',
+			adherence: total ? Math.round((taken / total) * 100) : 0
+		};
 	}
 
 	async function snoozeMedication(medication: any) {
@@ -120,6 +153,64 @@
 			diamond: 'bg-purple-600 text-white'
 		};
 		return colors[badge] || 'bg-gray-300 text-gray-700';
+	}
+
+	function getTimeLabel(dateString: string) {
+		return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+	}
+
+	function buildTodayTimeline() {
+		// Use historical 7-day data if available, otherwise fall back to today's timeline
+		if (adherenceHistory.length > 0) {
+			return {
+				labels: adherenceHistory.map((d: any) => {
+					const date = new Date(d.date);
+					return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+				}),
+				data: adherenceHistory.map((d: any) => d.adherenceRate)
+			};
+		}
+
+		const sorted = todayMedications
+			.filter((m) => m.scheduled_time)
+			.map((m) => ({
+				label: getTimeLabel(m.scheduled_time),
+				when: new Date(m.scheduled_time).getTime(),
+				is_taken: m.is_taken
+			}))
+			.sort((a, b) => a.when - b.when);
+
+		if (sorted.length === 0) {
+			return {
+				labels: ['—'],
+				data: [stats.adherence]
+			};
+		}
+
+		let takenSoFar = 0;
+		const data = sorted.map((entry, idx) => {
+			if (entry.is_taken) {
+				takenSoFar += 1;
+			}
+			return Math.round((takenSoFar / (idx + 1)) * 100);
+		});
+
+		return {
+			labels: sorted.map((entry) => entry.label),
+			data
+		};
+	}
+
+	function getMedicationDistribution() {
+		const counts = new Map<string, number>();
+		todayMedications.forEach((m) => {
+			const name = m.medication_name || 'Fără nume';
+			counts.set(name, (counts.get(name) || 0) + 1);
+		});
+
+		const labels = counts.size ? Array.from(counts.keys()).slice(0, 6) : ['Nicio medicație'];
+		const data = labels.map((label) => counts.get(label) || 0);
+		return { labels, data };
 	}
 
 	function initializeCharts() {
@@ -162,21 +253,20 @@
 			});
 		}
 
-		// Weekly Progress Chart (Line)
+		// Today timeline (Line)
 		if (weeklyChartCanvas) {
-			const days = ['Lun', 'Mar', 'Mie', 'Joi', 'Vin', 'Sâm', 'Dum'];
-			const weekData = Array(7).fill(0).map((_, i) => Math.floor(Math.random() * 100)); // Mock data
+			const timeline = buildTodayTimeline();
 
 			weeklyChart = new Chart(weeklyChartCanvas, {
 				type: 'line',
 				data: {
-					labels: days,
+					labels: timeline.labels,
 					datasets: [{
-						label: 'Aderență zilnică (%)',
-						data: weekData,
+						label: 'Aderență cumulată (%)',
+						data: timeline.data,
 						borderColor: '#3b82f6',
 						backgroundColor: 'rgba(59, 130, 246, 0.1)',
-						tension: 0.4,
+						tension: 0.35,
 						fill: true
 					}]
 				},
@@ -206,16 +296,15 @@
 
 		// Medications Distribution Chart (Bar)
 		if (medicationsChartCanvas) {
-			const medicationNames = todayMedications.slice(0, 5).map(m => m.medication_name || 'N/A');
-			const medicationCounts = Array(medicationNames.length).fill(1);
+			const distribution = getMedicationDistribution();
 
 			medicationsChart = new Chart(medicationsChartCanvas, {
 				type: 'bar',
 				data: {
-					labels: medicationNames,
+					labels: distribution.labels,
 					datasets: [{
 						label: 'Medicamente astăzi',
-						data: medicationCounts,
+						data: distribution.data,
 						backgroundColor: '#8b5cf6',
 						borderRadius: 8
 					}]
@@ -269,6 +358,9 @@
 		}
 		
 		if (weeklyChart) {
+			const timeline = buildTodayTimeline();
+			weeklyChart.data.labels = timeline.labels;
+			weeklyChart.data.datasets[0].data = timeline.data;
 			if (weeklyChart.options.plugins?.legend?.labels) {
 				weeklyChart.options.plugins.legend.labels.color = textColor;
 			}
@@ -284,6 +376,9 @@
 		}
 		
 		if (medicationsChart) {
+			const distribution = getMedicationDistribution();
+			medicationsChart.data.labels = distribution.labels;
+			medicationsChart.data.datasets[0].data = distribution.data;
 			if (medicationsChart.options.scales?.y) {
 				medicationsChart.options.scales.y.ticks = { stepSize: 1, color: textColor };
 				medicationsChart.options.scales.y.grid = { color: gridColor };
@@ -334,6 +429,30 @@
 		</div>
 	</div>
 
+	<!-- Quick Stats -->
+	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
+		<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm">
+			<p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Aderență azi</p>
+			<p class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.adherence}%</p>
+			<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{stats.taken} din {stats.total} doze</p>
+		</div>
+		<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm">
+			<p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Doze restante</p>
+			<p class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">{Math.max(stats.total - stats.taken, 0)}</p>
+			<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{stats.snoozed} amânate • {stats.overdue} întârziate</p>
+		</div>
+		<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm">
+			<p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Următoarea doză</p>
+			<p class="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">{stats.upcomingLabel}</p>
+			<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Actualizat la {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+		</div>
+		<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm">
+			<p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Doze confirmate</p>
+			<p class="text-2xl md:text-3xl font-bold text-green-600 dark:text-green-400">{stats.taken}</p>
+			<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Împreună cu streak-ul tău</p>
+		</div>
+	</div>
+
 	<!-- Charts Grid -->
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
 		<!-- Adherence Chart -->
@@ -344,9 +463,9 @@
 			</div>
 		</div>
 
-		<!-- Weekly Progress Chart -->
+		<!-- Today timeline Chart -->
 		<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-			<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">📈 Progres Săptămânal</h3>
+			<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">📈 Cronologia dozelor de azi</h3>
 			<div class="h-64">
 				<canvas bind:this={weeklyChartCanvas}></canvas>
 			</div>

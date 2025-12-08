@@ -6,7 +6,7 @@
 	import { api } from '$lib/api/client';
 	import { socketClient } from '$lib/api/socket';
 	import { toastStore } from '$lib/stores/notifications';
-	import { fly, scale } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 
 	let otherUserId = $state(0);
@@ -23,6 +23,8 @@
 	let isConnected = $state(true);
 	let lastMessageSent = $state<string>('');
 	let showOptionsMenu = $state(false);
+	let userOnline = $state(false);
+	let lastSeen = $state<number | null>(null);
 
 	$effect(() => {
 		const userId = $page.params.userId;
@@ -50,27 +52,30 @@
 			socketClient.socket?.emit('join-conversation', otherUserId);
 		}
 
-		// Listen for new messages
-		window.addEventListener('new-message', handleNewMessage as EventListener);
-		window.addEventListener('user-typing', handleUserTyping as EventListener);
-		window.addEventListener('user-stop-typing', handleUserStopTyping as EventListener);
-		
-		// Close dropdown on click outside
-		window.addEventListener('click', handleClickOutside);
-	});
+	// Listen for new messages
+	window.addEventListener('new-message', handleNewMessage as EventListener);
+	window.addEventListener('user-typing', handleUserTyping as EventListener);
+	window.addEventListener('user-stop-typing', handleUserStopTyping as EventListener);
+	window.addEventListener('user-status-change', handleUserStatusChange as EventListener);
+	
+	// Close dropdown on click outside
+	window.addEventListener('click', handleClickOutside);
 
-	onDestroy(() => {
-		window.removeEventListener('new-message', handleNewMessage as EventListener);
-		window.removeEventListener('user-typing', handleUserTyping as EventListener);
-		window.removeEventListener('user-stop-typing', handleUserStopTyping as EventListener);
-		window.removeEventListener('click', handleClickOutside);
-		
-		if (typingTimeout) {
-			clearTimeout(typingTimeout);
-		}
-	});
+	// Load initial user status
+	loadUserStatus();
+});
 
-	function handleNewMessage(event: CustomEvent) {
+onDestroy(() => {
+	window.removeEventListener('new-message', handleNewMessage as EventListener);
+	window.removeEventListener('user-typing', handleUserTyping as EventListener);
+	window.removeEventListener('user-stop-typing', handleUserStopTyping as EventListener);
+	window.removeEventListener('user-status-change', handleUserStatusChange as EventListener);
+	window.removeEventListener('click', handleClickOutside);
+	
+	if (typingTimeout) {
+		clearTimeout(typingTimeout);
+	}
+});	function handleNewMessage(event: CustomEvent) {
 		const message = event.detail;
 		
 		// Check if message belongs to this conversation
@@ -111,6 +116,45 @@
 		if (userId === otherUserId) {
 			isTyping = false;
 		}
+	}
+
+	function handleUserStatusChange(event: CustomEvent) {
+		const { userId, online, lastSeen: lastSeenTime } = event.detail;
+		if (userId === otherUserId) {
+			userOnline = online;
+			lastSeen = lastSeenTime || null;
+		}
+	}
+
+	async function loadUserStatus() {
+		if (!otherUserId) return;
+		
+		try {
+			const status = await api.getUserStatus(otherUserId);
+			userOnline = status.online;
+			lastSeen = status.lastSeen || null;
+		} catch (error) {
+			console.error('Failed to load user status:', error);
+		}
+	}
+
+	function formatLastSeen(timestamp: number | null): string {
+		if (!timestamp) return 'Offline';
+		
+		const now = Date.now();
+		const diff = now - timestamp;
+		const seconds = Math.floor(diff / 1000);
+		const minutes = Math.floor(seconds / 60);
+		const hours = Math.floor(minutes / 60);
+		const days = Math.floor(hours / 24);
+
+		if (seconds < 60) return 'Active now';
+		if (minutes < 60) return `Last seen ${minutes}m ago`;
+		if (hours < 24) return `Last seen ${hours}h ago`;
+		if (days === 1) return 'Last seen yesterday';
+		if (days < 7) return `Last seen ${days}d ago`;
+		
+		return `Last seen ${new Date(timestamp).toLocaleDateString()}`;
 	}
 
 	function handleClickOutside(event: MouseEvent) {
@@ -331,7 +375,8 @@
 </script>
 
 {#if $authStore.isAuthenticated}
-	<main class="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
+	<main class="min-h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden page-transition">
+		<div class="max-w-6xl mx-auto min-h-[calc(100vh-4rem)] flex flex-col overflow-hidden w-full">
 		<!-- Header - Chat Style -->
 		<div class="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 shadow-lg flex-shrink-0 z-10">
 			<div class="w-full px-2 sm:px-4 md:px-6">
@@ -362,7 +407,7 @@
 										</span>
 									</div>
 									<!-- Online status indicator -->
-									<div class="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 bg-green-400 border-2 border-white rounded-full shadow-md"></div>
+									<div class="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 {userOnline ? 'bg-green-400' : 'bg-gray-400'} border-2 border-white rounded-full shadow-md"></div>
 								</div>
 								
 								<!-- User info -->
@@ -375,11 +420,16 @@
 										</span>
 									</div>
 									<div class="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-white/90 mt-0.5">
-										<div class={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${isConnected ? 'bg-green-300 animate-pulse' : 'bg-red-400'} shadow-sm`}></div>
-										<span class="font-medium">{isConnected ? 'Activ' : 'Offline'}</span>
-										{#if isTyping}
-											<span class="text-white/80 italic">• scrie...</span>
-										{/if}
+										<div class={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${userOnline ? 'bg-green-300 animate-pulse' : 'bg-gray-300'} shadow-sm`}></div>
+										<span class="font-medium">
+											{#if isTyping}
+												scrie...
+											{:else if userOnline}
+												Active now
+											{:else}
+												{formatLastSeen(lastSeen)}
+											{/if}
+										</span>
 									</div>
 								</div>
 							</button>
@@ -485,6 +535,7 @@
 			</div>
 		</div>
 
+		<div class="flex-1 flex flex-col overflow-hidden">
 		{#if loading}
 			<div class="flex-1 flex items-center justify-center">
 				<div class="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-3 sm:border-4 border-blue-500 border-t-transparent"></div>
@@ -589,6 +640,8 @@
 					</p>
 				</div>
 			</div>
-		{/if}
+ 		{/if}
+		</div>
+	</div>
 	</main>
 {/if}

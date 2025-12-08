@@ -283,4 +283,39 @@ router.get('/history', authenticate, async (req: Request, res: Response) => {
   }
 });
 
+// Get daily adherence history for the past 30 days
+router.get('/history/adherence', authenticate, async (req: Request, res: Response) => {
+  try {
+    const patientId = (req as AuthRequest).user!.userId;
+    const days = Math.min(parseInt((req.query.days as string) || '30'), 365);
+
+    const result = await query(
+      `SELECT 
+         DATE(td.start_date) as date,
+         COUNT(DISTINCT td.dose_id) as total_doses,
+         COUNT(DISTINCT CASE WHEN dc.rezultat = 'pozitiv' THEN td.dose_id END) as taken_doses
+       FROM treatment_doses td
+       JOIN treatment_plans tp ON td.plan_id = tp.plan_id
+       LEFT JOIN dose_confirmations dc ON td.dose_id = dc.dose_id 
+         AND DATE(dc.scheduled_for) = DATE(td.start_date)
+       WHERE tp.patient_id = $1
+         AND td.is_active = true
+         AND DATE(td.start_date) >= CURRENT_DATE - INTERVAL '1 day' * $2
+       GROUP BY DATE(td.start_date)
+       ORDER BY date DESC`,
+      [patientId, days]
+    );
+
+    res.json(result.rows.map((d: any) => ({
+      date: d.date,
+      totalDoses: parseInt(d.total_doses),
+      takenDoses: parseInt(d.taken_doses),
+      adherenceRate: d.total_doses ? Math.round((parseInt(d.taken_doses) / parseInt(d.total_doses)) * 100) : 0
+    })));
+  } catch (error) {
+    logger.error('Get adherence history error', { error });
+    res.status(500).json({ error: 'Failed to fetch adherence history' });
+  }
+});
+
 export default router;

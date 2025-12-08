@@ -3,6 +3,7 @@ import { logger } from '../config/logger.js';
 import { body, validationResult } from 'express-validator';
 import { query } from '../config/database.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
+import { redis } from '../config/redis.js';
 
 const router: Router = express.Router();
 
@@ -188,6 +189,24 @@ router.patch('/:messageId/read', authenticate, async (req: Request, res: Respons
   } catch (error) {
     logger.error('Mark message read error', { error });
     res.status(500).json({ error: 'Failed to mark message' });
+  }
+});
+
+router.get('/status/:userId', authenticate, async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    
+    const online = await redis.get(`user:${userId}:online`);
+    const lastSeenStr = await redis.get(`user:${userId}:last_seen`);
+    
+    res.json({
+      userId: parseInt(userId),
+      online: online === 'true',
+      lastSeen: lastSeenStr ? parseInt(lastSeenStr) : null
+    });
+  } catch (error) {
+    logger.error('Get user status error', { error });
+    res.status(500).json({ error: 'Failed to get status' });
   }
 });
 

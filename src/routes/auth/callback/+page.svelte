@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth';
 	import { socketClient } from '$lib/api/socket';

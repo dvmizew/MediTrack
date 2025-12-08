@@ -29,11 +29,22 @@ export const setupSocketHandlers = (io: Server) => {
     const userId = socket.user!.userId;
     console.log(`User ${userId} connected to socket`);
 
-    // Join user's personal room
     socket.join(`user:${userId}`);
 
-    // Store socket connection in Redis
     await redis.set(`socket:${userId}`, socket.id, 'EX', 86400);
+    await redis.set(`user:${userId}:online`, 'true', 'EX', 120);
+    await redis.set(`user:${userId}:last_seen`, Date.now().toString());
+
+    io.emit('user-status-change', { userId, online: true });
+
+    // Setup heartbeat to keep online status fresh
+    const heartbeatInterval = setInterval(async () => {
+      try {
+        await redis.set(`user:${userId}:online`, 'true', 'EX', 120);
+      } catch (error) {
+        console.error('Heartbeat error:', error);
+      }
+    }, 60000);
 
     // Join conversation room with another user
     socket.on('join-conversation', async (otherUserId: number) => {
@@ -127,10 +138,16 @@ export const setupSocketHandlers = (io: Server) => {
       socket.to(roomName).emit('user-stop-typing', userId);
     });
 
-    // Handle disconnect
     socket.on('disconnect', async () => {
       console.log(`User ${userId} disconnected`);
+      
+      clearInterval(heartbeatInterval);
+      
       await redis.del(`socket:${userId}`);
+      await redis.del(`user:${userId}:online`);
+      await redis.set(`user:${userId}:last_seen`, Date.now().toString());
+      
+      io.emit('user-status-change', { userId, online: false, lastSeen: Date.now() });
     });
   });
 };

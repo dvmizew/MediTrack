@@ -3,8 +3,6 @@
 	import { api } from '$lib/api/client';
 	import { authStore } from '$lib/stores/auth';
 	import { toastStore } from '$lib/stores/notifications';
-	import { fly } from 'svelte/transition';
-	import { quintOut } from 'svelte/easing';
 
 	let user = $derived($authStore.user);
 	let isMedic = $derived(user?.role === 'medic');

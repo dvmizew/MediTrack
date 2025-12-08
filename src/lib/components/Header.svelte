@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { fly, scale, fade } from 'svelte/transition';
+	import { fly, scale} from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { page } from '$app/stores';
-	import { authStore, isMedic, isPacient } from '$lib/stores/auth';
+	import { authStore, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import { socketClient } from '$lib/api/socket';
 	import { notificationStore, toastStore } from '$lib/stores/notifications';
@@ -14,6 +14,7 @@
 	let showUserMenu = $state(false);
 	let showMobileMenu = $state(false);
 	let notificationFilter = $state<'all' | 'unread'>('all');
+	let confirmDialog = $state<{show: boolean, action: () => void, title: string, message: string} | null>(null);
 	let unreadCount = $derived(notifications.filter((n) => !n.isRead).length);
 	let filteredNotifications = $derived(
 		notificationFilter === 'unread' 
@@ -29,16 +30,27 @@
 		
 		// Close dropdowns on click outside
 		window.addEventListener('click', handleClickOutside);
+		
+		// Close dropdowns on ESC key
+		window.addEventListener('keydown', handleKeyDown);
 	});
 
 	onDestroy(() => {
 		window.removeEventListener('notification', handleRealtimeNotification as EventListener);
 		window.removeEventListener('click', handleClickOutside);
+		window.removeEventListener('keydown', handleKeyDown);
 	});
 
 	function handleClickOutside(event: MouseEvent) {
 		const target = event.target as HTMLElement;
 		if (!target.closest('.dropdown-container')) {
+			showNotifications = false;
+			showUserMenu = false;
+		}
+	}
+
+	function handleKeyDown(event: KeyboardEvent) {
+		if (event.key === 'Escape') {
 			showNotifications = false;
 			showUserMenu = false;
 		}
@@ -114,26 +126,32 @@
 	}
 
 	async function clearAllNotifications() {
-		if (!confirm('Sigur vrei să ștergi toate notificările?')) return;
-		try {
-			await api.deleteAllNotifications();
-			notifications = [];
-			toastStore.add({ type: 'success', title: 'Șterse', message: 'Toate notificările au fost șterse', duration: 2000 });
-		} catch (error) {
-			console.error('Failed to clear notifications:', error);
-			toastStore.add({ type: 'error', title: 'Eroare', message: 'Nu s-au putut șterge notificările', duration: 2000 });
-		}
+		confirmDialog = {
+			show: true,
+			title: 'Șterge toate notificările?',
+			message: 'Această acțiune nu poate fi anulată. Toate notificările vor fi șterse permanent.',
+			action: async () => {
+				try {
+					await api.deleteAllNotifications();
+					notifications = [];
+					toastStore.add({ type: 'success', title: 'Șterse', message: 'Toate notificările au fost șterse', duration: 2000 });
+					confirmDialog = null;
+				} catch (error) {
+					console.error('Failed to clear notifications:', error);
+					toastStore.add({ type: 'error', title: 'Eroare', message: 'Nu s-au putut șterge notificările', duration: 2000 });
+					confirmDialog = null;
+				}
+			}
+		};
 	}
 
 	async function deleteNotification(id: number, event?: MouseEvent) {
-		// Previne închiderea dropdown-ului
 		if (event) {
 			event.stopPropagation();
 		}
 		try {
 			await api.deleteNotification(id);
 			notifications = notifications.filter(n => n.id !== id);
-			// Nu mai afișăm toast - e prea obnoxious
 		} catch (error) {
 			console.error('Failed to delete notification:', error);
 			toastStore.add({ type: 'error', title: 'Eroare', message: 'Nu s-a putut șterge notificarea', duration: 2000 });
@@ -144,9 +162,12 @@
 		// Mark as read
 		markAsRead(notification.id);
 		
-		// Navigate based on notification type
-		showNotifications = false;
+		// Close on mobile (md breakpoint = 768px)
+		if (window.innerWidth < 768) {
+			showNotifications = false;
+		}
 		
+		// Navigate based on notification type
 		switch (notification.type) {
 			case 'medication':
 			case 'reminder':
@@ -267,21 +288,30 @@
 					}`}
 				>
 						Colaborări
+				</a>
+				<a 
+				href="/leaderboard" 
+				class={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+					isActive('/leaderboard')
+						? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 scale-105'
+						: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:scale-105'
+				}`}
+				>
+					🏆 Leaderboard
+				</a>
+				{#if $authStore.user.role === 'admin'}
+					<a 
+					href="/admin/reports" 
+					class={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+						isActive('/admin/reports')
+							? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 scale-105'
+							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:scale-105'
+					}`}
+					>
+						Admin Reports
 					</a>
-					{#if $authStore.user.role === 'admin'}
-						<a 
-						href="/admin/reports" 
-						class={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-							isActive('/admin/reports')
-								? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 scale-105'
-								: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:scale-105'
-						}`}
-						>
-							Admin Reports
-						</a>
-					{/if}
-				</div>
-
+				{/if}
+			</div>
 				<!-- Right Side Actions -->
 				<div class="flex items-center gap-2">
 				<!-- Theme Toggle -->
@@ -308,33 +338,56 @@
 					<div class="relative dropdown-container">
 						<button
 							onclick={() => {showNotifications = !showNotifications; showUserMenu = false; showMobileMenu = false;}}
-							class="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+							class="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition active:scale-95 min-w-10 h-10"
+							aria-label="Notificări"
 						>
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
 							</svg>
 							{#if unreadCount > 0}
-								<span class="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-									{unreadCount > 9 ? '9+' : unreadCount}
+								<span class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
+									{unreadCount > 99 ? '99' : unreadCount}
 								</span>
 							{/if}
 						</button>
 
 					{#if showNotifications}
+						<!-- Mobile Modal Overlay -->
+						<div 
+							class="md:hidden fixed inset-0 z-40 bg-black/40"
+							onclick={() => showNotifications = false}
+							onkeydown={(e) => e.key === 'Escape' && (showNotifications = false)}
+							role="button"
+							tabindex={0}
+							aria-label="Inchide notificari"
+						></div>
+
 						<div 
 							transition:fly={{ y: -10, duration: 300, easing: quintOut }}
-							class="absolute right-0 mt-2 w-full sm:w-96 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+							class="fixed md:absolute bottom-0 md:bottom-auto left-0 md:left-auto right-0 md:right-0 top-16 md:top-auto md:mt-2 w-full md:w-96 h-[calc(100vh-4rem)] md:h-auto max-h-screen md:max-h-[32rem] md:rounded-xl rounded-t-2xl shadow-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden z-50 flex flex-col md:block"
 						>
 							<!-- Header with actions -->
-							<div class="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900">
-								<div class="flex justify-between items-center mb-2 sm:mb-3">
-									<h3 class="font-bold text-gray-900 dark:text-gray-100 text-base sm:text-lg">Notificări</h3>
-									<div class="flex gap-1 sm:gap-2">
+							<div class="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 flex-shrink-0">
+								<div class="flex justify-between items-center gap-2 mb-2 sm:mb-3">
+									<h3 class="font-bold text-gray-900 dark:text-gray-100 text-base sm:text-lg flex-1 truncate">Notificări</h3>
+									<div class="flex gap-1 sm:gap-2 flex-shrink-0">
+										<!-- Mobile Close Button -->
+										<button 
+											onclick={() => showNotifications = false}
+											class="md:hidden p-1 sm:p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-all duration-200 active:scale-90"
+											aria-label="Inchide notificari"
+										>
+											<svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+											</svg>
+										</button>
+										
 										{#if notifications.length > 0}
 											<button 
 												onclick={clearAllNotifications}
-												class="text-xs px-2 py-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 font-medium"
+												class="text-xs px-2 py-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 font-medium active:scale-90"
 												title="Șterge toate"
+												aria-label="Sterge toate notificările"
 											>
 												<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -344,7 +397,8 @@
 										{#if unreadCount > 0}
 											<button 
 												onclick={markAllAsRead} 
-												class="text-[10px] sm:text-xs px-2 sm:px-3 py-1 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 font-medium whitespace-nowrap"
+												class="text-[10px] sm:text-xs px-2 sm:px-3 py-1 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 font-medium whitespace-nowrap active:scale-90"
+												aria-label="Marcheaza toate notificările ca citite"
 											>
 												<span class="hidden sm:inline">Marchează tot</span>
 												<span class="sm:hidden">✓ Tot</span>
@@ -354,10 +408,10 @@
 								</div>
 								
 								<!-- Filter tabs -->
-								<div class="flex gap-2">
+								<div class="flex gap-2 px-3 sm:px-4 py-2 sm:py-3 border-t border-gray-100 dark:border-gray-700 flex-shrink-0">
 									<button
 										onclick={() => notificationFilter = 'all'}
-										class="flex-1 px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-medium rounded-lg transition-all duration-200 truncate"
+										class="flex-1 px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg transition-all duration-200 truncate active:scale-95"
 										class:bg-blue-600={notificationFilter === 'all'}
 										class:text-white={notificationFilter === 'all'}
 										class:text-gray-600={notificationFilter !== 'all'}
@@ -369,7 +423,7 @@
 									</button>
 									<button
 										onclick={() => notificationFilter = 'unread'}
-										class="flex-1 px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-medium rounded-lg transition-all duration-200 relative truncate"
+										class="flex-1 px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg transition-all duration-200 relative truncate active:scale-95"
 										class:bg-blue-600={notificationFilter === 'unread'}
 										class:text-white={notificationFilter === 'unread'}
 										class:text-gray-600={notificationFilter !== 'unread'}
@@ -386,7 +440,7 @@
 							</div>
 
 							<!-- Notifications list -->
-							<div class="max-h-[60vh] sm:max-h-[32rem] overflow-y-auto overflow-x-hidden">
+							<div class="flex-1 md:flex-none md:max-h-[60vh] sm:md:max-h-[32rem] overflow-y-auto overflow-x-hidden">
 								{#if filteredNotifications.length === 0}
 									<div class="p-8 sm:p-12 text-center">
 										<div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
@@ -597,7 +651,14 @@
 					class={`px-3 py-3 rounded-lg text-sm font-medium transition ${isActive('/collaborations') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
 				>
 						🤝 Colaborări
-					</a>
+				</a>
+				<a 
+				href="/leaderboard"
+					onclick={() => showMobileMenu = false}
+					class={`px-3 py-3 rounded-lg text-sm font-medium transition ${isActive('/leaderboard') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+				>
+					🏆 Leaderboard
+				</a>
 				{#if $authStore.user.role === 'admin'}
 					<a 
 						href="/admin/reports" 
@@ -607,10 +668,10 @@
 						📈 Admin Reports
 					</a>
 				{/if}
-				</div>
+			</div>
 
-				<!-- Mobile User Info & Logout -->
-				<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+			<!-- Mobile User Info & Logout -->
+			<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
 					<div class="px-3 py-2">
 						<div class="flex items-center gap-3 mb-3">
 							<div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -638,4 +699,47 @@
 			</div>
 		{/if}
 	</nav>
+
+	<!-- Confirmation Dialog Modal -->
+	{#if confirmDialog?.show}
+		<!-- Overlay -->
+		<div 
+			class="fixed inset-0 z-50 bg-black/60 transition-opacity duration-200"
+			onclick={() => confirmDialog = null}
+			onkeydown={(e) => e.key === 'Escape' && (confirmDialog = null)}
+			role="button"
+			tabindex={0}
+			aria-label="Inchide dialog"
+		></div>
+
+		<!-- Dialog Container -->
+		<div 
+			transition:scale={{ duration: 200, start: 0.95 }}
+			class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+		>
+			<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 max-w-sm w-11/12 pointer-events-auto">
+				<!-- Title -->
+				<h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{confirmDialog.title}</h3>
+				
+				<!-- Message -->
+				<p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6">{confirmDialog.message}</p>
+				
+				<!-- Actions -->
+				<div class="flex gap-3 justify-end">
+					<button
+						onclick={() => confirmDialog = null}
+						class="px-4 py-2 text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition active:scale-95"
+					>
+						Anulează
+					</button>
+					<button
+						onclick={confirmDialog.action}
+						class="px-4 py-2 text-sm sm:text-base font-medium text-white bg-red-600 hover:bg-red-700 dark:hover:bg-red-700 rounded-lg transition active:scale-95"
+					>
+						Șterge
+					</button>
+				</div>
+			</div>
+		</div>
+	{/if}
 </header>

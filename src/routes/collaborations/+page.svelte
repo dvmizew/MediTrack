@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { fly, scale } from 'svelte/transition';
-	import { quintOut } from 'svelte/easing';
 	import { goto } from '$app/navigation';
 	import { authStore, isMedic, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';

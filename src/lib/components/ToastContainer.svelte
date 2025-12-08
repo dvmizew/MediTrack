@@ -10,12 +10,32 @@
 </script>
 
 <script lang="ts">
-	import { fade, fly, scale } from 'svelte/transition';
+	import { fly, scale } from 'svelte/transition';
 	import { quintOut, cubicOut } from 'svelte/easing';
-	import { onMount } from 'svelte';
 
 	let { toasts = $bindable([]) }: { toasts: Toast[] } = $props();
 	let progressIntervals = new Map<number, NodeJS.Timeout>();
+	
+	// Production-grade toast management
+	const MAX_VISIBLE_TOASTS = 5;
+	const TOAST_PRIORITY: Record<Toast['type'], number> = {
+		error: 3,
+		warning: 2,
+		success: 1,
+		info: 0
+	};
+	
+	// Only show top MAX_VISIBLE_TOASTS by priority and recency
+	let visibleToasts = $derived.by(() => {
+		return toasts
+			.sort((a, b) => {
+				// Higher priority first, then by recency
+				const priorityDiff = (TOAST_PRIORITY[b.type] ?? 0) - (TOAST_PRIORITY[a.type] ?? 0);
+				if (priorityDiff !== 0) return priorityDiff;
+				return (b.id ?? 0) - (a.id ?? 0);
+			})
+			.slice(0, MAX_VISIBLE_TOASTS);
+	});
 
 	function removeToast(id: number) {
 		if (progressIntervals.has(id)) {
@@ -55,17 +75,34 @@
 	});
 
 	function playSound(type: Toast['type']) {
+		if (typeof Audio === 'undefined') return;
+		
 		try {
 			const audio = new Audio();
-			switch(type) {
+			// Adjust volume based on type
+			const volumes: Record<Toast['type'], number> = {
+				success: 0.2,
+				error: 0.3,
+				warning: 0.25,
+				info: 0.15
+			};
+			
+			audio.volume = volumes[type] || 0.2;
+			
+			switch (type) {
 				case 'success':
-					audio.src = 'data:audio/wav;base64,UklGRhwAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQA=';
+					audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBWuu/c';
 					break;
 				case 'error':
-					audio.src = 'data:audio/wav;base64,UklGRhwAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQA=';
+					audio.src = 'data:audio/wav;base64,UklGRjYGAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQIAAP+BAf7/gf+B/4H/gf+B/4H/gf+B//8=';
+					break;
+				case 'warning':
+					audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBWuu/c';
+					break;
+				case 'info':
+					audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBWuu/c';
 					break;
 			}
-			audio.volume = 0.3;
 			audio.play().catch(() => {});
 		} catch {}
 	}
@@ -86,13 +123,13 @@
 	function getColors(type: Toast['type']) {
 		switch (type) {
 			case 'success':
-				return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300';
+				return 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700/50 text-green-900 dark:text-green-100';
 			case 'error':
-				return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300';
+				return 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700/50 text-red-900 dark:text-red-100';
 			case 'warning':
-				return 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300';
-			default:
-				return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300';
+				return 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700/50 text-yellow-900 dark:text-yellow-100';
+			case 'info':
+				return 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700/50 text-blue-900 dark:text-blue-100';
 		}
 	}
 
@@ -104,20 +141,20 @@
 				return 'bg-red-500';
 			case 'warning':
 				return 'bg-yellow-500';
-			default:
+			case 'info':
 				return 'bg-blue-500';
 		}
 	}
 </script>
 
-<div class="fixed top-4 right-4 z-[9999] flex flex-col gap-3 pointer-events-none max-w-[calc(100vw-2rem)]">
-	{#each toasts as toast, index (toast.id)}
+<div class="fixed top-4 sm:top-6 right-4 sm:right-6 z-[9999] flex flex-col gap-2 sm:gap-3 pointer-events-none max-w-[calc(100vw-2rem)] sm:max-w-sm safe-area-top">
+	{#each visibleToasts as toast, index (toast.id)}
 		<div
 			in:fly={{ x: 300, duration: 400, delay: index * 50, easing: quintOut }}
 			out:scale={{ duration: 200, easing: cubicOut, opacity: 0, start: 0.9 }}
-			class="pointer-events-auto w-full sm:w-96"
+			class="pointer-events-auto w-full"
 		>
-			<div class={`rounded-xl shadow-xl border p-3 md:p-4 ${getColors(toast.type)} backdrop-blur-sm relative overflow-hidden`}>
+			<div class={`rounded-xl shadow-lg sm:shadow-xl border p-3 sm:p-4 ${getColors(toast.type)} backdrop-blur-sm relative overflow-hidden transition-all duration-300`}>
 				<!-- Progress bar -->
 				{#if toast.duration && toast.duration > 0}
 					<div class="absolute bottom-0 left-0 h-1 bg-black/10 dark:bg-white/10 w-full">
@@ -128,24 +165,22 @@
 					</div>
 				{/if}
 				
-				<div class="flex gap-2 md:gap-3">
-					<div class="flex-shrink-0">
-						<div class="w-5 h-5 flex items-center justify-center">
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								{@html getIcon(toast.type)}
-							</svg>
-						</div>
+				<div class="flex gap-2 sm:gap-3 items-start">
+					<div class="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center mt-0.5">
+						<svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							{@html getIcon(toast.type)}
+						</svg>
 					</div>
 					<div class="flex-1 min-w-0">
-						<p class="font-semibold text-sm md:text-base">{toast.title}</p>
-						<p class="text-xs md:text-sm mt-1 opacity-90 line-clamp-2">{toast.message}</p>
+						<p class="font-semibold text-sm sm:text-base leading-tight">{toast.title}</p>
+						<p class="text-xs sm:text-sm mt-1 opacity-90 line-clamp-2 break-words">{toast.message}</p>
 					</div>
 					<button
 						onclick={() => removeToast(toast.id)}
-						class="flex-shrink-0 opacity-70 hover:opacity-100 hover:scale-110 transition-all duration-200 touch-manipulation p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
+						class="flex-shrink-0 min-w-8 h-8 sm:min-w-10 sm:h-10 flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity duration-200 touch-manipulation p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 active:scale-95"
 						aria-label="Închide notificarea"
 					>
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
 						</svg>
 					</button>

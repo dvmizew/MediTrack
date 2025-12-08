@@ -1,14 +1,15 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
-	import { scale } from 'svelte/transition';
-	import { quintOut } from 'svelte/easing';
+	import { socketClient } from '$lib/api/socket';
 
 	let collaborations = $state<any[]>([]);
 	let loading = $state(true);
 	let error = $state('');
+	let userStatuses = $state<Map<number, { online: boolean; lastSeen: number | null }>>(new Map());
+	let selectedUserId = $state<number | null>(null);
 
 	onMount(async () => {
 		if (!$authStore.isAuthenticated) {
@@ -16,6 +17,12 @@
 			return;
 		}
 		await loadCollaborations();
+		
+		window.addEventListener('user-status-change', handleUserStatusChange as EventListener);
+	});
+
+	onDestroy(() => {
+		window.removeEventListener('user-status-change', handleUserStatusChange as EventListener);
 	});
 
 	async function loadCollaborations() {
@@ -24,6 +31,19 @@
 			error = '';
 			const data = await api.getMyCollaborations();
 			collaborations = data;
+			
+			// Load status for each user
+			for (const collab of data) {
+				try {
+					const status = await api.getUserStatus(collab.user_id);
+					userStatuses.set(collab.user_id, {
+						online: status.online,
+						lastSeen: status.lastSeen || null
+					});
+				} catch (err) {
+					console.error(`Failed to load status for user ${collab.user_id}:`, err);
+				}
+			}
 		} catch (err: any) {
 			console.error('Failed to load collaborations:', err);
 			error = err.message || 'Nu s-au putut încărca colaborările';
@@ -31,35 +51,45 @@
 			loading = false;
 		}
 	}
+
+	function handleUserStatusChange(event: CustomEvent) {
+		const { userId, online, lastSeen } = event.detail;
+		userStatuses.set(userId, { online, lastSeen: lastSeen || null });
+	}
+
+	function formatLastSeen(timestamp: number | null): string {
+		if (!timestamp) return 'Offline';
+		
+		const now = Date.now();
+		const diff = now - timestamp;
+		const seconds = Math.floor(diff / 1000);
+		const minutes = Math.floor(seconds / 60);
+		const hours = Math.floor(minutes / 60);
+		const days = Math.floor(hours / 24);
+
+		if (seconds < 60) return 'Active now';
+		if (minutes < 60) return `${minutes}m ago`;
+		if (hours < 24) return `${hours}h ago`;
+		if (days === 1) return 'Yesterday';
+		if (days < 7) return `${days}d ago`;
+		
+		return new Date(timestamp).toLocaleDateString();
+	}
+
+	async function openChat(userId: number) {
+		selectedUserId = userId;
+		// Small delay to show the animation, then navigate
+		await new Promise(resolve => setTimeout(resolve, 150));
+		goto(`/chat/${userId}`);
+	}
 </script>
 
 {#if $authStore.isAuthenticated}
-	<main class="fixed inset-0 flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
-		<!-- Header - Chat Style -->
-		<div class="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 shadow-lg flex-shrink-0 z-10">
-			<div class="w-full px-3 sm:px-4 md:px-6">
-				<div class="flex items-center justify-between h-16 sm:h-18">
-					<button 
-						onclick={() => goto('/dashboard')}
-						class="flex items-center gap-3 hover:bg-white/10 dark:hover:bg-black/20 rounded-xl p-2 -ml-2 transition-all duration-200"
-					>
-						<!-- Back arrow -->
-						<svg class="w-6 h-6 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
-						</svg>
-						
-						<div class="text-left">
-							<h1 class="text-lg sm:text-xl font-bold text-white drop-shadow-sm">💬 Mesaje</h1>
-							<p class="text-xs text-white/80 hidden sm:block">Conversațiile tale</p>
-						</div>
-					</button>
-				</div>
-			</div>
-		</div>
-
+	<main class="min-h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
+		<div class="max-w-6xl mx-auto min-h-[calc(100vh-4rem)] flex flex-col overflow-hidden w-full">
 		<!-- Content -->
-		<div class="flex-1 overflow-y-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6">
-			<div class="max-w-4xl mx-auto">
+		<div class="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 md:px-6 py-4 sm:py-6">
+			<div class="w-full">
 			{#if loading}
 				<div class="flex justify-center py-12 sm:py-20">
 					<div class="animate-spin rounded-full h-10 w-10 sm:h-14 sm:w-14 border-3 sm:border-4 border-blue-600 border-t-transparent shadow-lg shadow-blue-500/50"></div>
@@ -103,8 +133,8 @@
 				<div class="grid gap-3 sm:gap-4 md:gap-5">
 					{#each collaborations as collab}
 						<button
-							onclick={() => goto(`/chat/${collab.user_id}`)}
-							class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-2 border-gray-200 dark:border-gray-700 p-4 sm:p-5 md:p-6 hover:shadow-xl hover:shadow-blue-500/10 active:border-blue-300 dark:active:border-blue-600 sm:hover:border-blue-300 sm:dark:hover:border-blue-600 sm:hover:-translate-y-1 transition-all duration-300 text-left group animate-scale-in touch-manipulation"
+							onclick={() => openChat(collab.user_id)}
+							class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-2 border-gray-200 dark:border-gray-700 p-4 sm:p-5 md:p-6 hover:shadow-xl hover:shadow-blue-500/10 active:border-blue-300 dark:active:border-blue-600 sm:hover:border-blue-300 sm:dark:hover:border-blue-600 sm:hover:-translate-y-1 transition-all duration-300 text-left group animate-scale-in touch-manipulation {selectedUserId === collab.user_id ? 'scale-95 opacity-50' : ''}"
 						>
 							<div class="flex items-center justify-between gap-2 sm:gap-4">
 								<div class="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
@@ -114,7 +144,7 @@
 											{collab.name?.charAt(0).toUpperCase() || '?'}
 										</div>
 										<!-- Online status indicator -->
-										<div class="absolute bottom-0 right-0 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
+										<div class="absolute bottom-0 right-0 w-3 h-3 sm:w-3.5 sm:h-3.5 {userStatuses.get(collab.user_id)?.online ? 'bg-green-500' : 'bg-gray-400'} border-2 border-white dark:border-gray-800 rounded-full"></div>
 									</div>
 									
 									<div class="min-w-0 flex-1">
@@ -127,9 +157,13 @@
 												{collab.role === 'medic' ? '⚕️ Doctor' : '🧑 Pacient'}
 											</span>
 										</div>
-										<!-- Email or last message preview -->
+										<!-- Status text -->
 										<p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
-											{collab.email}
+											{#if userStatuses.get(collab.user_id)?.online}
+												<span class="text-green-600 dark:text-green-500 font-medium">● Active now</span>
+											{:else}
+												<span class="text-gray-400 dark:text-gray-500">{formatLastSeen(userStatuses.get(collab.user_id)?.lastSeen || null)}</span>
+											{/if}
 										</p>
 									</div>
 								</div>
@@ -142,8 +176,9 @@
 						</button>
 					{/each}
 				</div>
-			{/if}
+ 			{/if}
 			</div>
 		</div>
-	</main>
+	</div>
+</main>
 {/if}

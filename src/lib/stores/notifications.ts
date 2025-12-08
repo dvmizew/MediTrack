@@ -62,16 +62,16 @@ function createToastStore() {
 			update((toasts) => toasts.filter((t) => t.id !== id));
 		},
 		success: (title: string, message: string, duration?: number) => {
-			return createToastStore().add({ type: 'success', title, message, duration });
+			return toastStore.add({ type: 'success', title, message, duration });
 		},
 		error: (title: string, message: string, duration?: number) => {
-			return createToastStore().add({ type: 'error', title, message, duration });
+			return toastStore.add({ type: 'error', title, message, duration });
 		},
 		warning: (title: string, message: string, duration?: number) => {
-			return createToastStore().add({ type: 'warning', title, message, duration });
+			return toastStore.add({ type: 'warning', title, message, duration });
 		},
 		info: (title: string, message: string, duration?: number) => {
-			return createToastStore().add({ type: 'info', title, message, duration });
+			return toastStore.add({ type: 'info', title, message, duration });
 		}
 	};
 }

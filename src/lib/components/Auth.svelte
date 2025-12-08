@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { fade, fly, slide } from 'svelte/transition';
+	import { fly, slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';

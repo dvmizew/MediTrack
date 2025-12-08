@@ -23,6 +23,7 @@ import confirmationRoutes from './routes/confirmations.js';
 import messageRoutes from './routes/messages.js';
 import notificationRoutes from './routes/notifications.js';
 import reportsRoutes from './routes/reports.js';
+import leaderboardRoutes from './routes/leaderboard.js';
 import { setupSocketHandlers } from './socket/handlers.js';
 import { startReminderCron } from './cron/reminders.js';
 import { startStreakCheckCron } from './cron/streaks.js';
@@ -78,6 +79,7 @@ app.use('/confirmations', confirmationRoutes);
 app.use('/messages', messageRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/admin/reports', reportsRoutes);
+app.use('/leaderboard', leaderboardRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

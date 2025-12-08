@@ -20,7 +20,7 @@ export interface AuthState {
 }
 
 const initialState: AuthState = {
-	user: null,
+	user: browser ? (localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null) : null,
 	token: browser ? localStorage.getItem('token') : null,
 	isAuthenticated: false
 };
@@ -33,12 +33,14 @@ function createAuthStore() {
 		login: (token: string, user: User) => {
 			if (browser) {
 				localStorage.setItem('token', token);
+				localStorage.setItem('user', JSON.stringify(user));
 			}
 			set({ token, user, isAuthenticated: true });
 		},
 		logout: () => {
 			if (browser) {
 				localStorage.removeItem('token');
+				localStorage.removeItem('user');
 			}
 			set({ token: null, user: null, isAuthenticated: false });
 		},

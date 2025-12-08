@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { authStore, isPacient, isMedic } from '$lib/stores/auth';
+	import { isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 
 	let loading = $state(true);

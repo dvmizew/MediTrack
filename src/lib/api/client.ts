@@ -36,16 +36,30 @@ async function request(endpoint: string, options: RequestOptions = {}) {
 					window.location.href = '/';
 				}
 			}
-			const errorData = await response.json().catch(() => ({ error: 'Unauthorized' }));
-			throw new Error(errorData.error || 'Unauthorized');
+			try {
+				const errorData = await response.json();
+				throw new Error(errorData.error || 'Unauthorized');
+			} catch {
+				throw new Error('Unauthorized');
+			}
 		}
 
 		if (!response.ok) {
-			const error = await response.json().catch(() => ({ error: 'Request failed' }));
-			throw new Error(error.error || 'Request failed');
+			try {
+				const error = await response.json();
+				throw new Error(error.error || `Request failed with status ${response.status}`);
+			} catch (e) {
+				if (e instanceof Error) throw e;
+				throw new Error(`Request failed with status ${response.status}`);
+			}
 		}
 
-		return response.json();
+		try {
+			return await response.json();
+		} catch (e) {
+			console.error('Failed to parse response JSON:', e);
+			throw new Error('Invalid response format from server');
+		}
 	} catch (error) {
 		// Network errors or other fetch errors
 		if (error instanceof Error) {
@@ -159,6 +173,8 @@ export const api = {
 			body: JSON.stringify(data)
 		}),
 	getMedicationHistory: () => request('/confirmations/history'),
+	getMedicationHistoryAdherence: (days: number = 30) =>
+		request(`/confirmations/history/adherence?days=${Math.min(days, 365)}`),
 
 	// Notifications
 	getNotifications: () => request('/notifications'),
@@ -181,5 +197,10 @@ export const api = {
 			body: JSON.stringify(data)
 		}),
 	getConversation: (userId: number) => request(`/messages/conversation/${userId}`),
-	getMyConversations: () => request('/messages/conversations')
+	getMyConversations: () => request('/messages/conversations'),
+	getUserStatus: (userId: number) => request(`/messages/status/${userId}`),
+
+	// Leaderboard
+	getLeaderboard: (timeFilter?: 'all' | 'month' | 'week') =>
+		request(`/leaderboard${timeFilter ? `?filter=${timeFilter}` : ''}`)
 };
