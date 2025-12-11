@@ -3,7 +3,6 @@
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
-	import { socketClient } from '$lib/api/socket';
 
 	let collaborations = $state<any[]>([]);
 	let loading = $state(true);
@@ -18,11 +17,15 @@
 		}
 		await loadCollaborations();
 		
-		window.addEventListener('user-status-change', handleUserStatusChange as EventListener);
+		if (typeof window !== 'undefined') {
+			window.addEventListener('user-status-change', handleUserStatusChange as EventListener);
+		}
 	});
 
 	onDestroy(() => {
-		window.removeEventListener('user-status-change', handleUserStatusChange as EventListener);
+		if (typeof window !== 'undefined') {
+			window.removeEventListener('user-status-change', handleUserStatusChange as EventListener);
+		}
 	});
 
 	async function loadCollaborations() {
@@ -67,7 +70,7 @@
 		const hours = Math.floor(minutes / 60);
 		const days = Math.floor(hours / 24);
 
-		if (seconds < 60) return 'Active now';
+		if (seconds < 60) return 'Just now';
 		if (minutes < 60) return `${minutes}m ago`;
 		if (hours < 24) return `${hours}h ago`;
 		if (days === 1) return 'Yesterday';

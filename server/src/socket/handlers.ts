@@ -31,20 +31,24 @@ export const setupSocketHandlers = (io: Server) => {
 
     socket.join(`user:${userId}`);
 
-    await redis.set(`socket:${userId}`, socket.id, 'EX', 86400);
+    await redis.set(`socket:${userId}`, socket.id, 'EX', 120);
     await redis.set(`user:${userId}:online`, 'true', 'EX', 120);
-    await redis.set(`user:${userId}:last_seen`, Date.now().toString());
 
     io.emit('user-status-change', { userId, online: true });
 
     // Setup heartbeat to keep online status fresh
+    // This runs every 50 seconds to refresh before the 120 second expiration
     const heartbeatInterval = setInterval(async () => {
       try {
-        await redis.set(`user:${userId}:online`, 'true', 'EX', 120);
+        // Check if socket is still connected
+        if (socket.connected) {
+          await redis.set(`user:${userId}:online`, 'true', 'EX', 120);
+          await redis.set(`socket:${userId}`, socket.id, 'EX', 120);
+        }
       } catch (error) {
         console.error('Heartbeat error:', error);
       }
-    }, 60000);
+    }, 50000);
 
     // Join conversation room with another user
     socket.on('join-conversation', async (otherUserId: number) => {

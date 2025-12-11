@@ -72,66 +72,69 @@ class SocketClient {
 
 				// Show toast notification with appropriate type
 				let toastType: 'success' | 'error' | 'warning' | 'info' = 'info';
-			let sound = false;
-			let duration = 4000;
+				let sound = false;
+				let duration = 4000;
 
-			switch (data.type) {
-				case 'alert':
-				case 'error':
-					toastType = 'error';
-					sound = true;
-					duration = 6000;
-					break;
-				case 'reminder':
-				case 'warning':
-					toastType = 'warning';
-					sound = true;
-					duration = 5000;
-					break;
-				case 'success':
-					toastType = 'success';
-					sound = true;
-					duration = 4000;
-					break;
-				case 'chat':
-				case 'message':
-					toastType = 'info';
-					sound = false;
-					duration = 3000;
-					break;
-			}
+				switch (data.type) {
+					case 'alert':
+					case 'error':
+						toastType = 'error';
+						sound = true;
+						duration = 6000;
+						break;
+					case 'reminder':
+					case 'warning':
+						toastType = 'warning';
+						sound = true;
+						duration = 5000;
+						break;
+					case 'success':
+						toastType = 'success';
+						sound = true;
+						duration = 4000;
+						break;
+					case 'chat':
+					case 'message':
+						toastType = 'info';
+						sound = false;
+						duration = 3000;
+						break;
+				}
 
-			notificationService.showToast({
-				type: toastType,
-				title: notification.title,
-				message: notification.message,
-				duration: duration,
-				sound: sound,
-				vibrate: true
-			});
-
-			if (notificationService.getPermissionStatus() === 'granted' && data.type !== 'chat') {
-				notificationService.showPushNotification({
+				notificationService.showToast({
 					type: toastType,
 					title: notification.title,
 					message: notification.message,
-					url: data.url || '/dashboard',
-					tag: data.type,
-					sound: sound
+					duration: duration,
+					sound: sound,
+					vibrate: true
 				});
-			}
+
+				if (notificationService.getPermissionStatus() === 'granted' && data.type !== 'chat') {
+					notificationService.showPushNotification({
+						type: toastType,
+						title: notification.title,
+						message: notification.message,
+						url: data.url || '/dashboard',
+						tag: data.type,
+						sound: sound
+					});
+				}
 
 				// Dispatch custom event for component listeners
-				window.dispatchEvent(new CustomEvent('notification', { detail: notification }));
+				if (typeof window !== 'undefined') {
+					window.dispatchEvent(new CustomEvent('notification', { detail: notification }));
+				}
 			} catch (error) {
 				console.error('Error processing notification:', error);
 			}
 		});
-
 		this.socket.on('new-message', (message) => {
 			try {
 				notificationService.info('Mesaj nou', `De la ${message.senderName}`, 3000);
-				window.dispatchEvent(new CustomEvent('new-message', { detail: message }));
+				if (typeof window !== 'undefined') {
+					window.dispatchEvent(new CustomEvent('new-message', { detail: message }));
+				}
 			} catch (error) {
 				console.error('Error processing message:', error);
 			}
@@ -139,7 +142,9 @@ class SocketClient {
 
 		this.socket.on('user-typing', (userId) => {
 			try {
-				window.dispatchEvent(new CustomEvent('user-typing', { detail: userId }));
+				if (typeof window !== 'undefined') {
+					window.dispatchEvent(new CustomEvent('user-typing', { detail: userId }));
+				}
 			} catch (error) {
 				console.error('Error dispatching user-typing event:', error);
 			}
@@ -147,9 +152,21 @@ class SocketClient {
 
 		this.socket.on('user-stop-typing', (userId) => {
 			try {
-				window.dispatchEvent(new CustomEvent('user-stop-typing', { detail: userId }));
+				if (typeof window !== 'undefined') {
+					window.dispatchEvent(new CustomEvent('user-stop-typing', { detail: userId }));
+				}
 			} catch (error) {
 				console.error('Error dispatching user-stop-typing event:', error);
+			}
+		});
+
+		this.socket.on('user-status-change', (data) => {
+			try {
+				if (typeof window !== 'undefined') {
+					window.dispatchEvent(new CustomEvent('user-status-change', { detail: data }));
+				}
+			} catch (error) {
+				console.error('Error dispatching user-status-change event:', error);
 			}
 		});
 
@@ -166,7 +183,6 @@ class SocketClient {
 			this.socket = null;
 		}
 	}
-
 	joinConversation(otherUserId: number) {
 		this.socket?.emit('join-conversation', otherUserId);
 	}

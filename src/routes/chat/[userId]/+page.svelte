@@ -52,30 +52,34 @@
 			socketClient.socket?.emit('join-conversation', otherUserId);
 		}
 
-	// Listen for new messages
-	window.addEventListener('new-message', handleNewMessage as EventListener);
-	window.addEventListener('user-typing', handleUserTyping as EventListener);
-	window.addEventListener('user-stop-typing', handleUserStopTyping as EventListener);
-	window.addEventListener('user-status-change', handleUserStatusChange as EventListener);
-	
-	// Close dropdown on click outside
-	window.addEventListener('click', handleClickOutside);
+		// Listen for new messages
+		if (typeof window !== 'undefined') {
+			window.addEventListener('new-message', handleNewMessage as EventListener);
+			window.addEventListener('user-typing', handleUserTyping as EventListener);
+			window.addEventListener('user-stop-typing', handleUserStopTyping as EventListener);
+			window.addEventListener('user-status-change', handleUserStatusChange as EventListener);
+			
+			// Close dropdown on click outside
+			window.addEventListener('click', handleClickOutside);
+		}
 
-	// Load initial user status
-	loadUserStatus();
-});
+		// Load initial user status
+		loadUserStatus();
+	});
 
-onDestroy(() => {
-	window.removeEventListener('new-message', handleNewMessage as EventListener);
-	window.removeEventListener('user-typing', handleUserTyping as EventListener);
-	window.removeEventListener('user-stop-typing', handleUserStopTyping as EventListener);
-	window.removeEventListener('user-status-change', handleUserStatusChange as EventListener);
-	window.removeEventListener('click', handleClickOutside);
-	
-	if (typingTimeout) {
-		clearTimeout(typingTimeout);
-	}
-});	function handleNewMessage(event: CustomEvent) {
+	onDestroy(() => {
+		if (typeof window !== 'undefined') {
+			window.removeEventListener('new-message', handleNewMessage as EventListener);
+			window.removeEventListener('user-typing', handleUserTyping as EventListener);
+			window.removeEventListener('user-stop-typing', handleUserStopTyping as EventListener);
+			window.removeEventListener('user-status-change', handleUserStatusChange as EventListener);
+			window.removeEventListener('click', handleClickOutside);
+		}
+		
+		if (typingTimeout) {
+			clearTimeout(typingTimeout);
+		}
+	});	function handleNewMessage(event: CustomEvent) {
 		const message = event.detail;
 		
 		// Check if message belongs to this conversation
@@ -148,7 +152,7 @@ onDestroy(() => {
 		const hours = Math.floor(minutes / 60);
 		const days = Math.floor(hours / 24);
 
-		if (seconds < 60) return 'Active now';
+		if (seconds < 60) return 'Last seen just now';
 		if (minutes < 60) return `Last seen ${minutes}m ago`;
 		if (hours < 24) return `Last seen ${hours}h ago`;
 		if (days === 1) return 'Last seen yesterday';

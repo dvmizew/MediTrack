@@ -195,14 +195,19 @@ router.patch('/:messageId/read', authenticate, async (req: Request, res: Respons
 router.get('/status/:userId', authenticate, async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
+    const targetUserId = parseInt(userId);
     
-    const online = await redis.get(`user:${userId}:online`);
-    const lastSeenStr = await redis.get(`user:${userId}:last_seen`);
+    const online = await redis.get(`user:${targetUserId}:online`);
+    const lastSeenStr = await redis.get(`user:${targetUserId}:last_seen`);
+    
+    // Return online status and last seen timestamp
+    // The frontend will handle the formatting of "Active now" vs "last seen X ago"
+    const isOnline = online === 'true';
     
     res.json({
-      userId: parseInt(userId),
-      online: online === 'true',
-      lastSeen: lastSeenStr ? parseInt(lastSeenStr) : null
+      userId: targetUserId,
+      online: isOnline,
+      lastSeen: isOnline ? null : (lastSeenStr ? parseInt(lastSeenStr) : null)
     });
   } catch (error) {
     logger.error('Get user status error', { error });
