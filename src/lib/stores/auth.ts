@@ -22,7 +22,7 @@ export interface AuthState {
 const initialState: AuthState = {
 	user: browser ? (localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null) : null,
 	token: browser ? localStorage.getItem('token') : null,
-	isAuthenticated: false
+	isAuthenticated: browser ? !!localStorage.getItem('token') : false
 };
 
 function createAuthStore() {

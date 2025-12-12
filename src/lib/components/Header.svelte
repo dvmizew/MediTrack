@@ -8,6 +8,7 @@
 	import { socketClient } from '$lib/api/socket';
 	import { notificationStore, toastStore } from '$lib/stores/notifications';
 	import { themeStore } from '$lib/stores/theme';
+	import { logout as sessionLogout } from '$lib/services/sessionManager';
 
 	let notifications = $state<any[]>([]);
 	let showNotifications = $state(false);
@@ -192,9 +193,8 @@
 	}
 
 	function handleLogout() {
-		socketClient.disconnect();
-		authStore.logout();
-		window.location.href = '/';
+		// Use session manager logout which handles cleanup
+		sessionLogout();
 	}
 
 	function isActive(path: string) {

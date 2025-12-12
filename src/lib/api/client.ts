@@ -85,6 +85,11 @@ export const api = {
 			auth: false
 		}),
 
+	refreshToken: () =>
+		request('/auth/refresh-token', {
+			method: 'POST'
+		}),
+
 	getProfile: () => request('/users/me'),
 
 	updateProfile: (data: { fullName?: string; email?: string; avatarUrl?: string }) =>

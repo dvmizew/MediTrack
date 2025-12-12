@@ -8,6 +8,7 @@
 	import { toastStore, type Toast } from '$lib/stores/notifications';
 	import { notificationService } from '$lib/services/notificationService';
 	import { themeStore } from '$lib/stores/theme';
+	import { startSessionManager, stopSessionManager } from '$lib/services/sessionManager';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import { registerServiceWorker, setupInstallPrompt, setupNetworkDetection } from '$lib/pwa';
@@ -29,6 +30,21 @@
 			notificationService.error('Conectare pierdută', 'Funcții limitate offline', 5000);
 		}
 	}) as EventListener;
+
+	// When tab becomes visible, optimistically refresh token to keep session alive
+	const handleVisibilityChange = () => {
+		if (document.visibilityState === 'visible' && $authStore.token) {
+			api.refreshToken()
+				.then((refreshed) => {
+					if (refreshed?.token) {
+						authStore.setToken(refreshed.token);
+					}
+				})
+				.catch(() => {
+					// Ignore; session manager will handle periodic refresh
+				});
+		}
+	};
 
 	onMount(async () => {
 		if (!browser) return;
@@ -52,19 +68,30 @@
 		
 		// Listen for network status changes
 		window.addEventListener('network-status', handleNetworkStatus);
+		document.addEventListener('visibilitychange', handleVisibilityChange);
 		
 		const { token } = $authStore;
-		
-		if (token) {
-			try {
-				const user = await api.getProfile();
-				authStore.updateUser(user);
-				socketClient.connect();
-			} catch (error) {
-				console.error('Failed to load profile:', error);
-				authStore.logout();
+
+
+			if (token) {
+				try {
+					// Optimistic refresh first to extend session seamlessly
+					const refreshed = await api.refreshToken();
+					if (refreshed?.token) {
+						// Apply refreshed token immediately
+						authStore.setToken(refreshed.token);
+					}
+					// Load profile with current (possibly refreshed) token
+					const user = await api.getProfile();
+					// Fully hydrate session state
+					authStore.login($authStore.token!, user);
+					socketClient.connect();
+					startSessionManager();
+				} catch (error) {
+					console.error('Startup session initialization failed:', error);
+					authStore.logout();
+				}
 			}
-		}
 	});
 
 	onDestroy(() => {
@@ -75,6 +102,10 @@
 		
 		// Cleanup event listeners
 		window.removeEventListener('network-status', handleNetworkStatus);
+		document.removeEventListener('visibilitychange', handleVisibilityChange);
+		
+		// Stop session manager
+		stopSessionManager();
 		
 		// Disconnect socket on component destroy (when user logs out)
 		if (!$authStore.isAuthenticated) {

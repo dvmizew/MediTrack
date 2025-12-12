@@ -3,7 +3,7 @@ import { logger } from '../config/logger.js';
 import bcrypt from 'bcrypt';
 import { body, validationResult } from 'express-validator';
 import { query } from '../config/database.js';
-import { generateToken } from '../middleware/auth.js';
+import { generateToken, authenticate, AuthRequest } from '../middleware/auth.js';
 import passport from '../config/passport.js';
 
 const router: Router = express.Router();
@@ -164,5 +164,49 @@ router.get(
     }
   }
 );
+
+// Refresh token endpoint
+router.post('/refresh-token', authenticate, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthRequest).user!.userId;
+    
+    // Fetch fresh user data from database
+    const result = await query(
+      'SELECT user_id, email, role, is_active FROM users WHERE user_id = $1',
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.rows[0];
+
+    if (!user.is_active) {
+      return res.status(401).json({ error: 'Account is inactive' });
+    }
+
+    // Generate new token with fresh data
+    const newToken = generateToken({
+      userId: user.user_id,
+      email: user.email,
+      role: user.role,
+    });
+
+    logger.info('Token refreshed', { userId: user.user_id });
+
+    res.json({
+      token: newToken,
+      user: {
+        id: user.user_id,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    logger.error('Refresh token error', { error });
+    res.status(500).json({ error: 'Token refresh failed' });
+  }
+});
 
 export default router;
