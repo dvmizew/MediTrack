@@ -11,6 +11,7 @@ dotenv.config();
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import passport from './config/passport.js';
+import { errorFormatter } from './middleware/errorFormatter.js';
 import { pool } from './config/database.js';
 import { redis } from './config/redis.js';
 import { logger, requestLoggerStream } from './config/logger.js';
@@ -99,6 +100,9 @@ app.use('/doses', doseRoutes);
 app.use('/confirmations', confirmationRoutes);
 app.use('/messages', messageRoutes);
 app.use('/notifications', notificationRoutes);
+
+// Centralized error formatting
+app.use(errorFormatter);
 app.use('/admin/reports', reportsRoutes);
 app.use('/leaderboard', leaderboardRoutes);
 

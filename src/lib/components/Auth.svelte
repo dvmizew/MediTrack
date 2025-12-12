@@ -7,6 +7,7 @@
 	import { socketClient } from '$lib/api/socket';
 	import { themeStore } from '$lib/stores/theme';
 	import { goto } from '$app/navigation';
+	import { authLoginSchema, authRegisterSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
 
 	let email = $state('');
 	let password = $state('');
@@ -26,17 +27,27 @@
 
 		try {
 			if (isRegister) {
-				const response = await api.register({ email, password, fullName });
+				const parsed = parseWithFriendlyErrors(authRegisterSchema, { email, password, fullName });
+				if (!parsed.success) {
+					error = parsed.errors.join('\n');
+					return;
+				}
+				const response = await api.register(parsed.data);
 				authStore.login(response.token, response.user);
 			} else {
-				const response = await api.login({ email, password });
+				const parsed = parseWithFriendlyErrors(authLoginSchema, { email, password });
+				if (!parsed.success) {
+					error = parsed.errors.join('\n');
+					return;
+				}
+				const response = await api.login(parsed.data);
 				authStore.login(response.token, response.user);
 			}
 
 			socketClient.connect();
 			goto('/dashboard');
 		} catch (err: any) {
-			error = err.message || 'Authentication failed';
+			error = err?.error || err?.message || 'Authentication failed';
 		} finally {
 			loading = false;
 		}

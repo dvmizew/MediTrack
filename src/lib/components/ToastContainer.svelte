@@ -12,6 +12,7 @@
 <script lang="ts">
 	import { fly, scale } from 'svelte/transition';
 	import { quintOut, cubicOut } from 'svelte/easing';
+	import { sanitizeHTML } from '$lib/utils/sanitize';
 
 	let { toasts = $bindable([]) }: { toasts: Toast[] } = $props();
 	let progressIntervals = new Map<number, NodeJS.Timeout>();
@@ -173,7 +174,8 @@
 					</div>
 					<div class="flex-1 min-w-0">
 						<p class="font-semibold text-sm sm:text-base leading-tight">{toast.title}</p>
-						<p class="text-xs sm:text-sm mt-1 opacity-90 line-clamp-2 break-words">{toast.message}</p>
+						<!-- Sanitize HTML content to prevent XSS -->
+						<p class="text-xs sm:text-sm mt-1 opacity-90 line-clamp-2 break-words">{@html sanitizeHTML(toast.message)}</p>
 					</div>
 					<button
 						onclick={() => removeToast(toast.id)}
@@ -185,7 +187,6 @@
 						</svg>
 					</button>
 				</div>
-			</div>
 		</div>
 	{/each}
 </div>

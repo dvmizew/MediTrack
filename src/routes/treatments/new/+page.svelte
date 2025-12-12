@@ -3,6 +3,7 @@
 	import { api } from '$lib/api/client';
 	import { authStore } from '$lib/stores/auth';
 	import { toastStore } from '$lib/stores/notifications';
+	import { treatmentSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
 
 	let user = $derived($authStore.user);
 	let isMedic = $derived(user?.role === 'medic');
@@ -52,6 +53,21 @@
 		}
 
 		try {
+			const parsed = parseWithFriendlyErrors(treatmentSchema, {
+				name: formData.diagnostic,
+				description: formData.descriere || undefined,
+				dosage: 'N/A'
+			});
+			if (!parsed.success) {
+				toastStore.add({
+					type: 'error',
+					title: 'Validare',
+					message: parsed.errors.join('\n'),
+					duration: 4000
+				});
+				return;
+			}
+
 			const result = await api.createTreatment({
 				patientId: parseInt(formData.patientId),
 				diagnostic: formData.diagnostic,

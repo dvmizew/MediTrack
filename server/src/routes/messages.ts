@@ -1,4 +1,5 @@
 import express, { Router, Request, Response } from 'express';
+import { sanitizeBody } from '../middleware/sanitize.js';
 import { logger } from '../config/logger.js';
 import { body, validationResult } from 'express-validator';
 import { query } from '../config/database.js';
@@ -8,14 +9,10 @@ import { redis } from '../config/redis.js';
 const router: Router = express.Router();
 
 // Send message - Uses Message table
-router.post(
-  '/send',
-  authenticate,
-  [
-    body('receiverId').isInt(),
-    body('continut').notEmpty().trim(),
-  ],
-  async (req: Request, res: Response) => {
+router.post('/send', authenticate, sanitizeBody, [
+  body('receiverId').isInt(),
+  body('continut').notEmpty().trim(),
+], async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {

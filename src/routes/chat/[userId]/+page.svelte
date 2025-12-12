@@ -6,6 +6,7 @@
 	import { api } from '$lib/api/client';
 	import { socketClient } from '$lib/api/socket';
 	import { toastStore } from '$lib/stores/notifications';
+	import { sanitizeHTML } from '$lib/utils/sanitize';
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 
@@ -421,7 +422,7 @@
 										<span class="px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold rounded-full flex-shrink-0 bg-white/20 backdrop-blur-sm text-white border border-white/30">
 											{otherUser.role === 'medic' ? '⚕️' : '🧑'}
 											<span class="hidden xs:inline ml-0.5">{otherUser.role === 'medic' ? 'Doctor' : 'Pacient'}</span>
-										</span>
+										<p class="text-sm sm:text-base text-gray-500 dark:text-gray-400">Niciun mesaj încă</p>
 									</div>
 									<div class="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-white/90 mt-0.5">
 										<div class={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${userOnline ? 'bg-green-300 animate-pulse' : 'bg-gray-300'} shadow-sm`}></div>

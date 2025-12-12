@@ -1,6 +1,7 @@
 import express, { Router, Request, Response } from 'express';
 import { logger } from '../config/logger.js';
 import { body, validationResult } from 'express-validator';
+import { sanitizeBody } from '../middleware/sanitize.js';
 import { query } from '../config/database.js';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth.js';
 
@@ -10,6 +11,7 @@ const router: Router = express.Router();
 router.post(
   '/',
   authenticate,
+  sanitizeBody,
   authorize('medic'),
   [
     body('pacientId').isInt(),

@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
+	import { profileUpdateSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
 
 	let loading = $state(true);
 	let user = $state<any>(null);
@@ -31,6 +32,20 @@
 			console.log('Profile loaded:', user);
 		} catch (error) {
 			console.error('Failed to load profile:', error);
+		}
+	}
+
+	async function saveProfile(updates: { fullName?: string; email?: string; avatarUrl?: string }) {
+		const parsed = parseWithFriendlyErrors(profileUpdateSchema, updates);
+		if (!parsed.success) {
+			console.error('Profile validation errors:', parsed.errors);
+			return;
+		}
+		try {
+			const updated = await api.updateProfile(parsed.data);
+			user = { ...user, ...updated };
+		} catch (error) {
+			console.error('Failed to update profile:', error);
 		}
 	}
 

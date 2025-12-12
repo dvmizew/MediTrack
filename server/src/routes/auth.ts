@@ -5,12 +5,14 @@ import { body, validationResult } from 'express-validator';
 import { query } from '../config/database.js';
 import { generateToken, authenticate, AuthRequest } from '../middleware/auth.js';
 import passport from '../config/passport.js';
+import { sanitizeBody } from '../middleware/sanitize.js';
 
 const router: Router = express.Router();
 
 // Register
 router.post(
   '/register',
+  sanitizeBody,
   [
     body('email').isEmail().normalizeEmail(),
     body('password').isLength({ min: 6 }),
@@ -76,6 +78,7 @@ router.post(
 // Login
 router.post(
   '/login',
+  sanitizeBody,
   [
     body('email').isEmail().normalizeEmail(),
     body('password').notEmpty(),
