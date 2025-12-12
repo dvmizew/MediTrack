@@ -53,6 +53,11 @@ self.addEventListener('fetch', (event) => {
 		return;
 	}
 
+	// Skip non-http schemes (chrome-extension, file, etc) - they can't be cached
+	if (!url.protocol.startsWith('http')) {
+		return;
+	}
+
 	// API requests - Network first, fallback to cache
 	if (url.pathname.startsWith('/api/')) {
 		event.respondWith(

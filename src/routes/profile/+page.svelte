@@ -26,7 +26,9 @@
 
 	async function loadProfile() {
 		try {
+			console.log('Loading profile from /users/me...');
 			user = await api.getProfile();
+			console.log('Profile loaded:', user);
 		} catch (error) {
 			console.error('Failed to load profile:', error);
 		}

@@ -118,6 +118,8 @@ router.post(
         role: user.role,
       });
 
+      logger.info('Login successful', { userId: user.user_id, email: user.email, role: user.role });
+
       res.json({
         token,
         user: {

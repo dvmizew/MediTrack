@@ -30,16 +30,37 @@ import { startStreakCheckCron } from './cron/streaks.js';
 
 const app = express();
 const httpServer = createServer(app);
+
+// Determine allowed origins - support both HTTP and HTTPS for localhost
+const getAllowedOrigins = () => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const origins = [frontendUrl];
+  
+  // If frontend is http://localhost, also allow https://localhost
+  if (frontendUrl.includes('localhost')) {
+    if (frontendUrl.startsWith('http://')) {
+      origins.push(frontendUrl.replace('http://', 'https://'));
+    } else if (frontendUrl.startsWith('https://')) {
+      origins.push(frontendUrl.replace('https://', 'http://'));
+    }
+  }
+  
+  return origins;
+};
+
+const allowedOrigins = getAllowedOrigins();
+console.log('Allowed CORS origins:', allowedOrigins);
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: allowedOrigins,
     credentials: true,
   },
 });
 
 // Core middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: allowedOrigins,
   credentials: true,
 }));
 app.use(helmet());

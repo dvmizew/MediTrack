@@ -116,6 +116,18 @@ CREATE TABLE notifications (
     read_at TIMESTAMP
 );
 
+-- Push Notifications Subscriptions
+CREATE TABLE push_subscriptions (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    endpoint VARCHAR(500) NOT NULL,
+    auth VARCHAR(100) NOT NULL,
+    p256dh VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, endpoint)
+);
+
 -- Indexes for Performance
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_google_id ON users(google_id);
@@ -141,6 +153,9 @@ CREATE INDEX idx_messages_timestamp ON messages(timestamp_mesaj);
 
 CREATE INDEX idx_notifications_user ON notifications(user_id);
 CREATE INDEX idx_notifications_status ON notifications(status_notif);
+
+CREATE INDEX idx_push_subscriptions_user ON push_subscriptions(user_id);
+CREATE INDEX idx_push_subscriptions_endpoint ON push_subscriptions(endpoint);
 CREATE INDEX idx_notifications_type ON notifications(tip);
 
 -- Trigger to auto-update updated_at

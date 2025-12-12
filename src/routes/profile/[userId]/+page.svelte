@@ -27,8 +27,11 @@
 
 	async function loadUserProfile() {
 		try {
-			// Check if viewing own profile
-			if (userId === $authStore.user?.id?.toString()) {
+			// Check if viewing own profile - compare as numbers
+			const currentUserId = $authStore.user?.id;
+			const profileUserId = parseInt(userId);
+			
+			if (currentUserId === profileUserId) {
 				goto('/profile');
 				return;
 			}

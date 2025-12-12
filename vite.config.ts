@@ -2,14 +2,27 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
+import fs from 'fs';
+import path from 'path';
+
+// Check if SSL certificates exist for HTTPS development
+const certPath = path.resolve('./localhost.pem');
+const keyPath = path.resolve('./localhost-key.pem');
+const hasSSL = fs.existsSync(certPath) && fs.existsSync(keyPath);
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 	server: {
+		...(hasSSL && {
+			https: {
+				cert: fs.readFileSync(certPath),
+				key: fs.readFileSync(keyPath)
+			}
+		}),
 		hmr: {
 			host: 'localhost',
 			port: 5173,
-			protocol: 'ws'
+			protocol: hasSSL ? 'wss' : 'ws'
 		}
 	},
 	test: {

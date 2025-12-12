@@ -42,6 +42,34 @@ npm run dev
 
 Open http://localhost:5173
 
+### HTTPS Development (for Push Notifications)
+Push notifications require HTTPS. To test locally:
+
+```bash
+# 1. Install mkcert (one-time)
+# macOS: brew install mkcert
+# Linux: apt install mkcert (or snap install mkcert)
+# Windows: choco install mkcert
+
+# 2. Install local CA
+mkcert -install
+
+# 3. Generate localhost certificate
+cd MediTrack
+mkcert localhost 127.0.0.1
+# This creates: localhost.pem and localhost-key.pem
+
+# 4. Start servers
+# Terminal 1 - Backend (still runs on HTTP)
+cd server && npm run dev
+
+# Terminal 2 - Frontend (auto-detects HTTPS cert)
+npm run dev
+```
+
+Frontend will be available at **https://localhost:5173** (with valid certificate)
+Push notifications will work in Settings → Notificări
+
 ### Manual Setup
 ```bash
 # 1. Clone

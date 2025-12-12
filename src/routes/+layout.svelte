@@ -11,6 +11,7 @@
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import { registerServiceWorker, setupInstallPrompt, setupNetworkDetection } from '$lib/pwa';
+	import { initializePushNotifications } from '$lib/services/pushNotifications';
 	import './layout.css';
 
 	let { children } = $props();
@@ -39,6 +40,15 @@
 		registerServiceWorker();
 		setupInstallPrompt();
 		setupNetworkDetection();
+		
+		// Initialize push notifications (only on HTTPS or non-localhost)
+		try {
+			if (window.location.protocol === 'https:' || window.location.hostname !== 'localhost') {
+				await initializePushNotifications();
+			}
+		} catch (error) {
+			console.warn('Push notifications initialization failed:', error);
+		}
 		
 		// Listen for network status changes
 		window.addEventListener('network-status', handleNetworkStatus);

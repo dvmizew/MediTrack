@@ -3,6 +3,7 @@
 	import { authStore, isPacient, isMedic } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import { toastStore } from '$lib/stores/notifications';
+	import NotificationPermission from '$lib/components/NotificationPermission.svelte';
 
 	type TabType = 'general' | 'security' | 'stats' | 'notifications' | 'privacy';
 
@@ -539,6 +540,11 @@
 
 				<!-- Notifications Tab -->
 				{#if activeTab === 'notifications'}
+				<div class="space-y-6">
+					<!-- Push Notifications Control -->
+					<NotificationPermission />
+
+					<!-- Notification Preferences -->
 					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Preferințe notificări</h2>
 						<form onsubmit={(e) => { e.preventDefault(); handleSaveNotifications(); }} class="space-y-6">
@@ -634,7 +640,8 @@
 							</div>
 						</form>
 					</div>
-				{/if}
+				</div>
+			{/if}
 
 				<!-- Privacy Tab -->
 				{#if activeTab === 'privacy'}
