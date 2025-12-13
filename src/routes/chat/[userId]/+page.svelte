@@ -32,6 +32,11 @@
 		if (userId) {
 			otherUserId = parseInt(userId);
 			loadConversation();
+			
+			// Join/rejoin conversation room when userId changes
+			if (socketClient.socket?.connected) {
+				socketClient.socket.emit('join-conversation', otherUserId);
+			}
 		}
 	});
 
@@ -83,27 +88,22 @@
 	});	function handleNewMessage(event: CustomEvent) {
 		const message = event.detail;
 		
-		// Check if message belongs to this conversation
-		if (
-			(message.sender_id === otherUserId && message.receiver_id === $authStore.user?.userId) ||
-			(message.sender_id === $authStore.user?.userId && message.receiver_id === otherUserId)
-		) {
+		// Only add messages RECEIVED from the other user (not sent by me)
+		// Messages I send are shown immediately via optimistic UI
+		if (message.sender_id === otherUserId && message.receiver_id === $authStore.user?.userId) {
 			// Check if message already exists (avoid duplicates)
 			const exists = messages.some(m => m.message_id === message.message_id);
 			if (!exists) {
 				messages = [...messages, message];
 				scrollToBottom();
 				
-				// Show notification for received messages (not sent by current user)
-				if (message.sender_id === otherUserId) {
-					// Play subtle sound effect
-					if (typeof Audio !== 'undefined') {
-						try {
-							const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt');
-							audio.volume = 0.15;
-							audio.play().catch(() => {});
-						} catch {}
-					}
+				// Play subtle sound effect for received messages
+				if (typeof Audio !== 'undefined') {
+					try {
+						const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt');
+						audio.volume = 0.15;
+						audio.play().catch(() => {});
+					} catch {}
 				}
 			}
 		}
@@ -184,35 +184,13 @@
 
 			if (!otherUser) {
 				error = 'Nu ai o colaborare activă cu acest utilizator';
-				toastStore.add({
-					type: 'error',
-					title: '❌ Acces interzis',
-					message: 'Nu ai o colaborare activă cu acest utilizator',
-					duration: 4000
-				});
 				return;
-			}
-
-			// Success feedback
-			if (messages.length > 0) {
-				toastStore.add({
-					type: 'success',
-					title: '💬 Conversație încărcată',
-					message: `${messages.length} mesaje găsite`,
-					duration: 2000
-				});
 			}
 
 			scrollToBottom();
 		} catch (err: any) {
 			console.error('Failed to load conversation:', err);
 			error = err.message || 'Nu s-a putut încărca conversația';
-			toastStore.add({
-				type: 'error',
-				title: '❌ Eroare de încărcare',
-				message: error,
-				duration: 4000
-			});
 		} finally {
 			loading = false;
 		}
@@ -226,9 +204,9 @@
 		newMessage = '';
 		sending = true;
 
-		// Optimistic UI update
+		// Optimistic UI - add message immediately with temporary ID
 		const tempMessage = {
-			message_id: Date.now(),
+			message_id: `temp-${Date.now()}`,
 			sender_id: $authStore.user?.userId,
 			receiver_id: otherUserId,
 			continut: messageText,
@@ -240,25 +218,23 @@
 
 		try {
 			// Send via socket for real-time delivery
+			// Socket handler will save to DB and emit to receiver only
 			socketClient.socket?.emit('send-message', {
 				receiverId: otherUserId,
 				continut: messageText
 			});
 
-			// Also send via API as fallback
-			const sentMessage = await api.sendMessage({
-				receiverId: otherUserId,
-				continut: messageText
-			});
-
-			// Replace temp message with real one
-			messages = messages.filter(m => m.message_id !== tempMessage.message_id);
-			if (!messages.some(m => m.message_id === sentMessage.message_id)) {
-				messages = [...messages, sentMessage];
-			}
-
 			// Stop typing indicator
 			socketClient.socket?.emit('stop-typing', otherUserId);
+
+			// Wait a bit for confirmation, then remove pending status
+			setTimeout(() => {
+				messages = messages.map(m => 
+					m.message_id === tempMessage.message_id 
+						? { ...m, _pending: false }
+						: m
+				);
+			}, 500);
 
 			scrollToBottom();
 		} catch (err: any) {
@@ -267,12 +243,6 @@
 			// Remove temp message on error
 			messages = messages.filter(m => m.message_id !== tempMessage.message_id);
 			
-			toastStore.add({
-				type: 'error',
-				title: '❌ Eroare de trimitere',
-				message: 'Nu s-a putut trimite mesajul. Verifică conexiunea.',
-				duration: 4000
-			});
 			// Restore message on error
 			newMessage = messageText;
 		} finally {
@@ -361,20 +331,8 @@
 		showOptionsMenu = false;
 		try {
 			await api.sendReminder(otherUserId);
-			toastStore.add({
-				type: 'success',
-				title: '🔔 Reminder trimis',
-				message: `Reminder pentru medicație trimis către ${otherUser?.name}`,
-				duration: 2000
-			});
 		} catch (err: any) {
 			console.error('Failed to send reminder:', err);
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: 'Nu s-a putut trimite reminder-ul',
-				duration: 2000
-			});
 		}
 	}
 </script>

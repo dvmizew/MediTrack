@@ -50,12 +50,12 @@ router.post('/send', authenticate, sanitizeBody, [
 
       const msg = result.rows[0];
       res.status(201).json({
-        messageId: msg.message_id,
-        senderId: msg.sender_id,
-        receiverId: msg.receiver_id,
+        message_id: msg.message_id,
+        sender_id: msg.sender_id,
+        receiver_id: msg.receiver_id,
         continut: msg.continut,
-        timestampMesaj: msg.timestamp_mesaj,
-        isRead: msg.is_read
+        timestamp_mesaj: msg.timestamp_mesaj,
+        is_read: msg.is_read
       });
     } catch (error) {
       logger.error('Send message error', { error });
@@ -92,12 +92,12 @@ router.get('/conversation/:userId', authenticate, async (req: Request, res: Resp
     );
 
     res.json(result.rows.map((m: any) => ({
-      messageId: m.message_id,
-      senderId: m.sender_id,
-      receiverId: m.receiver_id,
+      message_id: m.message_id,
+      sender_id: m.sender_id,
+      receiver_id: m.receiver_id,
       continut: m.continut,
-      timestampMesaj: m.timestamp_mesaj,
-      isRead: m.is_read,
+      timestamp_mesaj: m.timestamp_mesaj,
+      is_read: m.is_read,
       senderName: m.sender_name,
       senderAvatar: m.sender_avatar,
       receiverName: m.receiver_name,
@@ -176,12 +176,12 @@ router.patch('/:messageId/read', authenticate, async (req: Request, res: Respons
 
     const msg = result.rows[0];
     res.json({
-      messageId: msg.message_id,
-      senderId: msg.sender_id,
-      receiverId: msg.receiver_id,
+      message_id: msg.message_id,
+      sender_id: msg.sender_id,
+      receiver_id: msg.receiver_id,
       continut: msg.continut,
-      timestampMesaj: msg.timestamp_mesaj,
-      isRead: msg.is_read
+      timestamp_mesaj: msg.timestamp_mesaj,
+      is_read: msg.is_read
     });
   } catch (error) {
     logger.error('Mark message read error', { error });

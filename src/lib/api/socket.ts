@@ -132,7 +132,7 @@ class SocketClient {
 		});
 		this.socket.on('new-message', (message) => {
 			try {
-				notificationService.info('Mesaj nou', `De la ${message.senderName}`, 3000);
+				// Don't show toast - chat UI will handle message display
 				if (typeof window !== 'undefined') {
 					window.dispatchEvent(new CustomEvent('new-message', { detail: message }));
 				}

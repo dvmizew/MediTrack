@@ -103,10 +103,16 @@ export const setupSocketHandlers = (io: Server) => {
           [userId]
         );
 
+        // Standardize message format for frontend (snake_case to match DB columns)
         const messageData = {
-          ...savedMessage,
-          sender_name: userInfo.rows[0].full_name,
-          sender_avatar: userInfo.rows[0].avatar_url,
+          message_id: savedMessage.message_id,
+          sender_id: savedMessage.sender_id,
+          receiver_id: savedMessage.receiver_id,
+          continut: savedMessage.continut,
+          timestamp_mesaj: savedMessage.timestamp_mesaj,
+          is_read: savedMessage.is_read,
+          sender_name: userInfo.rows[0]?.full_name,
+          sender_avatar: userInfo.rows[0]?.avatar_url,
         };
 
         // Emit to conversation room
