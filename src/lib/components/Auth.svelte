@@ -15,6 +15,9 @@
 	let isRegister = $state(false);
 	let error = $state('');
 	let loading = $state(false);
+	let touchedEmail = $state(false);
+	let touchedPassword = $state(false);
+	let touchedFullName = $state(false);
 
 	onMount(() => {
 		themeStore.init();
@@ -119,7 +122,10 @@
 			{#if isRegister}
 				<div transition:slide={{ duration: 500, easing: quintOut }} class="mb-4 md:mb-5">
 					<label for="fullName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-						Nume complet <span aria-label="obligatoriu" class="text-red-500">*</span>
+						Nume complet
+						{#if (!fullName && (touchedFullName || error))}
+							<span aria-label="obligatoriu" class="text-red-500">*</span>
+						{/if}
 					</label>
 					<input
 						id="fullName"
@@ -132,13 +138,17 @@
 						aria-invalid={error && !fullName ? 'true' : 'false'}
 						class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 						placeholder="Ion Popescu"
+						onblur={() => (touchedFullName = true)}
 					/>
 				</div>
 			{/if}
 
 			<div class="mb-4 md:mb-5">
 				<label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-					Email <span aria-label="obligatoriu" class="text-red-500">*</span>
+					Email
+					{#if (!email && (touchedEmail || error))}
+						<span aria-label="obligatoriu" class="text-red-500">*</span>
+					{/if}
 				</label>
 				<input
 					id="email"
@@ -151,12 +161,16 @@
 					aria-invalid={error && !email ? 'true' : 'false'}
 					class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 					placeholder="email@example.com"
+					onblur={() => (touchedEmail = true)}
 				/>
 			</div>
 
 			<div class="mb-4 md:mb-5">
 				<label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-					Parolă <span aria-label="obligatoriu" class="text-red-500">*</span>
+					Parolă
+					{#if (!password && (touchedPassword || error))}
+						<span aria-label="obligatoriu" class="text-red-500">*</span>
+					{/if}
 				</label>
 				<input
 					id="password"
@@ -171,6 +185,7 @@
 					aria-describedby="password-hint"
 					class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 					placeholder="••••••••"
+					onblur={() => (touchedPassword = true)}
 				/>
 				<p id="password-hint" class="sr-only">Minim 6 caractere</p>
 			</div>
