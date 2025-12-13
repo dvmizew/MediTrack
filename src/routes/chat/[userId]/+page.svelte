@@ -338,8 +338,8 @@
 </script>
 
 {#if $authStore.isAuthenticated}
-	<main class="min-h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden page-transition">
-		<div class="max-w-6xl mx-auto min-h-[calc(100vh-4rem)] flex flex-col overflow-hidden w-full">
+	<main class="h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden page-transition">
+		<div class="h-full flex flex-col overflow-hidden w-full">
 		<!-- Header - Chat Style -->
 		<div class="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 shadow-lg flex-shrink-0 z-10">
 			<div class="w-full px-2 sm:px-4 md:px-6">
@@ -498,7 +498,7 @@
 			</div>
 		</div>
 
-		<div class="flex-1 flex flex-col overflow-hidden">
+		<div class="flex-1 flex flex-col overflow-hidden min-w-0">
 		{#if loading}
 			<div class="flex-1 flex items-center justify-center">
 				<div class="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-3 sm:border-4 border-blue-500 border-t-transparent"></div>
@@ -522,7 +522,7 @@
 			<!-- Messages Container -->
 			<div 
 				bind:this={messagesContainer}
-				class="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 md:px-6 py-4 sm:py-6 space-y-3 sm:space-y-4 w-full"
+				class="flex-1 overflow-y-auto overflow-x-hidden px-2 xs:px-3 sm:px-4 py-3 sm:py-4 space-y-3 sm:space-y-4 w-full"
 				style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;"
 			>
 				{#if messages.length === 0}
@@ -534,8 +534,8 @@
 					</div>
 				{:else}
 					{#each messages as message (message.message_id)}
-						<div class={`flex ${isMyMessage(message) ? 'justify-end' : 'justify-start'} animate-fade-in px-1 sm:px-2`}>
-							<div class={`max-w-[80%] sm:max-w-[75%] md:max-w-md lg:max-w-lg ${isMyMessage(message) ? 'order-2' : 'order-1'}`}>
+						<div class={`flex ${isMyMessage(message) ? 'justify-end' : 'justify-start'} animate-fade-in px-0.5 sm:px-1`}>
+							<div class={`max-w-[85%] xs:max-w-[80%] sm:max-w-[75%] md:max-w-md lg:max-w-lg ${isMyMessage(message) ? 'order-2' : 'order-1'}`}>
 								<div class={`rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 shadow-sm relative ${
 									isMyMessage(message) 
 											? message._pending 
@@ -567,40 +567,36 @@
 			</div>
 
 			<!-- Message Input -->
-			<div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 safe-area-bottom">
-				<div class="w-full px-3 sm:px-4 md:px-6 py-3 sm:py-4">
-					<form onsubmit={(e) => { e.preventDefault(); sendMessage(); }} class="flex gap-2 items-end w-full">
+			<div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 safe-area-bottom overflow-hidden">
+				<div class="w-full px-2 xs:px-3 sm:px-4 py-2 sm:py-3">
+					<form onsubmit={(e) => { e.preventDefault(); sendMessage(); }} class="flex gap-1.5 sm:gap-2 items-end w-full min-w-0">
 						<textarea
 							bind:this={messageInput}
 							bind:value={newMessage}
 							oninput={handleInput}
 							onkeypress={handleKeyPress}
-							placeholder="Scrie un mesaj..."
+							placeholder="Mesaj..."
 							rows="1"
-							class="flex-1 min-w-0 resize-none rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-0 focus:outline-none transition"
-							style="max-height: 100px; min-height: 40px;"
+							class="flex-1 min-w-0 resize-none rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-2 py-2 sm:px-3 sm:py-2 text-xs sm:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-0 focus:outline-none transition"
+							style="max-height: 100px; min-height: 36px;"
 						></textarea>
 						<button
 							type="submit"
 							disabled={!newMessage.trim() || sending}
-							class="flex-shrink-0 w-10 h-10 sm:w-auto sm:h-auto sm:px-5 sm:py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed hover:shadow-xl hover:shadow-blue-500/50 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md touch-manipulation"
+							class="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed hover:shadow-xl hover:shadow-blue-500/50 active:scale-95 transition-all duration-200 flex items-center justify-center font-medium shadow-md touch-manipulation"
 						>
 							{#if sending}
-								<svg class="animate-spin h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24">
+								<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
 									<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
 									<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 								</svg>
 							{:else}
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
 								</svg>
 							{/if}
-							<span class="hidden sm:inline text-sm">Trimite</span>
 						</button>
 					</form>
-					<p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-2 text-center hidden sm:block">
-						Apasă Enter pentru a trimite, Shift+Enter pentru linie nouă
-					</p>
 				</div>
 			</div>
  		{/if}

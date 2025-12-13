@@ -4,11 +4,27 @@
 	import { authStore } from '$lib/stores/auth';
 	import Auth from '$lib/components/Auth.svelte';
 
+	let isAuthenticated = $state(false);
+
 	onMount(() => {
-		if ($authStore.isAuthenticated) {
+		isAuthenticated = $authStore.isAuthenticated;
+		if (isAuthenticated) {
+			goto('/dashboard');
+		}
+	});
+
+	$effect(() => {
+		isAuthenticated = $authStore.isAuthenticated;
+		if (isAuthenticated) {
 			goto('/dashboard');
 		}
 	});
 </script>
 
-<Auth />
+{#if !isAuthenticated}
+	<Auth />
+{:else}
+	<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+		<div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+	</div>
+{/if}

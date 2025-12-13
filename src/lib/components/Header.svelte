@@ -299,7 +299,7 @@
 				>
 					🏆 Leaderboard
 				</a>
-				{#if $authStore.user.role === 'admin'}
+				{#if $authStore.user?.role === 'admin'}
 					<a 
 					href="/admin/reports" 
 					class={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -543,7 +543,7 @@
 						class="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition focus:outline-none"
 					>
 						<div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-							<span class="text-white text-sm font-medium">{$authStore.user.fullName.charAt(0).toUpperCase()}</span>
+							<span class="text-white text-sm font-medium">{$authStore.user?.fullName?.charAt(0).toUpperCase() || '?'}</span>
 						</div>
 					</button>						{#if showUserMenu}
 					<div 
@@ -551,10 +551,10 @@
 						class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 dropdown-container"
 					>
 						<div class="p-4 border-b border-gray-200 dark:border-gray-700">
-							<p class="font-medium text-gray-900 dark:text-gray-100">{$authStore.user.fullName}</p>
-							<p class="text-sm text-gray-500 dark:text-gray-400 capitalize">{$authStore.user.role}</p>
+							<p class="font-medium text-gray-900 dark:text-gray-100">{$authStore.user?.fullName || 'User'}</p>
+							<p class="text-sm text-gray-500 dark:text-gray-400 capitalize">{$authStore.user?.role || 'N/A'}</p>
 							{#if $isPacient}
-								<p class="text-xs text-blue-600 dark:text-blue-400 mt-1">{$authStore.user.totalXp || 0} XP</p>
+								<p class="text-xs text-blue-600 dark:text-blue-400 mt-1">{$authStore.user?.totalXp || 0} XP</p>
 							{/if}
 						</div>
 						<div class="py-2">
@@ -663,7 +663,7 @@
 				>
 					🏆 Leaderboard
 				</a>
-				{#if $authStore.user.role === 'admin'}
+				{#if $authStore.user?.role === 'admin'}
 					<a 
 						href="/admin/reports" 
 						onclick={() => showMobileMenu = false}
@@ -679,13 +679,13 @@
 					<div class="px-3 py-2">
 						<div class="flex items-center gap-3 mb-3">
 							<div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-								<span class="text-white font-medium">{$authStore.user.fullName.charAt(0).toUpperCase()}</span>
+								<span class="text-white font-medium">{$authStore.user?.fullName?.charAt(0).toUpperCase() || '?'}</span>
 							</div>
 							<div class="flex-1 min-w-0">
-							<p class="font-medium text-gray-900 dark:text-gray-100 truncate">{$authStore.user.fullName}</p>
-							<p class="text-sm text-gray-500 dark:text-gray-400 capitalize">{$authStore.user.role}</p>
+							<p class="font-medium text-gray-900 dark:text-gray-100 truncate">{$authStore.user?.fullName || 'User'}</p>
+							<p class="text-sm text-gray-500 dark:text-gray-400 capitalize">{$authStore.user?.role || 'N/A'}</p>
 								{#if $isPacient}
-									<p class="text-xs text-blue-600 dark:text-blue-400">{$authStore.user.totalXp || 0} XP</p>
+									<p class="text-xs text-blue-600 dark:text-blue-400">{$authStore.user?.totalXp || 0} XP</p>
 								{/if}
 							</div>
 						</div>
