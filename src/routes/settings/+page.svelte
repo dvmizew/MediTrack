@@ -698,7 +698,7 @@
 										<label for="shareStatistics" class="font-medium text-gray-900 dark:text-gray-100">
 											Partajează statisticile
 										</label>
-										<p class="text-sm text-gray-600 dark:text-gray-400">Permite medicilor să vadă statisticile tale de aderență</p>
+										<p class="text-sm text-gray-600 dark:text-gray-400">Permite medicilor să vadă statisticile tale de conformitate</p>
 									</div>
 								</div>
 							</div>

@@ -105,29 +105,3 @@ export function validateColorContrast(): Array<{
 		};
 	});
 }
-
-/**
- * Log contrast validation results to console
- */
-export function logContrastResults(): void {
-	const results = validateColorContrast();
-	
-	console.group('WCAG Color Contrast Validation');
-	
-	const passed = results.filter(r => r.status === 'pass').length;
-	const failed = results.filter(r => r.status === 'fail').length;
-	
-	console.log(`Passed: ${passed}/${results.length}`);
-	console.log(`Failed: ${failed}/${results.length}`);
-	console.log('');
-	
-	results.forEach(({ context, ratio, meetsAA, meetsAAA, status }) => {
-		const icon = status === 'pass' ? 'PASS' : 'FAIL';
-		const aaLabel = meetsAA ? 'AA: yes' : 'AA: no';
-		const aaaLabel = meetsAAA ? 'AAA: yes' : 'AAA: no';
-		console.log(`[${icon}] ${context}`);
-		console.log(`   Ratio: ${ratio}:1 | ${aaLabel} | ${aaaLabel}`);
-	});
-	
-	console.groupEnd();
-}

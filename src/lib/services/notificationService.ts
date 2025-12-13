@@ -1,9 +1,3 @@
-/**
- * Production-grade Notification Service
- * Handles toast notifications, push notifications, and sound playback
- * with proper autoplay policy compliance
- */
-
 import { browser } from '$app/environment';
 import { toastStore } from '../stores/notifications';
 
@@ -28,8 +22,6 @@ class NotificationService {
 	private vibrationSupported = 'vibrate' in navigator;
 	private pushNotificationSupported = 'serviceWorker' in navigator && 'Notification' in window;
 	private userInteracted = false;
-	private audioContext: AudioContext | null = null;
-	private preloadedAudio: Map<string, AudioBuffer> = new Map();
 
 	constructor() {
 		// Track user interaction for autoplay policy compliance

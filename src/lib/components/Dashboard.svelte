@@ -161,9 +161,6 @@
 			// separate second-based countdown interval
 			countdownInterval = setInterval(tick, 1000);
 			
-			// Auto-refresh every 60 seconds
-			// (moved above; includes tick)
-			
 			// Listen for theme changes
 			themeUnsubscribe = themeStore.subscribe(() => {
 				// Recreate charts with new theme colors
@@ -402,91 +399,71 @@
 	}
 
 	function buildTodayTimeline() {
-		// Use historical 7-day data for the timeline chart
+		// Always use historical 7-day data for the timeline chart when available
 		if (adherenceHistory.length > 0) {
 			return {
 				labels: adherenceHistory.map((d: any) => {
 					const date = new Date(d.date);
-					return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+					return date.toLocaleDateString('ro-RO', { month: 'short', day: 'numeric' });
 				}),
-				data: adherenceHistory.map((d: any) => d.adherenceRate)
+				data: adherenceHistory.map((d: any) => d.adherenceRate || 0)
 			};
 		}
 
-		const sorted = todayMedications
-			.filter((m) => m.ora)
-			.map((m) => {
-				const [hours, minutes] = m.ora.split(':').map(Number);
-				return {
-					label: m.ora,
-					when: hours * 60 + minutes,
-					is_taken: m.rezultat === 'pozitiv' || m.timestampConfirmare
-				};
-			})
-			.sort((a, b) => a.when - b.when);
-
-		if (sorted.length === 0) {
-			return {
-				labels: ['—'],
-				data: [stats.weeklyAdherence]
-			};
-		}
-
-		let takenSoFar = 0;
-		const data = sorted.map((entry, idx) => {
-			if (entry.is_taken) {
-				takenSoFar += 1;
-			}
-			return Math.round((takenSoFar / (idx + 1)) * 100);
-		});
-
+		// Fallback: if no history, show today's adherence as single point
+		const todayRate = stats.total > 0 
+			? Math.round((stats.taken / stats.total) * 100)
+			: 0;
+		
 		return {
-			labels: sorted.map((entry) => entry.label),
-			data
+			labels: ['Astăzi'],
+			data: [todayRate]
 		};
 	}
 
 	function getMedicationDistribution() {
-		// Count medications from the 7-day history
-		const counts = new Map<string, number>();
+		// Count unique medications from today's schedule
+		const dailyCounts = new Map<string, number>();
 		
-		if (adherenceHistory.length > 0) {
-			// Aggregate medication counts from history if available
-			// For now, use todayMedications as fallback; ideally API would return historical meds
-			adherenceHistory.forEach((day: any) => {
-				// If history contains medication details, aggregate them
-				// Otherwise, use today's distribution as proxy for weekly average
-			});
-		}
-		
-		// Use today's medications as the basis for weekly distribution
-		// (assuming similar schedule daily)
+		// Count how many doses per medication today
 		todayMedications.forEach((m) => {
 			const name = m.medicationName || 'Fără nume';
-			counts.set(name, (counts.get(name) || 0) * 7); // Multiply by 7 for weekly estimate
+			dailyCounts.set(name, (dailyCounts.get(name) || 0) + 1);
 		});
+		
+		if (dailyCounts.size === 0) {
+			return { 
+				labels: ['Nicio medicație'], 
+				data: [0] 
+			};
+		}
 
-		const labels = counts.size ? Array.from(counts.keys()).slice(0, 6) : ['Nicio medicație'];
-		const data = labels.map((label) => counts.get(label) || 0);
-		return { labels, data };
+		// Convert to array, multiply by 7 for weekly estimate, sort by count
+		const sortedMeds = Array.from(dailyCounts.entries())
+			.map(([name, dailyCount]) => ({ name, weeklyCount: dailyCount * 7 }))
+			.sort((a, b) => b.weeklyCount - a.weeklyCount)
+			.slice(0, 6); // Top 6 medications
+
+		return {
+			labels: sortedMeds.map(m => m.name),
+			data: sortedMeds.map(m => m.weeklyCount)
+		};
 	}
 
 	function initializeCharts() {
 		const { text: textColor, grid: gridColor } = chartTheme;
 
-		// Weekly Adherence Rate Chart (Doughnut) — using 7-day average
+		// Weekly Adherence Rate Chart (Doughnut) — using 7-day average percentage
 		if (adherenceChartCanvas) {
 			const weeklyRate = stats.weeklyAdherence;
-			// Estimate doses based on 7-day average
-			const estimatedTaken = Math.round((weeklyRate / 100) * (stats.total || 10) * 7);
-			const estimatedTotal = (stats.total || 10) * 7;
+			// Show percentage directly: weeklyRate% completed, (100-weeklyRate)% remaining
 
 			adherenceChart = new Chart(adherenceChartCanvas, {
 				type: 'doughnut',
 				data: {
-					labels: ['Luate', 'Rămase'],
+					labels: ['Conformitate', 'Rămas'],
 					datasets: [{
-						data: [estimatedTaken, estimatedTotal - estimatedTaken],
+						data: [weeklyRate, 100 - weeklyRate],
 						backgroundColor: ['#10b981', '#e5e7eb'],
 						borderWidth: 0
 					}]
@@ -598,10 +575,8 @@
 		
 		if (adherenceChart) {
 			const weeklyRate = stats.weeklyAdherence;
-			const estimatedTaken = Math.round((weeklyRate / 100) * (stats.total || 10) * 7);
-			const estimatedTotal = (stats.total || 10) * 7;
-			
-			adherenceChart.data.datasets[0].data = [estimatedTaken, estimatedTotal - estimatedTaken];
+			// Update with correct percentage data
+			adherenceChart.data.datasets[0].data = [weeklyRate, 100 - weeklyRate];
 			if (adherenceChart.options.plugins?.title) {
 				adherenceChart.options.plugins.title.text = `Conformitate săptămânală: ${weeklyRate}%`;
 				adherenceChart.options.plugins.title.color = textColor;

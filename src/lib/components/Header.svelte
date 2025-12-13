@@ -1,21 +1,24 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { fly, scale} from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { page } from '$app/stores';
 	import { authStore, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
-	import { socketClient } from '$lib/api/socket';
 	import { notificationStore, toastStore } from '$lib/stores/notifications';
 	import { themeStore } from '$lib/stores/theme';
 	import { logout as sessionLogout } from '$lib/services/sessionManager';
+	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 
 	let notifications = $state<any[]>([]);
 	let showNotifications = $state(false);
 	let showUserMenu = $state(false);
 	let showMobileMenu = $state(false);
 	let notificationFilter = $state<'all' | 'unread'>('all');
-	let confirmDialog = $state<{show: boolean, action: () => void, title: string, message: string} | null>(null);
+	let isConfirmOpen = $state(false);
+	let confirmTitle = $state('');
+	let confirmMessage = $state('');
+	let confirmAction = $state<(() => Promise<void>) | null>(null);
 	let unreadCount = $derived(notifications.filter((n) => !n.isRead).length);
 	let filteredNotifications = $derived(
 		notificationFilter === 'unread' 
@@ -127,23 +130,21 @@
 	}
 
 	async function clearAllNotifications() {
-		confirmDialog = {
-			show: true,
-			title: 'Șterge toate notificările?',
-			message: 'Această acțiune nu poate fi anulată. Toate notificările vor fi șterse permanent.',
-			action: async () => {
-				try {
-					await api.deleteAllNotifications();
-					notifications = [];
-					toastStore.add({ type: 'success', title: 'Șterse', message: 'Toate notificările au fost șterse', duration: 2000 });
-					confirmDialog = null;
-				} catch (error) {
-					console.error('Failed to clear notifications:', error);
-					toastStore.add({ type: 'error', title: 'Eroare', message: 'Nu s-au putut șterge notificările', duration: 2000 });
-					confirmDialog = null;
-				}
+		confirmTitle = 'Șterge toate notificările?';
+		confirmMessage = 'Această acțiune nu poate fi anulată. Toate notificările vor fi șterse permanent.';
+		confirmAction = async () => {
+			try {
+				await api.deleteAllNotifications();
+				notifications = [];
+				toastStore.add({ type: 'success', title: 'Șterse', message: 'Toate notificările au fost șterse', duration: 2000 });
+				isConfirmOpen = false;
+			} catch (error) {
+				console.error('Failed to clear notifications:', error);
+				toastStore.add({ type: 'error', title: 'Eroare', message: 'Nu s-au putut șterge notificările', duration: 2000 });
+				isConfirmOpen = false;
 			}
 		};
+		isConfirmOpen = true;
 	}
 
 	async function deleteNotification(id: number, event?: MouseEvent) {
@@ -704,46 +705,21 @@
 		{/if}
 	</nav>
 
-	<!-- Confirmation Dialog Modal -->
-	{#if confirmDialog?.show}
-		<!-- Overlay -->
-		<div 
-			class="fixed inset-0 z-50 bg-black/60 transition-opacity duration-200"
-			onclick={() => confirmDialog = null}
-			onkeydown={(e) => e.key === 'Escape' && (confirmDialog = null)}
-			role="button"
-			tabindex={0}
-			aria-label="Inchide dialog"
-		></div>
-
-		<!-- Dialog Container -->
-		<div 
-			transition:scale={{ duration: 200, start: 0.95 }}
-			class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
-		>
-			<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 max-w-sm w-11/12 pointer-events-auto">
-				<!-- Title -->
-				<h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{confirmDialog.title}</h3>
-				
-				<!-- Message -->
-				<p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6">{confirmDialog.message}</p>
-				
-				<!-- Actions -->
-				<div class="flex gap-3 justify-end">
-					<button
-						onclick={() => confirmDialog = null}
-						class="px-4 py-2 text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition active:scale-95"
-					>
-						Anulează
-					</button>
-					<button
-						onclick={confirmDialog.action}
-						class="px-4 py-2 text-sm sm:text-base font-medium text-white bg-red-600 hover:bg-red-700 dark:hover:bg-red-700 rounded-lg transition active:scale-95"
-					>
-						Șterge
-					</button>
-				</div>
-			</div>
-		</div>
-	{/if}
+	<!-- Confirmation Dialog -->
+	<ConfirmDialog
+		isOpen={isConfirmOpen}
+		title={confirmTitle}
+		message={confirmMessage}
+		confirmText="Șterge"
+		cancelText="Anulează"
+		isDangerous={true}
+		onConfirm={async () => {
+			if (confirmAction) {
+				await confirmAction();
+			}
+		}}
+		onCancel={() => {
+			isConfirmOpen = false;
+		}}
+	/>
 </header>
