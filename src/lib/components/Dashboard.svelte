@@ -4,6 +4,14 @@
 	import { api } from '$lib/api/client';
 	import { authStore, isPacient, isMedic } from '$lib/stores/auth';
 	import { themeStore } from '$lib/stores/theme';
+	import { goto } from '$app/navigation';
+	import Card from '$lib/components/Card.svelte';
+	import ActionButton from '$lib/components/ActionButton.svelte';
+	import PatientsList from '$lib/components/PatientsList.svelte';
+	import TreatmentsList from '$lib/components/TreatmentsList.svelte';
+	import MedicationsList from '$lib/components/MedicationsList.svelte';
+	import ChartsGroup from '$lib/components/ChartsGroup.svelte';
+	import WelcomeCard from '$lib/components/WelcomeCard.svelte';
 
 	let todayMedications = $state<any[]>([]);
 	let adherenceHistory = $state<any[]>([]);
@@ -16,44 +24,167 @@
 		overdue: 0,
 		snoozed: 0,
 		upcomingLabel: '—',
-		adherence: 0
+		weeklyAdherence: 0
 	});
+
+	// Medic-specific state
+	let patients = $state<any[]>([]);
+	let treatments = $state<any[]>([]);
+	let messagesCount = $state(0);
+	let medicStats = $state({
+		totalPatients: 0,
+		activeTreatments: 0,
+		pendingInvites: 0
+	});
+
+	// Derived UI data to avoid duplication
+	const patientCards = $derived([
+		{
+			title: 'Conformitate săptămânală',
+			value: `${stats.weeklyAdherence}%`,
+			sub: 'Media ultimelor 7 zile',
+			accent: 'text-gray-900 dark:text-gray-100'
+		},
+		{
+			title: 'Astăzi',
+			value: `${stats.taken}/${stats.total}`,
+			sub: `${stats.snoozed} amânate • ${stats.overdue} întârziate`,
+			accent: 'text-gray-900 dark:text-gray-100'
+		},
+		{
+			title: 'Următoarea doză',
+			value: stats.upcomingLabel,
+			sub: `Actualizat la ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+			accent: 'text-gray-900 dark:text-gray-100'
+		},
+		{
+			title: 'Streak',
+			value: $authStore.user.currentStreak || 0,
+			sub: 'zile consecutive',
+			accent: 'text-green-600 dark:text-green-400'
+		}
+	]);
+
+	const medicCards = $derived([
+		{
+			title: 'Pacienți Activi',
+			value: medicStats.totalPatients,
+			iconColor: 'text-blue-600 dark:text-blue-400',
+			iconBg: 'bg-blue-100 dark:bg-blue-900/30',
+			iconPath: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
+		},
+		{
+			title: 'Tratamente Active',
+			value: medicStats.activeTreatments,
+			iconColor: 'text-green-600 dark:text-green-400',
+			iconBg: 'bg-green-100 dark:bg-green-900/30',
+			iconPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'
+		},
+		{
+			title: 'Invitații În Așteptare',
+			value: medicStats.pendingInvites,
+			iconColor: 'text-yellow-600 dark:text-yellow-400',
+			iconBg: 'bg-yellow-100 dark:bg-yellow-900/30',
+			iconPath: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
+		},
+		{
+			title: 'Mesaje Noi',
+			value: messagesCount,
+			iconColor: 'text-purple-600 dark:text-purple-400',
+			iconBg: 'bg-purple-100 dark:bg-purple-900/30',
+			iconPath: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z'
+		}
+	]);
+
+	const medicActions = $derived([
+		{
+			label: 'Tratament Nou',
+			description: 'Crează un plan de tratament',
+			href: '/treatments/new',
+			bg: 'border-blue-400 dark:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10',
+			iconBg: 'bg-blue-100 dark:bg-blue-900/30',
+			iconColor: 'text-blue-600 dark:text-blue-400',
+			iconPath: 'M12 4v16m8-8H4'
+		},
+		{
+			label: 'Vezi Invitații',
+			description: 'Gestionează colaborările',
+			href: '/collaborations',
+			bg: 'border-green-400 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/10',
+			iconBg: 'bg-green-100 dark:bg-green-900/30',
+			iconColor: 'text-green-600 dark:text-green-400',
+			iconPath: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
+		},
+		{
+			label: 'Mesaje',
+			description: 'Comunică cu pacienții',
+			href: '/chat',
+			bg: 'border-purple-400 dark:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/10',
+			iconBg: 'bg-purple-100 dark:bg-purple-900/30',
+			iconColor: 'text-purple-600 dark:text-purple-400',
+			iconPath: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z'
+		}
+	]);
 	
 	// Chart references
-	let adherenceChartCanvas: HTMLCanvasElement;
+	let adherenceChartCanvas = $state<HTMLCanvasElement | null>(null);
 	let adherenceChart: Chart | null = null;
-	let weeklyChartCanvas: HTMLCanvasElement;
+	let weeklyChartCanvas = $state<HTMLCanvasElement | null>(null);
 	let weeklyChart: Chart | null = null;
-	let medicationsChartCanvas: HTMLCanvasElement;
+	let medicationsChartCanvas = $state<HTMLCanvasElement | null>(null);
 	let medicationsChart: Chart | null = null;
+	const chartTheme = $derived({
+		text: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151',
+		grid: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb'
+	});
 
 	onMount(async () => {
-		await loadMedications();
-		initializeCharts();
-		
-		// Auto-refresh every 60 seconds
-		refreshInterval = setInterval(() => {
-			loadMedications();
-			updateCharts();
-		}, 60000);
+		if ($isMedic) {
+			await loadDashboardData();
+		} else {
+			await loadMedications();
+			initializeCharts();
+
+			// Live countdown timer for next dose
+			const tick = () => {
+				updateCountdown();
+			};
+			// start immediately and every second
+			tick();
+			refreshInterval = setInterval(() => {
+				loadMedications();
+				updateCharts();
+				// also advance countdown
+				tick();
+			}, 60000);
+
+			// separate second-based countdown interval
+			countdownInterval = setInterval(tick, 1000);
+			
+			// Auto-refresh every 60 seconds
+			// (moved above; includes tick)
+			
+			// Listen for theme changes
+			themeUnsubscribe = themeStore.subscribe(() => {
+				// Recreate charts with new theme colors
+				if (adherenceChart) adherenceChart.destroy();
+				if (weeklyChart) weeklyChart.destroy();
+				if (medicationsChart) medicationsChart.destroy();
+				initializeCharts();
+			});
+		}
 		
 		// Listen for real-time notifications
 		window.addEventListener('notification', handleNotification as EventListener);
-		window.addEventListener('new-message', handleNotification as EventListener);
-		
-		// Listen for theme changes
-		themeUnsubscribe = themeStore.subscribe(() => {
-			// Recreate charts with new theme colors
-			if (adherenceChart) adherenceChart.destroy();
-			if (weeklyChart) weeklyChart.destroy();
-			if (medicationsChart) medicationsChart.destroy();
-			initializeCharts();
-		});
+			window.addEventListener('new-message', handleNewMessage as EventListener);
 	});
 
 	onDestroy(() => {
 		if (refreshInterval) {
 			clearInterval(refreshInterval);
+		}
+		if (countdownInterval) {
+			clearInterval(countdownInterval);
 		}
 		if (themeUnsubscribe) {
 			themeUnsubscribe();
@@ -62,15 +193,55 @@
 		if (weeklyChart) weeklyChart.destroy();
 		if (medicationsChart) medicationsChart.destroy();
 		window.removeEventListener('notification', handleNotification as EventListener);
-		window.removeEventListener('new-message', handleNotification as EventListener);
+		window.removeEventListener('new-message', handleNewMessage as EventListener);
 	});
 
 	function handleNotification(event: CustomEvent) {
 		const detail = event.detail;
 		if (detail?.type === 'reminder' || detail?.type === 'treatment_update' || detail?.type === 'alert') {
-			loadMedications();
-			refreshUserStats();
-			updateCharts();
+			if ($isMedic) {
+				loadDashboardData();
+			} else {
+				loadMedications();
+				refreshUserStats();
+				updateCharts();
+			}
+		}
+	}
+
+	function handleNewMessage(event: CustomEvent) {
+		messagesCount = messagesCount + 1;
+		if ($isMedic) {
+			// Optionally refresh patient/treatment lists if message impacts badges
+			loadDashboardData();
+		}
+	}
+
+	async function loadDashboardData() {
+		try {
+			loading = true;
+
+			// Load patients (collaborations)
+			const collabs = await api.getMyCollaborations();
+			patients = collabs.slice(0, 5); // Show top 5 patients
+
+			// Load treatments
+			const treatmentData = await api.getTreatments();
+			treatments = treatmentData.slice(0, 5); // Show recent 5
+
+			// Load pending invites
+			const invites = await api.getPendingInvites();
+
+			// Update stats
+			medicStats = {
+				totalPatients: collabs.length,
+				activeTreatments: treatmentData.length,
+				pendingInvites: invites.length
+			};
+		} catch (error) {
+			console.error('Failed to load dashboard data:', error);
+		} finally {
+			loading = false;
 		}
 	}
 
@@ -87,7 +258,6 @@
 		try {
 			const data = await api.getTodayMedications();
 			todayMedications = data;
-			updateStats();
 			
 			// Load historical adherence data
 			const history = await api.getMedicationHistoryAdherence(7);
@@ -95,6 +265,8 @@
 				new Date(a.date).getTime() - new Date(b.date).getTime()
 			);
 			
+			// Now update stats after we have history data
+			updateStats();
 			updateCharts();
 		} catch (error) {
 			console.error('Failed to load medications:', error);
@@ -106,37 +278,106 @@
 	function updateStats() {
 		const now = new Date();
 		const total = todayMedications.length;
-		const taken = todayMedications.filter((m) => m.is_taken).length;
-		const overdue = todayMedications.filter(
-			(m) => !m.is_taken && m.scheduled_time && new Date(m.scheduled_time) < now
-		).length;
-		const snoozed = todayMedications.filter(
-			(m) => !m.is_taken && m.snoozed_until && new Date(m.snoozed_until) > now
-		).length;
+		const taken = todayMedications.filter(isMedicationTaken).length;
+		
+		// Parse time from "HH:mm" format and compare with current time
+		const overdue = todayMedications.filter((m) => {
+			if (isMedicationTaken(m)) return false;
+			if (!m.ora) return false;
+			
+			const [hours, minutes] = m.ora.split(':').map(Number);
+			const scheduledTime = new Date();
+			scheduledTime.setHours(hours, minutes, 0, 0);
+			
+			return scheduledTime < now;
+		}).length;
+		
+		const snoozed = todayMedications.filter((m) => isMedicationSnoozed(m, now)).length;
 
+		// Find next upcoming medication
 		const upcoming = todayMedications
-			.filter((m) => !m.is_taken && m.scheduled_time && new Date(m.scheduled_time) >= now)
-			.sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time))[0];
+			.filter((m) => {
+				if (isMedicationTaken(m)) return false;
+				if (!m.ora) return false;
+				
+				const [hours, minutes] = m.ora.split(':').map(Number);
+				const scheduledTime = new Date();
+				scheduledTime.setHours(hours, minutes, 0, 0);
+				
+				return scheduledTime >= now;
+			})
+			.sort((a, b) => {
+				const [aH, aM] = a.ora.split(':').map(Number);
+				const [bH, bM] = b.ora.split(':').map(Number);
+				return (aH * 60 + aM) - (bH * 60 + bM);
+			})[0];
+
+		// store next dose for countdown updates
+		nextDose = upcoming || null;
+		updateCountdown();
 
 		stats = {
 			total,
 			taken,
 			overdue,
 			snoozed,
-			upcomingLabel: upcoming
-				? `${new Date(upcoming.scheduled_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${
-						upcoming.medication_name || 'Doză următoare'
-				  }`
-				: 'Nicio doză programată',
-			adherence: total ? Math.round((taken / total) * 100) : 0
+			upcomingLabel: countdownLabel,
+			weeklyAdherence: adherenceHistory.length > 0 ? Math.round(adherenceHistory.reduce((sum: number, d: any) => sum + (d.adherenceRate || 0), 0) / adherenceHistory.length) : (total ? Math.round((taken / total) * 100) : 0)
 		};
+	}
+
+	// Countdown state and helpers
+	let nextDose = $state<any | null>(null);
+	let countdownLabel = $state('Nicio doză programată');
+	let countdownInterval: ReturnType<typeof setInterval> | null = null;
+
+	function updateCountdown() {
+		if (!nextDose || !nextDose.ora) {
+			countdownLabel = 'Nicio doză programată';
+			// reflect in stats for live render
+			stats = { ...stats, upcomingLabel: countdownLabel };
+			return;
+		}
+		const now = new Date();
+		const [hours, minutes] = String(nextDose.ora).split(':').map(Number);
+		const scheduledTime = new Date();
+		scheduledTime.setHours(hours, minutes, 0, 0);
+		const diffMs = scheduledTime.getTime() - now.getTime();
+		if (diffMs <= 0) {
+			countdownLabel = `${nextDose.ora} - ${nextDose.medicationName || 'Doză următoare'}`;
+			stats = { ...stats, upcomingLabel: countdownLabel };
+			return;
+		}
+		const totalSeconds = Math.floor(diffMs / 1000);
+		const h = Math.floor(totalSeconds / 3600);
+		const m = Math.floor((totalSeconds % 3600) / 60);
+		const s = totalSeconds % 60;
+		const hh = h.toString().padStart(2, '0');
+		const mm = m.toString().padStart(2, '0');
+		const ss = s.toString().padStart(2, '0');
+		const label = `${hh}:${mm}:${ss}`;
+		countdownLabel = `${label} până la ${nextDose.medicationName || 'doza următoare'} (${nextDose.ora})`;
+		stats = { ...stats, upcomingLabel: countdownLabel };
+	}
+
+	async function confirmMedication(medication: any) {
+		try {
+			await api.confirmMedication({
+				doseId: medication.doseId,
+				scheduledFor: new Date().toISOString()
+			});
+			await loadMedications();
+			await refreshUserStats();
+		} catch (error) {
+			console.error('Failed to confirm medication:', error);
+		}
 	}
 
 	async function snoozeMedication(medication: any) {
 		try {
 			await api.snoozeMedication({
-				medicationScheduleId: medication.id,
-				scheduledTime: new Date().toISOString()
+				doseId: medication.doseId,
+				scheduledFor: new Date().toISOString()
 			});
 			await loadMedications();
 		} catch (error) {
@@ -144,23 +385,24 @@
 		}
 	}
 
-	function getBadgeColor(badge: string) {
-		const colors: Record<string, string> = {
-			bronze: 'bg-orange-700 text-white',
-			silver: 'bg-gray-400 text-white',
-			gold: 'bg-yellow-500 text-white',
-			platinum: 'bg-blue-400 text-white',
-			diamond: 'bg-purple-600 text-white'
-		};
-		return colors[badge] || 'bg-gray-300 text-gray-700';
+	function viewPatient(patientId: number) {
+		goto(`/chat/${patientId}`);
 	}
 
-	function getTimeLabel(dateString: string) {
-		return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+	function viewTreatment(planId: number) {
+		goto(`/treatments/${planId}`);
+	}
+
+	function isMedicationTaken(med: any) {
+		return med.rezultat === 'pozitiv' || Boolean(med.timestampConfirmare);
+	}
+
+	function isMedicationSnoozed(med: any, now = new Date()) {
+		return !isMedicationTaken(med) && med.snoozedUntil && new Date(med.snoozedUntil) > now;
 	}
 
 	function buildTodayTimeline() {
-		// Use historical 7-day data if available, otherwise fall back to today's timeline
+		// Use historical 7-day data for the timeline chart
 		if (adherenceHistory.length > 0) {
 			return {
 				labels: adherenceHistory.map((d: any) => {
@@ -172,18 +414,21 @@
 		}
 
 		const sorted = todayMedications
-			.filter((m) => m.scheduled_time)
-			.map((m) => ({
-				label: getTimeLabel(m.scheduled_time),
-				when: new Date(m.scheduled_time).getTime(),
-				is_taken: m.is_taken
-			}))
+			.filter((m) => m.ora)
+			.map((m) => {
+				const [hours, minutes] = m.ora.split(':').map(Number);
+				return {
+					label: m.ora,
+					when: hours * 60 + minutes,
+					is_taken: m.rezultat === 'pozitiv' || m.timestampConfirmare
+				};
+			})
 			.sort((a, b) => a.when - b.when);
 
 		if (sorted.length === 0) {
 			return {
 				labels: ['—'],
-				data: [stats.adherence]
+				data: [stats.weeklyAdherence]
 			};
 		}
 
@@ -202,10 +447,23 @@
 	}
 
 	function getMedicationDistribution() {
+		// Count medications from the 7-day history
 		const counts = new Map<string, number>();
+		
+		if (adherenceHistory.length > 0) {
+			// Aggregate medication counts from history if available
+			// For now, use todayMedications as fallback; ideally API would return historical meds
+			adherenceHistory.forEach((day: any) => {
+				// If history contains medication details, aggregate them
+				// Otherwise, use today's distribution as proxy for weekly average
+			});
+		}
+		
+		// Use today's medications as the basis for weekly distribution
+		// (assuming similar schedule daily)
 		todayMedications.forEach((m) => {
-			const name = m.medication_name || 'Fără nume';
-			counts.set(name, (counts.get(name) || 0) + 1);
+			const name = m.medicationName || 'Fără nume';
+			counts.set(name, (counts.get(name) || 0) * 7); // Multiply by 7 for weekly estimate
 		});
 
 		const labels = counts.size ? Array.from(counts.keys()).slice(0, 6) : ['Nicio medicație'];
@@ -214,22 +472,21 @@
 	}
 
 	function initializeCharts() {
-		const isDark = document.documentElement.classList.contains('dark');
-		const textColor = isDark ? '#e5e7eb' : '#374151';
-		const gridColor = isDark ? '#374151' : '#e5e7eb';
+		const { text: textColor, grid: gridColor } = chartTheme;
 
-		// Adherence Rate Chart (Doughnut)
+		// Weekly Adherence Rate Chart (Doughnut) — using 7-day average
 		if (adherenceChartCanvas) {
-			const takenCount = todayMedications.filter(m => m.is_taken).length;
-			const totalCount = todayMedications.length || 1;
-			const adherenceRate = Math.round((takenCount / totalCount) * 100);
+			const weeklyRate = stats.weeklyAdherence;
+			// Estimate doses based on 7-day average
+			const estimatedTaken = Math.round((weeklyRate / 100) * (stats.total || 10) * 7);
+			const estimatedTotal = (stats.total || 10) * 7;
 
 			adherenceChart = new Chart(adherenceChartCanvas, {
 				type: 'doughnut',
 				data: {
 					labels: ['Luate', 'Rămase'],
 					datasets: [{
-						data: [takenCount, totalCount - takenCount],
+						data: [estimatedTaken, estimatedTotal - estimatedTaken],
 						backgroundColor: ['#10b981', '#e5e7eb'],
 						borderWidth: 0
 					}]
@@ -244,7 +501,7 @@
 						},
 						title: {
 							display: true,
-							text: `Aderență: ${adherenceRate}%`,
+							text: `Conformitate săptămânală: ${weeklyRate}%`,
 							color: textColor,
 							font: { size: 16, weight: 'bold' }
 						}
@@ -253,7 +510,7 @@
 			});
 		}
 
-		// Today timeline (Line)
+		// 7-day timeline (Line)
 		if (weeklyChartCanvas) {
 			const timeline = buildTodayTimeline();
 
@@ -262,7 +519,7 @@
 				data: {
 					labels: timeline.labels,
 					datasets: [{
-						label: 'Aderență cumulată (%)',
+						label: 'Conformitate zilnică (%)',
 						data: timeline.data,
 						borderColor: '#3b82f6',
 						backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -294,7 +551,7 @@
 			});
 		}
 
-		// Medications Distribution Chart (Bar)
+		// 7-day Medications Distribution Chart (Bar)
 		if (medicationsChartCanvas) {
 			const distribution = getMedicationDistribution();
 
@@ -303,7 +560,7 @@
 				data: {
 					labels: distribution.labels,
 					datasets: [{
-						label: 'Medicamente astăzi',
+						label: 'Medicamente săptămânal',
 						data: distribution.data,
 						backgroundColor: '#8b5cf6',
 						borderRadius: 8
@@ -337,18 +594,16 @@
 	}
 
 	function updateCharts() {
-		const isDark = document.documentElement.classList.contains('dark');
-		const textColor = isDark ? '#e5e7eb' : '#374151';
-		const gridColor = isDark ? '#374151' : '#e5e7eb';
+		const { text: textColor, grid: gridColor } = chartTheme;
 		
 		if (adherenceChart) {
-			const takenCount = todayMedications.filter(m => m.is_taken).length;
-			const totalCount = todayMedications.length || 1;
-			const adherenceRate = Math.round((takenCount / totalCount) * 100);
+			const weeklyRate = stats.weeklyAdherence;
+			const estimatedTaken = Math.round((weeklyRate / 100) * (stats.total || 10) * 7);
+			const estimatedTotal = (stats.total || 10) * 7;
 			
-			adherenceChart.data.datasets[0].data = [takenCount, totalCount - takenCount];
+			adherenceChart.data.datasets[0].data = [estimatedTaken, estimatedTotal - estimatedTaken];
 			if (adherenceChart.options.plugins?.title) {
-				adherenceChart.options.plugins.title.text = `Aderență: ${adherenceRate}%`;
+				adherenceChart.options.plugins.title.text = `Conformitate săptămânală: ${weeklyRate}%`;
 				adherenceChart.options.plugins.title.color = textColor;
 			}
 			if (adherenceChart.options.plugins?.legend?.labels) {
@@ -392,163 +647,53 @@
 	}
 </script>
 
-<div class="space-y-4 md:space-y-6">
-	<!-- Stats Card -->
-	<div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 md:p-6 text-white shadow-lg">
-		<div class="flex-col sm:flex-row justify-between items-start gap-4">
-			<div class="w-full sm:flex-1">
-				<h2 class="text-xl md:text-2xl font-bold mb-3">Bine ai revenit, {$authStore.user.fullName}!</h2>
-				<div class="space-y-1 text-sm md:text-base">
-					<p class="text-blue-100 flex items-center gap-2">
-						<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-						</svg>
-						<span class="font-semibold">{$authStore.user.totalXp || 0} XP</span>
-					</p>
-					<p class="text-blue-100 flex items-center gap-2">
-						<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
-						</svg>
-						<span class="font-semibold">{$authStore.user.currentStreak || 0}</span> zile consecutive
-					</p>
-					<p class="text-blue-100 flex items-center gap-2">
-						<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-						</svg>
-						Record: <span class="font-semibold">{$authStore.user.longestStreak || 0}</span> zile
-					</p>
-				</div>
-			</div>
-			{#if $authStore.user.currentBadge}
-				<div class="text-center sm:text-right">
-					<div class={`px-3 py-2 md:px-4 md:py-2 rounded-xl ${getBadgeColor($authStore.user.currentBadge)} shadow-lg inline-block`}>
-						<p class="text-xs md:text-sm font-bold uppercase tracking-wide">{$authStore.user.currentBadge}</p>
-					</div>
-				</div>
-			{/if}
+{#if $isMedic}
+	<!-- Medic Dashboard -->
+	<div class="space-y-4 md:space-y-6">
+		<!-- Welcome Card -->
+		<WelcomeCard name={$authStore.user.fullName} subtitle={`Ai grijă de ${medicStats.totalPatients} pacienți astăzi`} />
+
+		<!-- Quick Stats -->
+		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
+			{#each medicCards as card}
+				<Card title={card.title} value={card.value} sub="" accent="text-gray-900 dark:text-gray-100" iconPath={card.iconPath} iconColor={card.iconColor} iconBg={card.iconBg} />
+			{/each}
 		</div>
+
+		<!-- Quick Actions -->
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			{#each medicActions as action}
+				<ActionButton href={action.href} label={action.label} description={action.description} iconPath={action.iconPath} iconBg={action.iconBg} iconColor={action.iconColor} borderHover={action.bg} />
+			{/each}
+		</div>
+
+		<!-- Patients List -->
+		<PatientsList {loading} {patients} onView={viewPatient}>
+			<button slot="actions" onclick={() => goto('/collaborations')} class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Vezi toți →</button>
+		</PatientsList>
+
+		<!-- Recent Treatments -->
+		<TreatmentsList {loading} {treatments} onView={viewTreatment}>
+			<button slot="actions" onclick={() => goto('/treatments')} class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Vezi toate →</button>
+		</TreatmentsList>
 	</div>
+{:else if $isPacient}
+	<!-- Patient Dashboard -->
+<div class="space-y-4 md:space-y-6">
+	<!-- Welcome Card (patient, same design) -->
+	<WelcomeCard name={$authStore.user.fullName} subtitle={`${$authStore.user.totalXp || 0} XP • Streak: ${$authStore.user.currentStreak || 0} zile`} />
 
 	<!-- Quick Stats -->
 	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
-		<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm">
-			<p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Aderență azi</p>
-			<p class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.adherence}%</p>
-			<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{stats.taken} din {stats.total} doze</p>
-		</div>
-		<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm">
-			<p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Doze restante</p>
-			<p class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">{Math.max(stats.total - stats.taken, 0)}</p>
-			<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{stats.snoozed} amânate • {stats.overdue} întârziate</p>
-		</div>
-		<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm">
-			<p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Următoarea doză</p>
-			<p class="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">{stats.upcomingLabel}</p>
-			<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Actualizat la {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-		</div>
-		<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm">
-			<p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Doze confirmate</p>
-			<p class="text-2xl md:text-3xl font-bold text-green-600 dark:text-green-400">{stats.taken}</p>
-			<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Împreună cu streak-ul tău</p>
-		</div>
-	</div>
-
-	<!-- Charts Grid -->
-	<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-		<!-- Adherence Chart -->
-		<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-			<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">📊 Aderență Astăzi</h3>
-			<div class="h-64">
-				<canvas bind:this={adherenceChartCanvas}></canvas>
-			</div>
-		</div>
-
-		<!-- Today timeline Chart -->
-		<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-			<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">📈 Cronologia dozelor de azi</h3>
-			<div class="h-64">
-				<canvas bind:this={weeklyChartCanvas}></canvas>
-			</div>
-		</div>
-
-		<!-- Medications Distribution -->
-		<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 lg:col-span-2">
-			<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">💊 Medicamentele Tale</h3>
-			<div class="h-64">
-				<canvas bind:this={medicationsChartCanvas}></canvas>
-			</div>
-		</div>
+		{#each patientCards as card}
+			<Card title={card.title} value={card.value} sub={card.sub} accent={card.accent} />
+		{/each}
 	</div>
 
 	<!-- Today's Medications -->
-	{#if $isPacient}
-		<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-			<div class="p-4 md:p-6 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-800">
-				<h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">📋 Medicamentele de astăzi</h3>
-			</div>
+	<MedicationsList loading={loading} medications={todayMedications} isTakenFn={isMedicationTaken} isSnoozedFn={(m: any) => isMedicationSnoozed(m)} onConfirm={confirmMedication} onSnooze={snoozeMedication} />
 
-			{#if loading}
-				<div class="flex justify-center py-8 md:py-12">
-					<div class="animate-spin rounded-full h-10 w-10 border-3 border-blue-600 border-t-transparent shadow-lg shadow-blue-500/50 animate-pulse"></div>
-				</div>
-			{:else if todayMedications.length === 0}
-				<div class="p-8 md:p-12 text-center">
-					<svg class="w-12 h-12 md:w-16 md:h-16 mx-auto text-gray-300 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-					</svg>
-					<p class="text-sm md:text-base text-gray-500 dark:text-gray-400">Nu ai medicamente programate astăzi</p>
-				</div>
-			{:else}
-				<div class="divide-y divide-gray-100 dark:divide-gray-700">
-					{#each todayMedications as medication}
-						<div class="p-4 md:p-5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 {medication.is_taken ? 'bg-green-50 dark:bg-green-900/20' : ''}">
-							<div class="flex flex-col sm:flex-row justify-between items-start gap-3 md:gap-4">
-								<div class="flex-1 min-w-0 w-full">
-									<h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-1 text-sm md:text-base">{medication.medication_name}</h4>
-									<div class="space-y-1">
-										<p class="text-xs md:text-sm text-gray-600 dark:text-gray-400">💊 Doza: <span class="font-medium">{medication.dosage}</span></p>
-										<p class="text-xs md:text-sm text-gray-600 dark:text-gray-400">🔄 Frecvență: <span class="font-medium">{medication.frequency}</span></p>
-										{#if medication.instructions}
-											<p class="text-xs md:text-sm text-gray-500 dark:text-gray-500 mt-2 italic line-clamp-2">{medication.instructions}</p>
-										{/if}
-									</div>
-								</div>
-
-								<div class="flex sm:flex-col gap-2 w-full sm:w-auto">
-									{#if medication.is_taken}
-										<span class="px-3 py-2 md:px-4 md:py-2 bg-green-500 text-white rounded-lg text-xs md:text-sm font-semibold shadow-sm flex items-center justify-center gap-2 whitespace-nowrap">
-											<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-											</svg>
-											Luat
-										</span>
-									{:else if medication.snoozed_until && new Date(medication.snoozed_until) > new Date()}
-										<span class="px-3 py-2 md:px-4 md:py-2 bg-yellow-100 text-yellow-800 rounded-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 whitespace-nowrap">
-											<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-											</svg>
-											Amânat
-										</span>
-									{:else}
-										<button
-											onclick={() => confirmMedication(medication)}
-											class="flex-1 sm:flex-none px-3 py-2 md:px-4 md:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 text-xs md:text-sm font-medium shadow-sm transition touch-manipulation"
-										>
-											✓ Confirmă
-										</button>
-										<button
-											onclick={() => snoozeMedication(medication)}
-											class="flex-1 sm:flex-none px-3 py-2 md:px-4 md:py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 active:bg-gray-300 dark:active:bg-gray-500 text-xs md:text-sm font-medium transition touch-manipulation"
-										>
-											⏰ +30min
-										</button>
-									{/if}
-								</div>
-							</div>
-						</div>
-					{/each}
-				</div>
-			{/if}
-		</div>
-	{/if}
-</div>
+	<!-- Charts Grid -->
+	<ChartsGroup bind:adherenceCanvas={adherenceChartCanvas} bind:weeklyCanvas={weeklyChartCanvas} bind:medicationsCanvas={medicationsChartCanvas} />
+	</div>
+{/if}

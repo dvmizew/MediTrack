@@ -129,9 +129,6 @@ export function startSessionManager(): void {
 	refreshTimer = setInterval(() => {
 		refreshAuthToken();
 	}, TOKEN_REFRESH_INTERVAL);
-
-	// Initial token refresh (optional, to get fresh token on app start)
-	// refreshAuthToken();
 }
 
 /**
