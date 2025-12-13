@@ -9,11 +9,11 @@
   let overview = $state<any>(null);
   let error = $state<string | null>(null);
 
-  let adherence7Canvas: HTMLCanvasElement;
-  let adherence30Canvas: HTMLCanvasElement;
+  let adherence7Canvas = $state<HTMLCanvasElement | null>(null);
+  let adherence30Canvas = $state<HTMLCanvasElement | null>(null);
 
   function renderCharts() {
-    if (!overview) return;
+    if (!overview || !adherence7Canvas || !adherence30Canvas) return;
     const seven = overview.adherence.last7Days;
     const thirty = overview.adherence.last30Days;
 
