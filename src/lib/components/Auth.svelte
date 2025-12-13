@@ -59,11 +59,16 @@
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 px-4 py-8 animate-fade-in relative">
+	<!-- Skip to main content link for keyboard users -->
+	<a href="#auth-form" class="skip-link">Sari la formular</a>
+
 	<!-- Theme Toggle Button (Top Right) -->
 	<button
 		onclick={themeStore.toggle}
 		class="absolute top-4 right-4 p-3 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white dark:hover:bg-gray-800 hover:shadow-lg hover:scale-110 transition-all duration-300 ease-in-out group"
-		aria-label="Toggle theme"
+		aria-label={$themeStore === 'dark' ? 'Comută la modul luminos' : 'Comută la modul întunecat'}
+		aria-pressed={$themeStore === 'dark'}
+		type="button"
 	>
 		{#if $themeStore === 'dark'}
 			<svg class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,8 +83,8 @@
 
 	<div class="max-w-md w-full animate-slide-up">
 		<!-- Logo & Title -->
-		<div class="text-center mb-6 md:mb-8">
-			<div class="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg mb-3 md:mb-4 hover:scale-110 hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300 animate-bounce-gentle">
+		<div class="text-center mb-6 md:mb-8" role="banner">
+			<div class="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg mb-3 md:mb-4 hover:scale-110 hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300 animate-bounce-gentle" aria-hidden="true">
 				<svg class="w-8 h-8 md:w-9 md:h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
 				</svg>
@@ -90,6 +95,8 @@
 					in:fly={{ y: -10, duration: 300, easing: quintOut }}
 					out:fly={{ y: 10, duration: 200, easing: quintOut }}
 					class="text-sm md:text-base text-gray-600 dark:text-gray-400"
+					id="auth-subtitle"
+					aria-live="polite"
 				>
 					{isRegister ? 'Creează cont nou' : 'Bine ai revenit!'}
 				</p>
@@ -97,24 +104,32 @@
 		</div>
 
 		<!-- Card -->
-		<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-6 md:p-8 hover:shadow-2xl transition-shadow duration-300">
+		<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-6 md:p-8 hover:shadow-2xl transition-shadow duration-300" role="main">
 			{#if error}
-			<div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm animate-shake">
+			<div 
+				class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm animate-shake"
+				role="alert"
+				aria-live="assertive"
+			>
 				{error}
 			</div>
 		{/if}
 
-		<form onsubmit={handleSubmit}>
+		<form onsubmit={handleSubmit} id="auth-form" aria-labelledby="auth-subtitle">
 			{#if isRegister}
 				<div transition:slide={{ duration: 500, easing: quintOut }} class="mb-4 md:mb-5">
 					<label for="fullName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-						Nume complet
+						Nume complet <span aria-label="obligatoriu" class="text-red-500">*</span>
 					</label>
 					<input
 						id="fullName"
+						name="fullName"
 						type="text"
 						bind:value={fullName}
 						required
+						autocomplete="name"
+						aria-required="true"
+						aria-invalid={error && !fullName ? 'true' : 'false'}
 						class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 						placeholder="Ion Popescu"
 					/>
@@ -122,33 +137,48 @@
 			{/if}
 
 			<div class="mb-4 md:mb-5">
-				<label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+				<label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+					Email <span aria-label="obligatoriu" class="text-red-500">*</span>
+				</label>
 				<input
 					id="email"
+					name="email"
 					type="email"
 					bind:value={email}
 					required
+					autocomplete="email"
+					aria-required="true"
+					aria-invalid={error && !email ? 'true' : 'false'}
 					class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 					placeholder="email@example.com"
 				/>
 			</div>
 
 			<div class="mb-4 md:mb-5">
-				<label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Parolă</label>
+				<label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+					Parolă <span aria-label="obligatoriu" class="text-red-500">*</span>
+				</label>
 				<input
 					id="password"
+					name="password"
 					type="password"
 					bind:value={password}
 					required
 					minlength={6}
+					autocomplete={isRegister ? 'new-password' : 'current-password'}
+					aria-required="true"
+					aria-invalid={error && !password ? 'true' : 'false'}
+					aria-describedby="password-hint"
 					class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 					placeholder="••••••••"
 				/>
+				<p id="password-hint" class="sr-only">Minim 6 caractere</p>
 			</div>
 
 			<button
 				type="submit"
 				disabled={loading}
+				aria-busy={loading}
 				class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 hover:shadow-xl hover:shadow-blue-500/50 hover:scale-[1.02] focus:ring-4 focus:ring-blue-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg touch-manipulation active:scale-95"
 			>
 				{loading ? 'Se procesează...' : isRegister ? 'Creează cont' : 'Intră în cont'}
@@ -156,7 +186,7 @@
 		</form>
 
 		<div class="mt-5 md:mt-6">
-			<div class="relative">
+			<div class="relative" role="separator" aria-label="sau">
 				<div class="absolute inset-0 flex items-center">
 					<div class="w-full border-t border-gray-200 dark:border-gray-700"></div>
 				</div>
@@ -166,10 +196,12 @@
 			</div>
 
 			<button
+				type="button"
 				onclick={handleGoogleLogin}
+				aria-label="Continuă cu Google"
 				class="mt-4 w-full flex items-center justify-center gap-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 py-3 px-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-lg hover:scale-[1.02] focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 font-medium transition-all duration-200 touch-manipulation active:scale-95"
 			>
-				<svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
+				<svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
 					<path
 						fill="currentColor"
 						d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -193,10 +225,12 @@
 
 		<div class="mt-5 md:mt-6 text-center">
 			<button
+				type="button"
 				onclick={() => {
 					isRegister = !isRegister;
 					error = '';
 				}}
+				aria-label={isRegister ? 'Schimbă la pagina de autentificare' : 'Schimbă la pagina de înregistrare'}
 				class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:scale-105 text-sm font-semibold transition-all duration-200 touch-manipulation"
 			>
 				{isRegister ? 'Ai deja cont? Intră în cont' : 'Nu ai cont? Creează unul'}

@@ -234,11 +234,11 @@
 </script>
 
 <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-	<nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+	<nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Navigare principală">
 		<div class="flex justify-between items-center h-16">
 			<!-- Logo -->
-			<a href="/dashboard" class="flex items-center gap-2 group">
-				<div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+			<a href="/dashboard" class="flex items-center gap-2 group" aria-label="MediTrack - mergi la Dashboard">
+				<div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center" aria-hidden="true">
 					<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
 					</svg>
@@ -318,7 +318,8 @@
 				<button
 					onclick={() => themeStore.toggle()}
 					class="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"
-					aria-label="Toggle theme"
+					aria-label={$themeStore === 'dark' ? 'Comută la modul luminos' : 'Comută la modul întunecat'}
+					aria-pressed={$themeStore === 'dark'}
 					type="button"
 				>
 					{#if $themeStore === 'dark'}
@@ -339,9 +340,12 @@
 						<button
 							onclick={() => {showNotifications = !showNotifications; showUserMenu = false; showMobileMenu = false;}}
 							class="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition active:scale-95 min-w-10 h-10"
-							aria-label="Notificări"
+							aria-label={unreadCount > 0 ? `Notificări (${unreadCount} necitite)` : 'Notificări'}
+							aria-expanded={showNotifications}
+							aria-haspopup="true"
+							type="button"
 						>
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
 							</svg>
 							{#if unreadCount > 0}

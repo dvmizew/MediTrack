@@ -101,9 +101,11 @@
 			{:else}
 				<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 					{#each treatments as treatment}
-					<div
-						class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-2 border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition cursor-pointer group"
+					<button
+						type="button"
+						class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-2 border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition cursor-pointer group text-left w-full"
 						onclick={() => viewDetails(treatment.plan_id)}
+						aria-label="Vezi detalii pentru {treatment.diagnoza}"
 						>
 							<div class="flex justify-between items-start mb-4">
 								<h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
@@ -166,8 +168,8 @@
 
 						<div class="flex items-center justify-end pt-3 border-t border-gray-100 dark:border-gray-700">
 							<span class="text-sm text-blue-600 dark:text-blue-400 font-medium group-hover:underline">Vezi detalii →</span>
-							</div>
 						</div>
+					</button>
 					{/each}
 			</div>
 		{/if}
