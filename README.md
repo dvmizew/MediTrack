@@ -82,7 +82,7 @@ cd server && npm install && cd ..
 
 # 3. Setup environment
 cp .env.example server/.env
-sed -i "s/generate_random_32_char_secret_with_openssl_rand_base64_32/$(openssl rand -base64 32)/" server/.env
+NEW_SECRET=$(openssl rand -base64 32) && sed -i "s|generate_random_32_char_secret_with_openssl_rand_base64_32|$NEW_SECRET|" server/.env
 
 # 4. Start infrastructure
 docker compose up -d
