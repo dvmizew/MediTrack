@@ -21,6 +21,18 @@
 		descriere: ''
 	});
 
+	function formatDate(value: string | Date) {
+		if (!value) return '–';
+		const d = new Date(value);
+		if (Number.isNaN(d.getTime())) return '–';
+		return d.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+	}
+
+	function formatTime(value: string) {
+		if (!value) return '–';
+		return value.slice(0, 5);
+	}
+
 	// Add medication form
 	let newMedication = $state({
 		medicationName: '',
@@ -62,14 +74,15 @@
 	async function handleAddMedication() {
 		try {
 			await api.addMedication({
-				treatmentPlanId: planId,
+				planId,
 				medicationName: newMedication.medicationName,
-				dosage: newMedication.cantitate,
-				frequency: newMedication.frecventa,
-				scheduleTimes: [newMedication.ora],
+				cantitate: newMedication.cantitate,
+				ora: newMedication.ora,
+				frecventa: newMedication.frecventa,
 				startDate: newMedication.startDate,
 				endDate: newMedication.endDate || undefined,
-				instructions: newMedication.instructiuni
+				instructiuni: newMedication.instructiuni,
+				detaliiMedicament: newMedication.detaliiMedicament || newMedication.medicationName
 			});
 
 			toastStore.add({
@@ -105,13 +118,14 @@
 
 	function startEditMedication(med: any) {
 		editingMedication = med;
-		newMedication.medicationName = med.medication_name;
-		newMedication.cantitate = med.dosage;
-		newMedication.ora = med.scheduled_time;
-		newMedication.frecventa = med.frequency;
-		newMedication.startDate = med.start_date?.split('T')[0] || '';
-		newMedication.endDate = med.end_date?.split('T')[0] || '';
-		newMedication.instructiuni = med.instructions || '';
+		newMedication.medicationName = med.medicationName;
+		newMedication.cantitate = med.cantitate;
+		newMedication.ora = med.ora;
+		newMedication.frecventa = med.frecventa;
+		newMedication.startDate = med.startDate?.split('T')[0] || '';
+		newMedication.endDate = med.endDate?.split('T')[0] || '';
+		newMedication.instructiuni = med.instructiuni || '';
+		newMedication.detaliiMedicament = med.detaliiMedicament || '';
 	}
 
 	function cancelEdit() {
@@ -132,14 +146,15 @@
 		if (!editingMedication) return;
 
 		try {
-			await api.updateMedication(editingMedication.dose_id, {
-				medication_name: newMedication.medicationName,
-				dosage: newMedication.cantitate,
-				scheduled_time: newMedication.ora,
-				frequency: newMedication.frecventa,
-				start_date: newMedication.startDate,
-				end_date: newMedication.endDate || null,
-				instructions: newMedication.instructiuni || null
+			await api.updateMedication(editingMedication.doseId, {
+				medicationName: newMedication.medicationName,
+				cantitate: newMedication.cantitate,
+				ora: newMedication.ora,
+				frecventa: newMedication.frecventa,
+				startDate: newMedication.startDate,
+				endDate: newMedication.endDate || null,
+				instructiuni: newMedication.instructiuni || null,
+				detaliiMedicament: newMedication.detaliiMedicament || newMedication.medicationName
 			});
 
 			toastStore.add({
@@ -197,18 +212,6 @@
 				duration: 3000
 			});
 		}
-	}
-
-	function formatDate(dateString: string) {
-		return new Date(dateString).toLocaleDateString('ro-RO', {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric'
-		});
-	}
-
-	function formatTime(timeString: string) {
-		return timeString.substring(0, 5);
 	}
 </script>
 
@@ -314,7 +317,7 @@
 					</div>
 					<div>
 						<p class="text-gray-500 dark:text-gray-400">Data creării</p>
-						<p class="font-semibold text-gray-900 dark:text-gray-100">{formatDate(treatment.data_creare)}</p>
+						<p class="font-semibold text-gray-900 dark:text-gray-100">{formatDate(treatment.dataCreare)}</p>
 					</div>
 				</div>
 			</div>
@@ -443,16 +446,16 @@
 							<div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-600 transition">
 								<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
 									<div class="flex-1 min-w-0">
-										<h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 break-words">{med.medication_name}</h3>
-										<p class="text-gray-600 dark:text-gray-400 text-sm mt-1">{med.dosage} • {med.frequency}</p>
-										{#if med.instructions}
-											<p class="text-gray-500 dark:text-gray-400 text-sm mt-2 break-words">{med.instructions}</p>
+										<h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 break-words">{med.medicationName}</h3>
+										<p class="text-gray-600 dark:text-gray-400 text-sm mt-1">{med.cantitate} • {med.frecventa}</p>
+										{#if med.instructiuni}
+											<p class="text-gray-500 dark:text-gray-400 text-sm mt-2 break-words">{med.instructiuni}</p>
 										{/if}
 									</div>
 									<div class="flex sm:flex-col items-center sm:items-end gap-2 flex-shrink-0">
-										<p class="text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{formatTime(med.scheduled_time)}</p>
+									<p class="text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{formatTime(med.ora)}</p>
 										<span class="inline-block px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap {med.is_active ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'}">
-											{med.is_active ? 'Activ' : 'Inactiv'}
+										{med.isActive ? 'Activ' : 'Inactiv'}
 										</span>
 										{#if $isMedic}
 											<button
@@ -465,9 +468,9 @@
 									</div>
 								</div>
 								<div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
-									<span class="whitespace-nowrap">📅 Start: {formatDate(med.start_date)}</span>
-									{#if med.end_date}
-										<span class="whitespace-nowrap">📅 Sfârșit: {formatDate(med.end_date)}</span>
+									<span class="whitespace-nowrap">📅 Start: {formatDate(med.startDate)}</span>
+									{#if med.endDate}
+										<span class="whitespace-nowrap">📅 Sfârșit: {formatDate(med.endDate)}</span>
 									{/if}
 								</div>
 							</div>

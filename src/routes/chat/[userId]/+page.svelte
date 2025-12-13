@@ -2,11 +2,9 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { authStore, isMedic, isPacient } from '$lib/stores/auth';
+	import { authStore, isMedic } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import { socketClient } from '$lib/api/socket';
-	import { toastStore } from '$lib/stores/notifications';
-	import { sanitizeHTML } from '$lib/utils/sanitize';
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 
@@ -131,6 +129,21 @@
 		}
 	}
 
+	function deriveUserFromConversation(conversation: any[]) {
+		if (!conversation || conversation.length === 0) return null;
+
+		const sample = conversation[conversation.length - 1];
+		const isSender = sample?.sender_id === $authStore.user?.userId;
+		const assumedRole = $isMedic ? 'pacient' : 'medic';
+
+		return {
+			user_id: otherUserId,
+			name: isSender ? sample?.receiverName || sample?.receiver_name : sample?.senderName || sample?.sender_name || 'Utilizator',
+			role: assumedRole,
+			avatar: isSender ? sample?.receiverAvatar : sample?.senderAvatar
+		};
+	}
+
 	async function loadUserStatus() {
 		if (!otherUserId) return;
 		
@@ -178,13 +191,66 @@
 			const conversationData = await api.getConversation(otherUserId);
 			messages = conversationData;
 
-			// Load other user info
-			const users = await api.getMyCollaborations();
-			otherUser = users.find((u: any) => u.user_id === otherUserId);
+			// Load other user info (fallback to conversation/profile when collaboration is missing)
+			const users = await api.getMyCollaborations().catch((collabErr: unknown) => {
+				console.error('Failed to load collaborations:', collabErr);
+				return [] as any[];
+			});
+			const collaborationUser = Array.isArray(users)
+				? users.find((u: any) => u.user_id === otherUserId)
+				: null;
 
-			if (!otherUser) {
-				error = 'Nu ai o colaborare activă cu acest utilizator';
-				return;
+			if (collaborationUser) {
+				otherUser = {
+					user_id: collaborationUser.user_id,
+					name:
+						collaborationUser.name ||
+						collaborationUser.medicName ||
+						collaborationUser.pacientName ||
+						collaborationUser.full_name,
+					email:
+						collaborationUser.email ||
+						collaborationUser.medicEmail ||
+						collaborationUser.pacientEmail,
+					role: collaborationUser.role,
+					avatar: collaborationUser.medicAvatar || collaborationUser.pacientAvatar
+				};
+			} else {
+				const derivedUser = deriveUserFromConversation(conversationData);
+				if (derivedUser) {
+					otherUser = derivedUser;
+				} else {
+					try {
+						const profile = await api.getUserProfile(String(otherUserId));
+						otherUser = {
+							user_id: profile.user_id ?? otherUserId,
+							name: profile.fullName || profile.name || profile.email || 'Utilizator',
+							email: profile.email,
+							role: profile.role || ($isMedic ? 'pacient' : 'medic'),
+							avatar: profile.avatarUrl
+						};
+					} catch (profileErr) {
+						console.error('Failed to load user profile:', profileErr);
+						otherUser = {
+							user_id: otherUserId,
+							name: 'Utilizator',
+							role: $isMedic ? 'pacient' : 'medic'
+						};
+					}
+				}
+			}
+
+			// Mark all unread messages from this user as read
+			const unreadMessages = messages.filter((m: any) => 
+				m.sender_id === otherUserId && !m.is_read
+			);
+			
+			for (const msg of unreadMessages) {
+				try {
+					await api.markMessageAsRead(msg.message_id);
+				} catch (err) {
+					console.error('Failed to mark message as read:', err);
+				}
 			}
 
 			scrollToBottom();

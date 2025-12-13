@@ -123,12 +123,13 @@ export const setupSocketHandlers = (io: Server) => {
         await query(
           `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
            VALUES ($1, 'chat', 'sent', 'Mesaj Nou', $2, $3)`,
-          [receiverId, `Mesaj nou de la ${userInfo.rows[0].full_name}`, savedMessage.message_id]
+          [receiverId, `Mesaj nou de la ${userInfo.rows[0].full_name}`, userId]
         );
 
         io.to(`user:${receiverId}`).emit('notification', {
           tip: 'chat',
           message: 'Mesaj nou primit',
+          referenceId: userId
         });
 
       } catch (error) {

@@ -45,7 +45,7 @@ router.post('/send', authenticate, sanitizeBody, [
       await query(
         `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
          VALUES ($1, 'chat', 'sent', 'Mesaj nou', 'Ai un mesaj nou', $2)`,
-        [receiverId, result.rows[0].message_id]
+        [receiverId, senderId]
       );
 
       const msg = result.rows[0];

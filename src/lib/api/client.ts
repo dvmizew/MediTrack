@@ -145,14 +145,15 @@ export const api = {
 
 	// Medications (Doses)
 	addMedication: (data: {
-		treatmentPlanId: number;
+		planId: number;
 		medicationName: string;
-		dosage: string;
-		frequency: string;
-		scheduleTimes: string[];
-		startDate: string;
+		cantitate: string;
+		ora: string; // HH:mm
+		frecventa: string;
+		startDate: string; // ISO date
 		endDate?: string;
-		instructions?: string;
+		instructiuni?: string;
+		detaliiMedicament?: string;
 	}) =>
 		request('/doses', {
 			method: 'POST',
@@ -204,6 +205,8 @@ export const api = {
 	getConversation: (userId: number) => request(`/messages/conversation/${userId}`),
 	getMyConversations: () => request('/messages/conversations'),
 	getUserStatus: (userId: number) => request(`/messages/status/${userId}`),
+	markMessageAsRead: (messageId: number) =>
+		request(`/messages/${messageId}/read`, { method: 'PATCH' }),
 
 	// Leaderboard
 	getLeaderboard: (timeFilter?: 'all' | 'month' | 'week') =>

@@ -28,7 +28,12 @@
 	async function loadCollaborations() {
 		try {
 			const data = await api.getMyCollaborations();
-			collaborations = data.filter((c: any) => c.status === 'accepted');
+			// API already returns only accepted; normalize to use patientId/user_id
+			collaborations = data.map((c: any) => ({
+				...c,
+				patientId: c.patientId ?? c.user_id, // user_id is unified field from backend
+				patientName: c.pacientName ?? c.name
+			}));
 			loading = false;
 		} catch (err) {
 			toastStore.add({
@@ -69,9 +74,9 @@
 			}
 
 			const result = await api.createTreatment({
-				patientId: parseInt(formData.patientId),
-				diagnostic: formData.diagnostic,
-				descriere: formData.descriere || undefined
+				pacientId: parseInt(formData.patientId),
+				diagnosis: formData.diagnostic,
+				description: formData.descriere || undefined
 			});
 
 			toastStore.add({
@@ -128,9 +133,11 @@
 					>
 						<option value="">Selectează pacient</option>
 						{#each collaborations as collab}
-							<option value={collab.patient_id}>
-								{collab.patient_name}
-							</option>
+							{#if collab.patientId}
+								<option value={collab.patientId}>
+									{collab.patientName}
+								</option>
+							{/if}
 						{/each}
 					</select>
 				</div>

@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
+	import { page } from '$app/stores';
 	import { isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import { profileUpdateSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
@@ -23,6 +24,24 @@
 			await loadStats();
 		}
 		loading = false;
+	});
+
+	// Reload profile when page becomes visible (user returns to tab/window)
+	$effect(() => {
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === 'visible') {
+				loadProfile();
+				if ($isPacient) {
+					loadStats();
+				}
+			}
+		};
+
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+
+		return () => {
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
+		};
 	});
 
 	async function loadProfile() {
