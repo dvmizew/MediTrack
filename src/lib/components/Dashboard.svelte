@@ -37,6 +37,15 @@
 		pendingInvites: 0
 	});
 
+	// Admin-specific state
+	let adminOverview = $state<any>(null);
+	let adminLoading = $state(false);
+	let adminError = $state<string | null>(null);
+	let adherence7Canvas = $state<HTMLCanvasElement | null>(null);
+	let adherence30Canvas = $state<HTMLCanvasElement | null>(null);
+	let adherence7Chart: Chart | null = null;
+	let adherence30Chart: Chart | null = null;
+
 	// Derived UI data to avoid duplication
 	const patientCards = $derived([
 		{
@@ -125,6 +134,33 @@
 			iconPath: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z'
 		}
 	]);
+
+	const adminCards = $derived(adminOverview ? [
+		{
+			title: 'Utilizatori Total',
+			value: adminOverview.users.active + adminOverview.users.inactive,
+			sub: `Activi ${adminOverview.users.active} · Inactivi ${adminOverview.users.inactive}`,
+			accent: 'text-blue-600 dark:text-blue-400'
+		},
+		{
+			title: 'Colaborări',
+			value: adminOverview.collaborations.reduce((a:any, c:any) => a + c.count, 0),
+			sub: `Acceptate ${adminOverview.collaborations.find((c:any) => c.status === 'accepted')?.count || 0}`,
+			accent: 'text-green-600 dark:text-green-400'
+		},
+		{
+			title: 'Tratamente Active',
+			value: adminOverview.treatments.active,
+			sub: `Total ${adminOverview.treatments.total}`,
+			accent: 'text-purple-600 dark:text-purple-400'
+		},
+		{
+			title: 'Doze Total',
+			value: adminOverview.doses.total,
+			sub: `Ultim 7d: ${adminOverview.adherence.last7Days.confirmed}`,
+			accent: 'text-orange-600 dark:text-orange-400'
+		}
+	] : []);
 	
 	// Chart references
 	let adherenceChartCanvas = $state<HTMLCanvasElement | null>(null);
@@ -134,12 +170,154 @@
 	let medicationsChartCanvas = $state<HTMLCanvasElement | null>(null);
 	let medicationsChart: Chart | null = null;
 	const chartTheme = $derived({
-		text: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151',
-		grid: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb'
+		text: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
+			|| document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#1f2937',
+		grid: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
+			|| document.documentElement.classList.contains('dark') ? '#4b5563' : '#d1d5db'
 	});
 
+	const isAdmin = $derived($authStore.user?.role === 'admin');
+
+	function renderAdminCharts() {
+		if (!adminOverview || !adherence7Canvas || !adherence30Canvas) return;
+		const seven = adminOverview.adherence.last7Days;
+		const thirty = adminOverview.adherence.last30Days;
+		
+		// Detect dark mode more reliably
+		const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
+			|| document.documentElement.classList.contains('dark');
+		const textColor = isDark ? '#e5e7eb' : '#1f2937';
+		const gridColor = isDark ? '#4b5563' : '#d1d5db';
+		const tooltipBg = isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(249, 250, 251, 0.95)';
+		const tooltipText = isDark ? '#e5e7eb' : '#1f2937';
+
+		// Destroy existing charts if any
+		if (adherence7Chart) adherence7Chart.destroy();
+		if (adherence30Chart) adherence30Chart.destroy();
+
+		adherence7Chart = new Chart(adherence7Canvas, {
+			type: 'doughnut',
+			data: {
+				labels: ['Confirmate', 'Rămase'],
+				datasets: [{
+					data: [seven.confirmed, Math.max(seven.scheduled - seven.confirmed, 0)],
+					backgroundColor: ['#22c55e', '#f87171'],
+					borderWidth: 0
+				}]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: true,
+				plugins: {
+					legend: {
+						position: 'bottom',
+						labels: { 
+							boxWidth: 12, 
+							padding: 8, 
+							font: { size: 10, weight: '500' }, 
+							color: textColor 
+						}
+					},
+					tooltip: {
+						backgroundColor: tooltipBg,
+						titleColor: tooltipText,
+						bodyColor: tooltipText,
+						borderColor: isDark ? '#4b5563' : '#e5e7eb',
+						borderWidth: 1,
+						padding: 10,
+						displayColors: true,
+						titleFont: { size: 12, weight: 'bold' },
+						bodyFont: { size: 11 }
+					}
+				},
+				cutout: '70%'
+			}
+		});
+
+		adherence30Chart = new Chart(adherence30Canvas, {
+			type: 'bar',
+			data: {
+				labels: ['Programate', 'Confirmate'],
+				datasets: [{
+					data: [thirty.scheduled, thirty.confirmed],
+					backgroundColor: ['#60a5fa', '#34d399'],
+					borderRadius: 4,
+					borderSkipped: false
+				}]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: true,
+				plugins: { 
+					legend: { display: false },
+					tooltip: {
+						backgroundColor: tooltipBg,
+						titleColor: tooltipText,
+						bodyColor: tooltipText,
+						borderColor: isDark ? '#4b5563' : '#e5e7eb',
+						borderWidth: 1,
+						padding: 10,
+						titleFont: { size: 12, weight: 'bold' },
+						bodyFont: { size: 11 }
+					}
+				},
+				scales: {
+					y: { 
+						beginAtZero: true, 
+						ticks: { 
+							font: { size: 11, weight: '500' }, 
+							color: textColor,
+							stepSize: Math.ceil(Math.max(thirty.scheduled, thirty.confirmed) / 5)
+						}, 
+						grid: { 
+							color: gridColor,
+							drawTicks: true
+						} 
+					},
+					x: { 
+						ticks: { 
+							font: { size: 11, weight: '500' }, 
+							color: textColor 
+						}, 
+						grid: { display: false } 
+					}
+				}
+			}
+		});
+	}
+
+	async function loadAdminOverview() {
+		try {
+			adminLoading = true;
+			adminError = null;
+			const token = $authStore.token;
+			const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/admin/reports/overview`, {
+				headers: { 'Authorization': `Bearer ${token}` }
+			});
+			if (!res.ok) throw new Error('Failed to load admin overview');
+			adminOverview = await res.json();
+			setTimeout(renderAdminCharts, 0);
+		} catch (e: any) {
+			adminError = e.message || 'Failed to load admin overview';
+		} finally {
+			adminLoading = false;
+		}
+	}
+
 	onMount(async () => {
-		if ($isMedic) {
+		if (isAdmin) {
+			await loadAdminOverview();
+			
+			// Listen for theme changes - update admin charts
+			themeUnsubscribe = themeStore.subscribe(() => {
+				// Recreate admin charts with new theme colors (with delay to ensure DOM is updated)
+				setTimeout(() => {
+					if (adherence7Chart) adherence7Chart.destroy();
+					if (adherence30Chart) adherence30Chart.destroy();
+					renderAdminCharts();
+				}, 50);
+			});
+		} else if ($isMedic) {
 			await loadDashboardData();
 		} else {
 			await loadMedications();
@@ -186,6 +364,9 @@
 		if (themeUnsubscribe) {
 			themeUnsubscribe();
 		}
+		// Destroy all charts
+		if (adherence7Chart) adherence7Chart.destroy();
+		if (adherence30Chart) adherence30Chart.destroy();
 		if (adherenceChart) adherenceChart.destroy();
 		if (weeklyChart) weeklyChart.destroy();
 		if (medicationsChart) medicationsChart.destroy();
@@ -452,6 +633,9 @@
 
 	function initializeCharts() {
 		const { text: textColor, grid: gridColor } = chartTheme;
+		const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
+			|| document.documentElement.classList.contains('dark');
+		const tooltipBg = isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(249, 250, 251, 0.95)';
 
 		// Weekly Adherence Rate Chart (Doughnut) — using 7-day average percentage
 		if (adherenceChartCanvas) {
@@ -474,13 +658,26 @@
 					plugins: {
 						legend: {
 							position: 'bottom',
-							labels: { color: textColor }
+							labels: { 
+								color: textColor,
+								font: { size: 11, weight: '500' }
+							}
 						},
 						title: {
 							display: true,
 							text: `Conformitate săptămânală: ${weeklyRate}%`,
 							color: textColor,
 							font: { size: 16, weight: 'bold' }
+						},
+						tooltip: {
+							backgroundColor: tooltipBg,
+							titleColor: textColor,
+							bodyColor: textColor,
+							borderColor: isDark ? '#4b5563' : '#e5e7eb',
+							borderWidth: 1,
+							padding: 10,
+							titleFont: { size: 12, weight: 'bold' },
+							bodyFont: { size: 11 }
 						}
 					}
 				}
@@ -509,18 +706,37 @@
 					maintainAspectRatio: false,
 					plugins: {
 						legend: {
-							labels: { color: textColor }
+							labels: { 
+								color: textColor,
+								font: { size: 11, weight: '500' }
+							}
+						},
+						tooltip: {
+							backgroundColor: tooltipBg,
+							titleColor: textColor,
+							bodyColor: textColor,
+							borderColor: isDark ? '#4b5563' : '#e5e7eb',
+							borderWidth: 1,
+							padding: 10,
+							titleFont: { size: 12, weight: 'bold' },
+							bodyFont: { size: 11 }
 						}
 					},
 					scales: {
 						y: {
 							beginAtZero: true,
 							max: 100,
-							ticks: { color: textColor },
+							ticks: { 
+								color: textColor,
+								font: { size: 11, weight: '500' }
+							},
 							grid: { color: gridColor }
 						},
 						x: {
-							ticks: { color: textColor },
+							ticks: { 
+								color: textColor,
+								font: { size: 11, weight: '500' }
+							},
 							grid: { color: gridColor }
 						}
 					}
@@ -549,6 +765,16 @@
 					plugins: {
 						legend: {
 							display: false
+						},
+						tooltip: {
+							backgroundColor: tooltipBg,
+							titleColor: textColor,
+							bodyColor: textColor,
+							borderColor: isDark ? '#4b5563' : '#e5e7eb',
+							borderWidth: 1,
+							padding: 10,
+							titleFont: { size: 12, weight: 'bold' },
+							bodyFont: { size: 11 }
 						}
 					},
 					scales: {
@@ -556,12 +782,16 @@
 							beginAtZero: true,
 							ticks: { 
 								stepSize: 1,
-								color: textColor 
+								color: textColor,
+								font: { size: 11, weight: '500' }
 							},
 							grid: { color: gridColor }
 						},
 						x: {
-							ticks: { color: textColor },
+							ticks: { 
+								color: textColor,
+								font: { size: 11, weight: '500' }
+							},
 							grid: { display: false }
 						}
 					}
@@ -651,6 +881,194 @@
 		<TreatmentsList {loading} {treatments} onView={viewTreatment}>
 			<button slot="actions" onclick={() => goto('/treatments')} class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Vezi toate →</button>
 		</TreatmentsList>
+	</div>
+{:else if isAdmin}
+	<!-- Admin Dashboard -->
+	<div class="space-y-4 md:space-y-6">
+		<!-- Header -->
+		<div class="space-y-1">
+			<h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Admin Dashboard</h1>
+			<p class="text-sm text-gray-600 dark:text-gray-300">Prezentare generală a sistemului, activitate și conformitate</p>
+		</div>
+
+		{#if adminLoading}
+			<div class="p-6 text-gray-900 dark:text-gray-100">Se încarcă rapoarte…</div>
+		{:else if adminError}
+			<div class="p-6 text-red-600 dark:text-red-400">{adminError}</div>
+		{:else if adminOverview}
+			<div class="space-y-4 md:space-y-6">
+				<!-- KPI Cards + Action Button Row -->
+				<div class="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-5">
+					<!-- Cards Section (4 columns) -->
+					<div class="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
+						{#each adminCards as card}
+							<Card title={card.title} value={card.value} sub={card.sub} accent={card.accent} />
+						{/each}
+					</div>
+					
+					<!-- Action Button (1 column, taller) -->
+					<div class="lg:col-span-1 flex">
+						<ActionButton 
+							label="Gestionează Utilizatori"
+							description="Vizualizează, editează și monitorizează"
+							href="/admin/users"
+							bg="border-blue-400 dark:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10"
+							iconBg="bg-blue-100 dark:bg-blue-900/30"
+							iconColor="text-blue-600 dark:text-blue-400"
+							iconPath="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+						/>
+					</div>
+				</div>
+
+				<!-- 2-Column Layout for Content Sections -->
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+					<!-- Left Column -->
+					<div class="space-y-6">
+						<!-- Users by Role -->
+						<section class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+							<div class="p-6 border-b border-gray-200 dark:border-gray-700">
+								<h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">👤 Utilizatori după Rol</h2>
+							</div>
+							<div class="p-6 grid gap-3">
+								{#if adminOverview.users.byRole && adminOverview.users.byRole.length > 0}
+									{#each adminOverview.users.byRole as r}
+										<div class="rounded-lg bg-gray-50 dark:bg-gray-900 p-3 flex items-center justify-between hover:shadow-md transition-all">
+											<div class="font-medium capitalize text-gray-900 dark:text-gray-100">
+												{#if r.role === 'admin'}
+													👑 Administrator
+												{:else if r.role === 'medic'}
+													👨‍⚕️ Medic
+												{:else}
+													🧑 Pacient
+												{/if}
+											</div>
+											<div class="text-xl font-semibold text-gray-900 dark:text-gray-100">{r.count}</div>
+										</div>
+									{/each}
+								{:else}
+									<div class="py-8 text-center text-gray-500 dark:text-gray-400">
+										<div class="text-3xl mb-2">👥</div>
+										<p class="text-sm">Nu sunt utilizatori în sistem</p>
+									</div>
+								{/if}
+							</div>
+						</section>
+
+						<!-- Collaborations -->
+						<div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+							<div class="p-6 border-b border-gray-200 dark:border-gray-700">
+								<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">🤝 Status Colaborări</h2>
+							</div>
+							<div class="p-4 space-y-2">
+								{#if adminOverview.collaborations && adminOverview.collaborations.length > 0}
+									{#each adminOverview.collaborations as c}
+										<div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
+											<span class="capitalize text-gray-600 dark:text-gray-300 text-sm">
+												{#if c.status === 'pending'}
+													⏳ În așteptare
+												{:else if c.status === 'accepted'}
+													✅ Acceptate
+												{:else if c.status === 'rejected'}
+													❌ Respinse
+												{:else}
+													{c.status}
+												{/if}
+											</span>
+											<span class="font-semibold text-gray-900 dark:text-gray-100">{c.count}</span>
+										</div>
+									{/each}
+								{:else}
+									<div class="py-6 text-center text-gray-500 dark:text-gray-400">
+										<div class="text-3xl mb-2">🤷</div>
+										<p class="text-sm">Nicio colaborare în sistem</p>
+									</div>
+								{/if}
+							</div>
+						</div>
+
+						<!-- 7-Day Adherence Chart -->
+						<div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+							<div class="p-6 border-b border-gray-200 dark:border-gray-700">
+								<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">📅 Conformitate - 7 zile</h2>
+							</div>
+							<div class="p-6">
+								{#if adminOverview.adherence.last7Days.scheduled > 0}
+									<div class="mb-4 max-w-[200px] mx-auto">
+										<canvas bind:this={adherence7Canvas}></canvas>
+									</div>
+									<div class="grid grid-cols-3 gap-2 text-xs text-center">
+										<div><div class="text-gray-500">Programate</div><div class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.adherence.last7Days.scheduled}</div></div>
+										<div><div class="text-gray-500">Confirmate</div><div class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.adherence.last7Days.confirmed}</div></div>
+										<div><div class="text-gray-500">Rată</div><div class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.adherence.last7Days.rate}</div></div>
+									</div>
+								{:else}
+									<div class="py-8 text-center text-gray-500 dark:text-gray-400">
+										<div class="text-3xl mb-2">📊</div>
+										<p class="text-sm">Nicio dată de conformitate în ultimele 7 zile</p>
+									</div>
+								{/if}
+							</div>
+						</div>
+					</div>
+
+					<!-- Right Column -->
+					<div class="space-y-6">
+						<!-- Treatments -->
+						<div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+							<div class="p-6 border-b border-gray-200 dark:border-gray-700">
+								<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">💊 Tratamente</h2>
+								<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Status și numere</p>
+							</div>
+							<div class="p-4 space-y-2">
+								{#if adminOverview.treatments.total > 0}
+									<div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
+										<span class="text-gray-600 dark:text-gray-300 text-sm">Activ</span>
+										<span class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.treatments.active}</span>
+									</div>
+									<div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
+										<span class="text-gray-600 dark:text-gray-300 text-sm">Inactiv</span>
+										<span class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.treatments.inactive}</span>
+									</div>
+									<div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
+										<span class="text-gray-600 dark:text-gray-300 text-sm">Total</span>
+										<span class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.treatments.total}</span>
+									</div>
+								{:else}
+									<div class="py-6 text-center text-gray-500 dark:text-gray-400">
+										<div class="text-3xl mb-2">💊</div>
+										<p class="text-sm">Niciun tratament în sistem</p>
+									</div>
+								{/if}
+							</div>
+						</div>
+
+						<!-- 30-Day Adherence Chart -->
+						<div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+							<div class="p-6 border-b border-gray-200 dark:border-gray-700">
+								<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">📈 Conformitate - 30 zile</h2>
+							</div>
+							<div class="p-6">
+								{#if adminOverview.adherence.last30Days.scheduled > 0}
+									<div class="mb-4 max-w-[200px] mx-auto">
+										<canvas bind:this={adherence30Canvas}></canvas>
+									</div>
+									<div class="grid grid-cols-3 gap-2 text-xs text-center">
+										<div><div class="text-gray-500">Programate</div><div class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.adherence.last30Days.scheduled}</div></div>
+										<div><div class="text-gray-500">Confirmate</div><div class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.adherence.last30Days.confirmed}</div></div>
+										<div><div class="text-gray-500">Rată</div><div class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.adherence.last30Days.rate}</div></div>
+									</div>
+								{:else}
+									<div class="py-8 text-center text-gray-500 dark:text-gray-400">
+										<div class="text-3xl mb-2">📊</div>
+										<p class="text-sm">Nicio dată de conformitate în ultimele 30 zile</p>
+									</div>
+								{/if}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		{/if}
 	</div>
 {:else if $isPacient}
 	<!-- Patient Dashboard -->

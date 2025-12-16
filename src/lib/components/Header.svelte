@@ -304,18 +304,6 @@
 				>
 					🏆 Leaderboard
 				</a>
-				{#if $authStore.user?.role === 'admin'}
-					<a 
-					href="/admin/reports" 
-					class={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-						isActive('/admin/reports')
-							? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 scale-105'
-							: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:scale-105'
-					}`}
-					>
-						Admin Reports
-					</a>
-				{/if}
 			</div>
 				<!-- Right Side Actions -->
 				<div class="flex items-center gap-2">
@@ -668,15 +656,6 @@
 				>
 					🏆 Leaderboard
 				</a>
-				{#if $authStore.user?.role === 'admin'}
-					<a 
-						href="/admin/reports" 
-						onclick={() => showMobileMenu = false}
-						class={`px-3 py-3 rounded-lg text-sm font-medium transition ${isActive('/admin/reports') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-					>
-						📈 Admin Reports
-					</a>
-				{/if}
 			</div>
 
 			<!-- Mobile User Info & Logout -->

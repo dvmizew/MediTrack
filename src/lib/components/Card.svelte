@@ -11,10 +11,10 @@
 <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm hover:shadow-md transition">
 	<div class="flex items-center justify-between">
 		<div>
-			<p class="text-sm text-gray-500 dark:text-gray-400 mb-1">{title}</p>
+			<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">{title}</p>
 			<p class={`text-2xl md:text-3xl font-bold ${accent}`}>{value}</p>
 			{#if sub}
-				<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{sub}</p>
+				<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{sub}</p>
 			{/if}
 		</div>
 		{#if iconPath}
