@@ -98,6 +98,10 @@ const authLimiter = rateLimit({
 });
 app.use('/auth/login', authLimiter);
 app.use('/auth/register', authLimiter);
+app.use('/auth/login-mfa', authLimiter);
+app.use('/auth/mfa/verify-setup', authLimiter);
+app.use('/auth/mfa/setup', authLimiter);
+app.use('/auth/mfa/backup-codes', authLimiter);
 
 // Routes
 app.use('/auth', authRoutes);

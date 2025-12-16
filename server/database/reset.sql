@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS treatment_doses CASCADE;
 DROP TABLE IF EXISTS treatment_plans CASCADE;
 DROP TABLE IF EXISTS doctor_patient CASCADE;
 DROP TABLE IF EXISTS patient_profiles CASCADE;
+DROP TABLE IF EXISTS mfa_attempts CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
 -- Drop all ENUM types

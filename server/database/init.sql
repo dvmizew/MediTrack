@@ -15,6 +15,9 @@ CREATE TABLE users (
     password_hash VARCHAR(255),
     role user_role NOT NULL DEFAULT 'pacient',
     mfa_enabled BOOLEAN DEFAULT false,
+    mfa_secret VARCHAR(255),
+    mfa_backup_codes TEXT[],
+    mfa_verified_at TIMESTAMP,
     google_id VARCHAR(255) UNIQUE,
     -- Profile data
     full_name VARCHAR(255) NOT NULL,
@@ -135,6 +138,7 @@ CREATE TABLE push_subscriptions (
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_google_id ON users(google_id);
 CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_users_mfa_enabled ON users(mfa_enabled);
 
 CREATE INDEX idx_doctor_patient_doctor ON doctor_patient(doctor_id);
 CREATE INDEX idx_doctor_patient_patient ON doctor_patient(patient_id);
@@ -162,6 +166,19 @@ CREATE INDEX idx_notifications_status ON notifications(status_notif);
 CREATE INDEX idx_push_subscriptions_user ON push_subscriptions(user_id);
 CREATE INDEX idx_push_subscriptions_endpoint ON push_subscriptions(endpoint);
 CREATE INDEX idx_notifications_type ON notifications(tip);
+
+-- MFA attempts logging
+CREATE TABLE IF NOT EXISTS mfa_attempts (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    ip_address VARCHAR(45),
+    success BOOLEAN DEFAULT false,
+    attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    code_length INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_mfa_attempts_user ON mfa_attempts(user_id);
+CREATE INDEX IF NOT EXISTS idx_mfa_attempts_timestamp ON mfa_attempts(attempted_at);
 
 -- Trigger to auto-update updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()

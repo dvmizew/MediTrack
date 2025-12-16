@@ -88,7 +88,7 @@ export const api = {
 			auth: false
 		}),
 
-	login: (data: { email: string; password: string }) =>
+	login: (data: { email: string; password: string; deviceToken?: string }) =>
 		request('/auth/login', {
 			method: 'POST',
 			body: JSON.stringify(data),
@@ -229,4 +229,35 @@ export const api = {
 	// Leaderboard
 	getLeaderboard: (timeFilter?: 'all' | 'month' | 'week') =>
 		request(`/leaderboard${timeFilter ? `?filter=${timeFilter}` : ''}`)
+};
+
+// MFA API
+export const mfaApi = {
+	startSetup: () =>
+		request('/auth/mfa/setup', {
+			method: 'POST',
+			auth: true,
+		}),
+	verifySetup: (secret: string, totpCode: string) =>
+		request('/auth/mfa/verify-setup', {
+			method: 'POST',
+			body: JSON.stringify({ secret, totpCode }),
+			auth: true,
+		}),
+	verifyLogin: (userId: number, totpCode: string, rememberDevice: boolean = false) =>
+		request('/auth/login-mfa', {
+			method: 'POST',
+			body: JSON.stringify({ userId, totpCode, rememberDevice }),
+			auth: false,
+		}),
+	disable: (password: string) =>
+		request('/auth/mfa/disable', {
+			method: 'POST',
+			body: JSON.stringify({ password }),
+		}),
+	generateBackupCodes: (totpCode: string) =>
+		request('/auth/mfa/backup-codes', {
+			method: 'POST',
+			body: JSON.stringify({ totpCode }),
+		}),
 };

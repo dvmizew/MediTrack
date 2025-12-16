@@ -27,8 +27,10 @@
 	};
 	
 	// Only show top MAX_VISIBLE_TOASTS by priority and recency
-	let visibleToasts = $derived.by(() => {
-		return toasts
+	let visibleToasts = $state<Toast[]>([]);
+	$effect(() => {
+		visibleToasts = toasts
+			.slice()
 			.sort((a, b) => {
 				// Higher priority first, then by recency
 				const priorityDiff = (TOAST_PRIORITY[b.type] ?? 0) - (TOAST_PRIORITY[a.type] ?? 0);

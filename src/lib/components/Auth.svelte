@@ -4,6 +4,7 @@
 	import { quintOut } from 'svelte/easing';
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
+    import { mfaApi } from '$lib/api/client';
 	import { socketClient } from '$lib/api/socket';
 	import { themeStore } from '$lib/stores/theme';
 	import { goto } from '$app/navigation';
@@ -18,9 +19,20 @@
 	let touchedEmail = $state(false);
 	let touchedPassword = $state(false);
 	let touchedFullName = $state(false);
+	let showMfaStep = $state(false);
+	let pendingUserId = $state<number | null>(null);
+	let mfaCode = $state('');
+	let rememberDevice = $state(true);
+	let deviceTrustToken = $state('');
 
 	onMount(() => {
 		themeStore.init();
+		try {
+			const stored = localStorage.getItem('mfaDeviceToken');
+			if (stored) deviceTrustToken = stored;
+		} catch (err) {
+			// ignore storage errors
+		}
 	});
 
 	async function handleSubmit(e: Event) {
@@ -43,7 +55,12 @@
 					error = parsed.errors.join('\n');
 					return;
 				}
-				const response = await api.login(parsed.data);
+				const response = await api.login({ ...parsed.data, deviceToken: deviceTrustToken || undefined });
+				if (response?.mfaRequired && response?.userId) {
+					pendingUserId = response.userId;
+					showMfaStep = true;
+					return;
+				}
 				authStore.login(response.token, response.user);
 			}
 
@@ -51,6 +68,34 @@
 			goto('/dashboard');
 		} catch (err: any) {
 			error = err?.error || err?.message || 'Authentication failed';
+		} finally {
+			loading = false;
+		}
+	}
+
+	async function handleMfaVerify(e: Event) {
+		e.preventDefault();
+		error = '';
+		loading = true;
+		try {
+			if (!pendingUserId) throw new Error('Missing MFA session');
+			if (!/^\d{6}$|^\w{8}$/.test(mfaCode)) {
+				throw new Error('Introduce un cod valid (6 cifre sau 8 caractere)');
+			}
+			const resp = await mfaApi.verifyLogin(pendingUserId, mfaCode, rememberDevice);
+			if (rememberDevice && resp?.deviceToken) {
+				try {
+					localStorage.setItem('mfaDeviceToken', resp.deviceToken);
+					deviceTrustToken = resp.deviceToken;
+				} catch (err) {
+					// ignore storage errors
+				}
+			}
+			authStore.login(resp.token, resp.user);
+			socketClient.connect();
+			goto('/dashboard');
+		} catch (err: any) {
+			error = err?.message || 'Verificarea MFA a eșuat';
 		} finally {
 			loading = false;
 		}
@@ -118,6 +163,24 @@
 			</div>
 		{/if}
 
+		{#if showMfaStep}
+			<form onsubmit={handleMfaVerify} id="auth-form" aria-labelledby="auth-subtitle" class="space-y-4">
+				<div class="mb-4">
+					<label for="mfaCode" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cod autentificator (6 cifre) sau backup (8 caractere)</label>
+					<input id="mfaCode" name="mfaCode" type="text" bind:value={mfaCode} maxlength={8} placeholder="000000 sau XXXXXXXX" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" autocomplete="off"/>
+					<div class="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+						<input id="rememberDevice" type="checkbox" bind:checked={rememberDevice} class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded"/>
+						<label for="rememberDevice" class="select-none">Ține-mă minte pe acest dispozitiv (nu cere 2FA timp de 30 zile)</label>
+					</div>
+				</div>
+				<button type="submit" disabled={loading || !mfaCode.trim()} class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+					{loading ? 'Se verifică...' : 'Verifică codul'}
+				</button>
+				<button type="button" class="w-full mt-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors" onclick={() => { showMfaStep = false; pendingUserId = null; mfaCode=''; error=''; }}>
+					Înapoi la autentificare
+				</button>
+			</form>
+		{:else}
 		<form onsubmit={handleSubmit} id="auth-form" aria-labelledby="auth-subtitle">
 			{#if isRegister}
 				<div transition:slide={{ duration: 500, easing: quintOut }} class="mb-4 md:mb-5">
@@ -199,6 +262,7 @@
 				{loading ? 'Se procesează...' : isRegister ? 'Creează cont' : 'Intră în cont'}
 			</button>
 		</form>
+		{/if}
 
 		<div class="mt-5 md:mt-6">
 			<div class="relative" role="separator" aria-label="sau">
