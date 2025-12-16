@@ -8,14 +8,17 @@
 
 	onMount(() => {
 		isAuthenticated = $authStore.isAuthenticated;
-		if (isAuthenticated) {
+		console.log('[Root] Mount - authenticated:', isAuthenticated, 'path:', window.location.pathname);
+		if (isAuthenticated && window.location.pathname === '/') {
+			console.log('[Root] Redirecting to dashboard');
 			goto('/dashboard');
 		}
 	});
 
 	$effect(() => {
 		isAuthenticated = $authStore.isAuthenticated;
-		if (isAuthenticated) {
+		if (isAuthenticated && window.location.pathname === '/') {
+			console.log('[Root] Effect redirect to dashboard');
 			goto('/dashboard');
 		}
 	});

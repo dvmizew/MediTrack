@@ -1,6 +1,6 @@
-const CACHE_NAME = 'meditrack-v1';
-const STATIC_CACHE = 'meditrack-static-v1';
-const API_CACHE = 'meditrack-api-v1';
+const CACHE_NAME = 'meditrack-v2';
+const STATIC_CACHE = 'meditrack-static-v2';
+const API_CACHE = 'meditrack-api-v2';
 
 const STATIC_ASSETS = [
 	'/',
@@ -41,6 +41,14 @@ self.addEventListener('activate', (event) => {
 			})
 			.then(() => self.clients.claim())
 	);
+});
+
+// Handle messages (e.g., skip waiting)
+self.addEventListener('message', (event) => {
+	if (event.data && event.data.type === 'SKIP_WAITING') {
+		self.skipWaiting();
+		self.clients.claim();
+	}
 });
 
 // Fetch event - network first, fallback to cache
@@ -88,6 +96,15 @@ self.addEventListener('fetch', (event) => {
 						return new Response('Offline', { status: 503 });
 					});
 				})
+		);
+		return;
+	}
+
+	// HTML navigations: always network-first, don't cache HTML
+	if (request.mode === 'navigate') {
+		event.respondWith(
+			fetch(request)
+				.catch(() => caches.match('/offline.html'))
 		);
 		return;
 	}

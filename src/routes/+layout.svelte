@@ -50,6 +50,8 @@
 	onMount(async () => {
 		if (!browser) return;
 		
+		console.log('[Layout] Mounting, current path:', window.location.pathname);
+		
 		// Initialize theme
 		themeStore.init();
 		

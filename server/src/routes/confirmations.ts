@@ -40,6 +40,8 @@ router.get('/today', authenticate, async (req: Request, res: Response) => {
          AND DATE(dc.scheduled_for) = CURRENT_DATE
        WHERE tp.patient_id = $1 
          AND td.is_active = true
+         AND td.is_deleted = false
+         AND tp.is_deleted = false
          AND CURRENT_DATE BETWEEN td.start_date AND COALESCE(td.end_date, CURRENT_DATE + INTERVAL '100 years')
        ORDER BY td.ora`,
       [patientId]
@@ -87,6 +89,18 @@ router.post(
 
       const patientId = (req as AuthRequest).user!.userId;
       const { doseId, scheduledFor, notes } = req.body;
+
+      const doseOwner = await query(
+        `SELECT tp.patient_id 
+         FROM treatment_doses td 
+         JOIN treatment_plans tp ON td.plan_id = tp.plan_id
+         WHERE td.dose_id = $1 AND tp.patient_id = $2 AND td.is_deleted = false AND tp.is_deleted = false`,
+        [doseId, patientId]
+      );
+
+      if (doseOwner.rows.length === 0) {
+        return res.status(404).json({ error: 'Dose not found' });
+      }
 
       // Check if already confirmed
       const existingConfirmation = await query(
@@ -196,6 +210,18 @@ router.post(
 
       const { doseId, scheduledFor } = req.body;
 
+      const doseOwner = await query(
+        `SELECT tp.patient_id 
+         FROM treatment_doses td 
+         JOIN treatment_plans tp ON td.plan_id = tp.plan_id
+         WHERE td.dose_id = $1 AND tp.patient_id = $2 AND td.is_deleted = false AND tp.is_deleted = false`,
+        [doseId, (req as AuthRequest).user!.userId]
+      );
+
+      if (doseOwner.rows.length === 0) {
+        return res.status(404).json({ error: 'Dose not found' });
+      }
+
       // Calculate snooze time (30 minutes from now)
       const snoozedUntil = new Date(Date.now() + 30 * 60 * 1000);
 
@@ -258,7 +284,7 @@ router.get('/history', authenticate, async (req: Request, res: Response) => {
        FROM dose_confirmations dc
        JOIN treatment_doses td ON dc.dose_id = td.dose_id
        JOIN treatment_plans tp ON td.plan_id = tp.plan_id
-       WHERE tp.patient_id = $1
+      WHERE tp.patient_id = $1 AND td.is_deleted = false AND tp.is_deleted = false
        ORDER BY dc.scheduled_for DESC
        LIMIT 100`,
       [patientId]
@@ -299,6 +325,8 @@ router.get('/history/adherence', authenticate, async (req: Request, res: Respons
        LEFT JOIN dose_confirmations dc ON td.dose_id = dc.dose_id 
          AND DATE(dc.scheduled_for) = DATE(td.start_date)
        WHERE tp.patient_id = $1
+         AND td.is_deleted = false
+         AND tp.is_deleted = false
          AND td.is_active = true
          AND DATE(td.start_date) >= CURRENT_DATE - INTERVAL '1 day' * $2
        GROUP BY DATE(td.start_date)

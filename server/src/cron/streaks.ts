@@ -29,6 +29,8 @@ export const startStreakCheckCron = () => {
            JOIN treatment_plans tp ON td.plan_id = tp.plan_id
            WHERE tp.patient_id = $1
              AND td.is_active = true
+             AND td.is_deleted = false
+             AND tp.is_deleted = false
              AND tp.activ = true
              AND $2::DATE BETWEEN td.start_date AND COALESCE(td.end_date, $2::DATE)`,
           [patient.patient_id, yesterdayStr]
@@ -42,6 +44,8 @@ export const startStreakCheckCron = () => {
              JOIN treatment_doses td ON dc.dose_id = td.dose_id
              JOIN treatment_plans tp ON td.plan_id = tp.plan_id
              WHERE tp.patient_id = $1
+               AND td.is_deleted = false
+               AND tp.is_deleted = false
                AND dc.rezultat = 'pozitiv'
                AND DATE(dc.scheduled_for) = $2::DATE`,
             [patient.patient_id, yesterdayStr]
@@ -76,7 +80,8 @@ export const startStreakCheckCron = () => {
          WHERE td.dose_id = dc.dose_id
            AND dc.rezultat = 'negativ' 
            AND dc.scheduled_for < NOW() - INTERVAL '24 hours'
-           AND td.status != 'missed'`
+           AND td.status != 'missed'
+           AND td.is_deleted = false`
       );
 
     } catch (error) {

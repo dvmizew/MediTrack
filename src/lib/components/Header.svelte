@@ -47,6 +47,10 @@
 
 	function handleClickOutside(event: MouseEvent) {
 		const target = event.target as HTMLElement;
+		// Don't interfere with navigation links
+		if (target.closest('a[href]')) {
+			return;
+		}
 		if (!target.closest('.dropdown-container')) {
 			showNotifications = false;
 			showUserMenu = false;

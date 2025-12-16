@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { authStore, isMedic } from '$lib/stores/auth';
@@ -20,6 +20,11 @@
 		diagnostic: '',
 		descriere: ''
 	});
+
+	let deleteConfirmToken = $state<string | null>(null);
+	let deleteExpiresAt = $state<number | null>(null);
+	let deleteCountdown = $state<number>(0);
+	let deleteCountdownTimer: ReturnType<typeof setInterval> | null = null;
 
 	function formatDate(value: string | Date) {
 		if (!value) return '–';
@@ -53,6 +58,10 @@
 		await loadTreatmentDetails();
 	});
 
+	onDestroy(() => {
+		clearDeleteTimers();
+	});
+
 	async function loadTreatmentDetails() {
 		try {
 			loading = true;
@@ -63,11 +72,88 @@
 			]);
 			treatment = treatmentData;
 			medications = medicationsData;
+			resetDeleteState();
 		} catch (err: any) {
 			console.error('Failed to load treatment:', err);
 			error = err.message || 'Nu s-au putut încărca detaliile tratamentului';
 		} finally {
 			loading = false;
+		}
+	}
+
+	function clearDeleteTimers() {
+		if (deleteCountdownTimer) {
+			clearInterval(deleteCountdownTimer);
+			deleteCountdownTimer = null;
+		}
+	}
+
+	function resetDeleteState() {
+		clearDeleteTimers();
+		deleteConfirmToken = null;
+		deleteExpiresAt = null;
+		deleteCountdown = 0;
+	}
+
+	async function startTreatmentDelete() {
+		try {
+			const response = await api.deleteTreatment(planId);
+			deleteConfirmToken = response.confirmToken;
+			deleteExpiresAt = response.expiresAt;
+			updateCountdown();
+			deleteCountdownTimer = setInterval(updateCountdown, 250);
+			toastStore.add({
+				type: 'warning',
+				title: 'Confirmă ștergerea',
+				message: 'Confirmă în 5 secunde pentru a șterge planul',
+				duration: 1500
+			});
+		} catch (err: any) {
+			resetDeleteState();
+			toastStore.add({
+				type: 'error',
+				title: 'Eroare',
+				message: err.message || 'Nu s-a putut iniția ștergerea',
+				duration: 3000
+			});
+		}
+	}
+
+	function updateCountdown() {
+		if (!deleteExpiresAt) return;
+		const remainingMs = deleteExpiresAt - Date.now();
+		deleteCountdown = Math.max(0, Math.ceil(remainingMs / 1000));
+		if (remainingMs <= 0) {
+			resetDeleteState();
+			toastStore.add({
+				type: 'error',
+				title: 'Expirat',
+				message: 'Fereastra de confirmare a expirat',
+				duration: 2500
+			});
+		}
+	}
+
+	async function confirmTreatmentDelete() {
+		if (!deleteConfirmToken) return;
+		try {
+			await api.deleteTreatment(planId, deleteConfirmToken);
+			toastStore.add({
+				type: 'success',
+				title: 'Șters',
+				message: 'Planul de tratament a fost șters',
+				duration: 2000
+			});
+			resetDeleteState();
+			goto('/treatments');
+		} catch (err: any) {
+			toastStore.add({
+				type: 'error',
+				title: 'Eroare',
+				message: err.message || 'Nu s-a putut șterge planul',
+				duration: 3000
+			});
+			resetDeleteState();
 		}
 	}
 
@@ -176,6 +262,29 @@
 		}
 	}
 
+	async function handleDeleteMedication(doseId: number) {
+		const confirmDelete = confirm('Ștergi acest medicament?');
+		if (!confirmDelete) return;
+
+		try {
+			await api.deleteMedication(doseId);
+			toastStore.add({
+				type: 'success',
+				title: 'Șters',
+				message: 'Medicament șters cu succes',
+				duration: 2000
+			});
+			await loadTreatmentDetails();
+		} catch (err: any) {
+			toastStore.add({
+				type: 'error',
+				title: 'Eroare',
+				message: err.message || 'Nu s-a putut șterge medicamentul',
+				duration: 3000
+			});
+		}
+	}
+
 	function startEditTreatment() {
 		editingTreatment = true;
 		treatmentForm.diagnostic = treatment.diagnoza;
@@ -251,12 +360,35 @@
 								{treatment.activ ? 'Activ' : 'Inactiv'}
 							</span>
 							{#if $isMedic}
-								<button
-									onclick={startEditTreatment}
-									class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap"
-								>
-									✏️ Editează
-								</button>
+								{#if deleteConfirmToken}
+									<div class="flex items-center gap-2">
+										<button
+											onclick={confirmTreatmentDelete}
+											class="px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition whitespace-nowrap"
+										>
+											Confirmă ștergerea ({deleteCountdown}s)
+										</button>
+										<button
+											onclick={resetDeleteState}
+											class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap"
+										>
+											Anulează
+										</button>
+									</div>
+								{:else}
+									<button
+										onclick={startEditTreatment}
+										class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap"
+									>
+										✏️ Editează
+									</button>
+									<button
+										onclick={startTreatmentDelete}
+										class="px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition whitespace-nowrap"
+									>
+										🗑 Șterge
+									</button>
+								{/if}
 							{/if}
 						</div>
 					</div>
@@ -463,6 +595,12 @@
 												class="px-3 py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 text-xs font-medium rounded transition whitespace-nowrap"
 											>
 												✏️ Editează
+											</button>
+											<button
+												onclick={() => handleDeleteMedication(med.doseId)}
+												class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition whitespace-nowrap"
+											>
+												🗑 Șterge
 											</button>
 										{/if}
 									</div>

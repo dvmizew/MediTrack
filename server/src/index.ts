@@ -68,6 +68,14 @@ app.use(helmet());
 app.use(express.json({ limit: '1mb' }));
 app.use(passport.initialize());
 
+// Disable caching for API responses to avoid stale data in clients
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
 // Request logging
 app.use(morgan('combined', { stream: requestLoggerStream }));
 

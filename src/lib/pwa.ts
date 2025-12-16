@@ -10,6 +10,12 @@ let newWorkerAvailable = false;
  * Handles updates, offline fallback, and push notifications
  */
 export async function registerServiceWorker(): Promise<void> {
+	// Disable SW in dev to avoid caching issues during development
+	// SvelteKit + Vite HMR works best without SW in dev
+	if (import.meta.env.DEV) {
+		console.info('Service Worker disabled in development mode');
+		return;
+	}
 	if (!('serviceWorker' in navigator)) {
 		console.warn('Service Workers not supported');
 		return;

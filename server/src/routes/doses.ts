@@ -44,7 +44,7 @@ router.post(
 
       // Verify medic owns the treatment plan
       const plan = await query(
-        'SELECT patient_id FROM treatment_plans WHERE plan_id = $1 AND doctor_id = $2',
+        'SELECT patient_id FROM treatment_plans WHERE plan_id = $1 AND doctor_id = $2 AND is_deleted = false',
         [planId, medicId]
       );
 
@@ -98,7 +98,7 @@ router.get('/plan/:planId', authenticate, async (req: Request, res: Response) =>
 
     // Verify access to treatment plan
     const plan = await query(
-      'SELECT plan_id FROM treatment_plans WHERE plan_id = $1 AND (doctor_id = $2 OR patient_id = $2)',
+      'SELECT plan_id FROM treatment_plans WHERE plan_id = $1 AND is_deleted = false AND (doctor_id = $2 OR patient_id = $2)',
       [planId, userId]
     );
 
@@ -107,7 +107,7 @@ router.get('/plan/:planId', authenticate, async (req: Request, res: Response) =>
     }
 
     const result = await query(
-      'SELECT * FROM treatment_doses WHERE plan_id = $1 AND is_active = true ORDER BY ora',
+      'SELECT * FROM treatment_doses WHERE plan_id = $1 AND is_active = true AND is_deleted = false ORDER BY ora',
       [planId]
     );
 
@@ -148,7 +148,7 @@ router.patch(
         `SELECT td.*, tp.patient_id 
          FROM treatment_doses td
          JOIN treatment_plans tp ON td.plan_id = tp.plan_id
-         WHERE td.dose_id = $1 AND tp.doctor_id = $2`,
+         WHERE td.dose_id = $1 AND tp.doctor_id = $2 AND td.is_deleted = false`,
         [doseId, medicId]
       );
 
@@ -175,6 +175,8 @@ router.patch(
       if (fields.length === 0) {
         return res.status(400).json({ error: 'No valid fields to update' });
       }
+
+      fields.push('updated_at = CURRENT_TIMESTAMP');
 
       values.push(doseId);
 
@@ -209,6 +211,55 @@ router.patch(
     } catch (error) {
       logger.error('Update dose error', { error });
       res.status(500).json({ error: 'Failed to update dose' });
+    }
+  }
+);
+
+// Delete dose (soft delete, medic only)
+router.delete(
+  '/:doseId',
+  authenticate,
+  authorize('medic'),
+  async (req: Request, res: Response) => {
+    try {
+      const { doseId } = req.params;
+      const medicId = (req as AuthRequest).user!.userId;
+
+      const doseCheck = await query(
+        `SELECT td.plan_id, tp.patient_id 
+         FROM treatment_doses td
+         JOIN treatment_plans tp ON td.plan_id = tp.plan_id
+         WHERE td.dose_id = $1 AND td.is_deleted = false AND tp.is_deleted = false AND tp.doctor_id = $2`,
+        [doseId, medicId]
+      );
+
+      if (doseCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Dose not found' });
+      }
+
+      const result = await query(
+        `UPDATE treatment_doses 
+         SET is_active = false, is_deleted = true, updated_at = CURRENT_TIMESTAMP 
+         WHERE dose_id = $1 
+         RETURNING *`,
+        [doseId]
+      );
+
+      await query(
+        `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
+         VALUES ($1, 'treatment_update', 'sent', 'Medicament eliminat', 'Un medicament a fost eliminat din planul tău de tratament', $2)`,
+        [doseCheck.rows[0].patient_id, doseId]
+      );
+
+      const dose = result.rows[0];
+      res.json({
+        message: 'Dose deleted',
+        doseId: dose.dose_id,
+        deletedAt: dose.updated_at
+      });
+    } catch (error) {
+      logger.error('Delete dose error', { error });
+      res.status(500).json({ error: 'Failed to delete dose' });
     }
   }
 );

@@ -15,6 +15,8 @@ export const startReminderCron = () => {
          FROM treatment_doses td
          JOIN treatment_plans tp ON td.plan_id = tp.plan_id
          WHERE td.is_active = true
+           AND td.is_deleted = false
+           AND tp.is_deleted = false
            AND tp.activ = true
            AND CURRENT_DATE BETWEEN td.start_date AND COALESCE(td.end_date, CURRENT_DATE + INTERVAL '100 years')
            AND td.ora = $1::TIME`,

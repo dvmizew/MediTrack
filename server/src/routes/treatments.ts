@@ -1,4 +1,5 @@
 import express, { Router, Request, Response } from 'express';
+import { randomUUID } from 'crypto';
 import { logger } from '../config/logger.js';
 import { body, validationResult } from 'express-validator';
 import { sanitizeBody } from '../middleware/sanitize.js';
@@ -6,6 +7,8 @@ import { query } from '../config/database.js';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth.js';
 
 const router: Router = express.Router();
+const DELETE_CONFIRM_WINDOW_MS = 5000;
+const pendingDeleteTokens = new Map<string, { planId: number; doctorId: number; expiresAt: number }>();
 
 // Create treatment plan (medic only)
 router.post(
@@ -84,7 +87,7 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
         SELECT tp.*, u.full_name as patient_name, u.email as patient_email
         FROM treatment_plans tp
         JOIN users u ON tp.patient_id = u.user_id
-        WHERE tp.doctor_id = $1 AND tp.activ = true
+        WHERE tp.doctor_id = $1 AND tp.activ = true AND tp.is_deleted = false
         ORDER BY tp.data_creare DESC
       `;
       params = [userId];
@@ -93,7 +96,7 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
         SELECT tp.*, u.full_name as doctor_name, u.email as doctor_email
         FROM treatment_plans tp
         JOIN users u ON tp.doctor_id = u.user_id
-        WHERE tp.patient_id = $1 AND tp.activ = true
+        WHERE tp.patient_id = $1 AND tp.activ = true AND tp.is_deleted = false
         ORDER BY tp.data_creare DESC
       `;
       params = [userId];
@@ -133,7 +136,7 @@ router.get('/:planId', authenticate, async (req: Request, res: Response) => {
        FROM treatment_plans tp
        JOIN users m ON tp.doctor_id = m.user_id
        JOIN users p ON tp.patient_id = p.user_id
-       WHERE tp.plan_id = $1 AND (tp.doctor_id = $2 OR tp.patient_id = $2)`,
+       WHERE tp.plan_id = $1 AND tp.is_deleted = false AND (tp.doctor_id = $2 OR tp.patient_id = $2)`,
       [planId, userId]
     );
 
@@ -143,7 +146,7 @@ router.get('/:planId', authenticate, async (req: Request, res: Response) => {
 
     // Get medications
     const medications = await query(
-      'SELECT * FROM treatment_doses WHERE plan_id = $1 ORDER BY created_at',
+      'SELECT * FROM treatment_doses WHERE plan_id = $1 AND is_deleted = false ORDER BY created_at',
       [planId]
     );
 
@@ -206,7 +209,7 @@ router.patch(
 
       // Verify ownership
       const planCheck = await query(
-        'SELECT patient_id FROM treatment_plans WHERE plan_id = $1 AND doctor_id = $2',
+        'SELECT patient_id FROM treatment_plans WHERE plan_id = $1 AND doctor_id = $2 AND is_deleted = false',
         [planId, medicId]
       );
 
@@ -263,6 +266,101 @@ router.patch(
     } catch (error) {
       logger.error('Update treatment plan error', { error });
       res.status(500).json({ error: 'Failed to update treatment plan' });
+    }
+  }
+);
+
+// Delete treatment plan with 5s confirmation window (medic only, soft delete)
+router.delete(
+  '/:planId',
+  authenticate,
+  authorize('medic'),
+  async (req: Request, res: Response) => {
+    try {
+      const { planId } = req.params;
+      const doctorId = (req as AuthRequest).user!.userId;
+      const confirmToken = (req.query.confirmToken as string | undefined) ?? undefined;
+      const numericPlanId = parseInt(planId, 10);
+
+      if (Number.isNaN(numericPlanId)) {
+        return res.status(400).json({ error: 'Invalid plan id' });
+      }
+
+      // Verify ownership and current state
+      const planCheck = await query(
+        'SELECT patient_id, is_deleted FROM treatment_plans WHERE plan_id = $1 AND doctor_id = $2',
+        [numericPlanId, doctorId]
+      );
+
+      if (planCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Treatment plan not found' });
+      }
+
+      if (planCheck.rows[0].is_deleted) {
+        return res.status(410).json({ error: 'Treatment plan already deleted' });
+      }
+
+      // First call: issue confirmation token valid for 5 seconds
+      if (!confirmToken) {
+        const token = randomUUID();
+        const expiresAt = Date.now() + DELETE_CONFIRM_WINDOW_MS;
+        pendingDeleteTokens.set(token, { planId: numericPlanId, doctorId, expiresAt });
+
+        setTimeout(() => {
+          const pending = pendingDeleteTokens.get(token);
+          if (pending && pending.expiresAt <= Date.now()) {
+            pendingDeleteTokens.delete(token);
+          }
+        }, DELETE_CONFIRM_WINDOW_MS + 100);
+
+        return res.status(202).json({ confirmToken: token, expiresAt });
+      }
+
+      // Second call: validate token and perform soft delete
+      const tokenData = pendingDeleteTokens.get(confirmToken);
+
+      if (!tokenData || tokenData.planId !== numericPlanId || tokenData.doctorId !== doctorId) {
+        return res.status(400).json({ error: 'Invalid or expired confirmation token' });
+      }
+
+      if (tokenData.expiresAt < Date.now()) {
+        pendingDeleteTokens.delete(confirmToken);
+        return res.status(410).json({ error: 'Confirmation window expired' });
+      }
+
+      const result = await query(
+        `UPDATE treatment_plans 
+         SET activ = false, is_deleted = true, updated_at = CURRENT_TIMESTAMP 
+         WHERE plan_id = $1 
+         RETURNING *`,
+        [numericPlanId]
+      );
+
+      await query(
+        `UPDATE treatment_doses 
+         SET is_active = false, is_deleted = true, updated_at = CURRENT_TIMESTAMP 
+         WHERE plan_id = $1`,
+        [numericPlanId]
+      );
+
+      pendingDeleteTokens.delete(confirmToken);
+
+      // Notify patient about deletion
+      await query(
+        `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
+         VALUES ($1, 'treatment_update', 'sent', 'Plan de tratament șters', 'Medicul tău a șters planul de tratament', $2)`,
+        [planCheck.rows[0].patient_id, numericPlanId]
+      );
+
+      const plan = result.rows[0];
+      res.json({
+        message: 'Treatment plan deleted',
+        planId: plan.plan_id,
+        deletedAt: plan.updated_at
+      });
+    } catch (error) {
+      logger.error('Delete treatment plan error', { error });
+      res.status(500).json({ error: 'Failed to delete treatment plan' });
     }
   }
 );

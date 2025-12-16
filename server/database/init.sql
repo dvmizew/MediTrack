@@ -60,6 +60,7 @@ CREATE TABLE treatment_plans (
     descriere TEXT,
     data_creare TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     activ BOOLEAN DEFAULT true,
+    is_deleted BOOLEAN DEFAULT false,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -77,7 +78,9 @@ CREATE TABLE treatment_doses (
     end_date DATE,
     status dose_status DEFAULT 'pending',
     is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    is_deleted BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 6. DoseConfirmation Table
@@ -140,9 +143,11 @@ CREATE INDEX idx_doctor_patient_status ON doctor_patient(status_invitatie);
 CREATE INDEX idx_treatment_plans_patient ON treatment_plans(patient_id);
 CREATE INDEX idx_treatment_plans_doctor ON treatment_plans(doctor_id);
 CREATE INDEX idx_treatment_plans_active ON treatment_plans(activ);
+CREATE INDEX idx_treatment_plans_deleted ON treatment_plans(is_deleted);
 
 CREATE INDEX idx_treatment_doses_plan ON treatment_doses(plan_id);
 CREATE INDEX idx_treatment_doses_status ON treatment_doses(status);
+CREATE INDEX idx_treatment_doses_deleted ON treatment_doses(is_deleted);
 
 CREATE INDEX idx_dose_confirmations_dose ON dose_confirmations(dose_id);
 CREATE INDEX idx_dose_confirmations_scheduled ON dose_confirmations(scheduled_for);
@@ -174,6 +179,9 @@ CREATE TRIGGER update_patient_profiles_updated_at BEFORE UPDATE ON patient_profi
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_treatment_plans_updated_at BEFORE UPDATE ON treatment_plans
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_treatment_doses_updated_at BEFORE UPDATE ON treatment_doses
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Initial admin user (password: admin123)

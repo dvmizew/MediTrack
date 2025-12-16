@@ -11,6 +11,7 @@ async function request(endpoint: string, options: RequestOptions = {}) {
 
 	const headers: Record<string, string> = {
 		'Content-Type': 'application/json',
+		'Cache-Control': 'no-cache',
 		...(fetchOptions.headers as Record<string, string>)
 	};
 
@@ -22,9 +23,18 @@ async function request(endpoint: string, options: RequestOptions = {}) {
 	}
 
 	try {
-		const response = await fetch(`${API_URL}${endpoint}`, {
+		// Build URL and add cache-busting param for GET requests
+		const method = (fetchOptions.method || 'GET').toUpperCase();
+		let url = `${API_URL}${endpoint}`;
+		if (method === 'GET') {
+			const sep = url.includes('?') ? '&' : '?';
+			url = `${url}${sep}ts=${Date.now()}`;
+		}
+
+		const response = await fetch(url, {
 			...fetchOptions,
-			headers
+			headers,
+			cache: 'no-store'
 		});
 
 		if (response.status === 401) {
@@ -142,6 +152,10 @@ export const api = {
 			method: 'PATCH',
 			body: JSON.stringify(data)
 		}),
+	deleteTreatment: (planId: number, confirmToken?: string) =>
+		request(`/treatments/${planId}${confirmToken ? `?confirmToken=${encodeURIComponent(confirmToken)}` : ''}`, {
+			method: 'DELETE'
+		}),
 
 	// Medications (Doses)
 	addMedication: (data: {
@@ -164,6 +178,10 @@ export const api = {
 		request(`/doses/${medicationId}`, {
 			method: 'PATCH',
 			body: JSON.stringify(data)
+		}),
+	deleteMedication: (medicationId: number) =>
+		request(`/doses/${medicationId}`, {
+			method: 'DELETE'
 		}),
 
 	// Logs (Confirmations)
