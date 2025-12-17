@@ -217,6 +217,7 @@
 
 	function cancelEdit() {
 		editingMedication = null;
+		showAddMedication = false; // close the edit/add form
 		newMedication = {
 			medicationName: '',
 			cantitate: '',
