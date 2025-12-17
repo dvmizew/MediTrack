@@ -144,8 +144,16 @@ router.post(
       const statsResult = await query(
         `UPDATE patient_profiles 
          SET nivel_xp = nivel_xp + $1,
-             current_streak = current_streak + 1,
-             longest_streak = GREATEST(longest_streak, current_streak + 1),
+             current_streak = CASE
+               WHEN last_activity::date = CURRENT_DATE THEN COALESCE(current_streak, 0)
+               WHEN last_activity::date = CURRENT_DATE - INTERVAL '1 day' THEN COALESCE(current_streak, 0) + 1
+               ELSE 1
+             END,
+             longest_streak = GREATEST(longest_streak, CASE
+               WHEN last_activity::date = CURRENT_DATE THEN COALESCE(current_streak, 0)
+               WHEN last_activity::date = CURRENT_DATE - INTERVAL '1 day' THEN COALESCE(current_streak, 0) + 1
+               ELSE 1
+             END),
              progres_total = progres_total + 1,
              last_activity = CURRENT_TIMESTAMP,
              updated_at = CURRENT_TIMESTAMP

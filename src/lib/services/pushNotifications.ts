@@ -225,8 +225,8 @@ export async function syncSubscriptionWithBackend(
 			},
 			body: JSON.stringify({
 				endpoint: subscription.endpoint,
-				auth: subscription.getKey('auth')?.toString() || '',
-				p256dh: subscription.getKey('p256dh')?.toString() || ''
+				auth: encodeKey(subscription.getKey('auth')),
+				p256dh: encodeKey(subscription.getKey('p256dh'))
 			})
 		});
 
@@ -302,6 +302,16 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 	}
 
 	return outputArray;
+}
+
+function encodeKey(key: ArrayBuffer | null): string {
+	if (!key) return '';
+	const bytes = new Uint8Array(key);
+	let binary = '';
+	for (let i = 0; i < bytes.byteLength; i++) {
+		binary += String.fromCharCode(bytes[i]);
+	}
+	return btoa(binary);
 }
 
 /**

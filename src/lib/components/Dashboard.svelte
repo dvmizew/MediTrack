@@ -437,7 +437,27 @@
 
 	async function loadMedications() {
 		try {
-			const data = await api.getTodayMedications();
+			const today = new Date();
+			let data = await api.getTodayMedications();
+			
+			// Fallback: if no meds returned, load from active treatment plans
+			if (!data || data.length === 0) {
+				const plans = await api.getTreatments();
+				const medsByPlan = await Promise.all(
+					(plans || []).map((plan: any) => api.getMedicationsForPlan(plan.planId))
+				);
+				data = medsByPlan
+					.flat()
+					.filter((m: any) => m && m.isActive !== false)
+					.filter((m: any) => {
+						const start = m.startDate ? new Date(m.startDate) : null;
+						const end = m.endDate ? new Date(m.endDate) : null;
+						const afterStart = !start || start <= today;
+						const beforeEnd = !end || end >= today;
+						return afterStart && beforeEnd;
+					});
+			}
+
 			todayMedications = data;
 			
 			// Load historical adherence data
