@@ -133,6 +133,27 @@
 		}
 	}
 
+	// Open/toggle notifications and auto mark all as read optimistically
+	async function openNotifications() {
+		showNotifications = !showNotifications;
+		showUserMenu = false;
+		showMobileMenu = false;
+
+		// If there are unread notifications, optimistically mark them as read and call API
+		if (unreadCount > 0) {
+			const prev = notifications;
+			notifications = notifications.map((n) => ({ ...n, isRead: true }));
+			try {
+				await api.markAllNotificationsRead();
+			} catch (error) {
+				console.error('Failed to auto mark all as read:', error);
+				// Revert if API fails
+				notifications = prev;
+				toastStore.add({ type: 'error', title: 'Eroare', message: 'Nu s-au putut marca notificările', duration: 2000 });
+			}
+		}
+	}
+
 	async function clearAllNotifications() {
 		confirmTitle = 'Șterge toate notificările?';
 		confirmMessage = 'Această acțiune nu poate fi anulată. Toate notificările vor fi șterse permanent.';
@@ -331,7 +352,7 @@
 				<!-- Notifications -->
 					<div class="relative dropdown-container">
 						<button
-							onclick={() => {showNotifications = !showNotifications; showUserMenu = false; showMobileMenu = false;}}
+							onclick={openNotifications}
 							class="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition active:scale-95 min-w-10 h-10"
 							aria-label={unreadCount > 0 ? `Notificări (${unreadCount} necitite)` : 'Notificări'}
 							aria-expanded={showNotifications}
