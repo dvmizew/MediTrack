@@ -1,30 +1,33 @@
 import cron from 'node-cron';
 import { query } from '../config/database.js';
+import { logger } from '../config/logger.js';
 
 export const startStreakCheckCron = () => {
-  // Run at midnight every day to check for broken streaks
-  cron.schedule('0 0 * * *', async () => {
+  // Run at 01:00 UTC every day to check for broken streaks
+  cron.schedule('0 1 * * *', async () => {
     try {
-      // Find patients who haven't confirmed medication in the last 24 hours - use patient_profiles table
-      const result = await query(
+      logger.info('Starting streak reset check');
+      
+      // Find all active patients with active streaks
+      const patients = await query(
         `SELECT pp.patient_id, pp.current_streak, pp.last_activity
          FROM patient_profiles pp
          JOIN users u ON pp.patient_id = u.user_id
          WHERE u.role = 'pacient' 
            AND u.is_active = true
-           AND pp.current_streak > 0
-           AND (pp.last_activity IS NULL 
-                OR pp.last_activity < NOW() - INTERVAL '24 hours')`
+           AND pp.current_streak > 0`
       );
 
-      for (const patient of result.rows) {
-        // Check if patient had any doses scheduled yesterday
+      let resetCount = 0;
+
+      for (const patient of patients.rows) {
+        // Check if patient had any doses scheduled YESTERDAY
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayStr = yesterday.toISOString().split('T')[0];
 
         const scheduledDoses = await query(
-          `SELECT COUNT(*) as count
+          `SELECT COUNT(*)::int as count
            FROM treatment_doses td
            JOIN treatment_plans tp ON td.plan_id = tp.plan_id
            WHERE tp.patient_id = $1
@@ -36,10 +39,10 @@ export const startStreakCheckCron = () => {
           [patient.patient_id, yesterdayStr]
         );
 
-        if (scheduledDoses.rows[0].count > 0) {
-          // Check if patient confirmed any doses yesterday
+        // Only reset if patient HAD doses scheduled yesterday but didn't confirm any
+        if (scheduledDoses.rows[0]?.count > 0) {
           const confirmedDoses = await query(
-            `SELECT COUNT(*) as count
+            `SELECT COUNT(*)::int as count
              FROM dose_confirmations dc
              JOIN treatment_doses td ON dc.dose_id = td.dose_id
              JOIN treatment_plans tp ON td.plan_id = tp.plan_id
@@ -51,8 +54,8 @@ export const startStreakCheckCron = () => {
             [patient.patient_id, yesterdayStr]
           );
 
-          if (confirmedDoses.rows[0].count === 0) {
-            // Patient had doses scheduled but didn't confirm any - break streak
+          // If NO confirmed doses, reset streak to 0
+          if (confirmedDoses.rows[0]?.count === 0) {
             await query(
               `UPDATE patient_profiles 
                SET current_streak = 0, updated_at = CURRENT_TIMESTAMP 
@@ -60,34 +63,24 @@ export const startStreakCheckCron = () => {
               [patient.patient_id]
             );
 
-            // Create notification with status_notif='sent'
             await query(
               `INSERT INTO notifications (user_id, tip, status_notif, title, message) 
                VALUES ($1, 'alert', 'sent', 'Streak Pierdut', 'Seria ta de medicație a fost resetată. Începe din nou astăzi!')`,
               [patient.patient_id]
             );
 
-            console.log(`Streak reset for patient ${patient.patient_id}`);
+            resetCount++;
+            logger.info('Streak reset for patient', { patientId: patient.patient_id, previousStreak: patient.current_streak });
           }
         }
       }
 
-      // Mark missed doses - update status in treatment_doses
-      await query(
-        `UPDATE treatment_doses td
-         SET status = 'missed'
-         FROM dose_confirmations dc
-         WHERE td.dose_id = dc.dose_id
-           AND dc.rezultat = 'negativ' 
-           AND dc.scheduled_for < NOW() - INTERVAL '24 hours'
-           AND td.status != 'missed'
-           AND td.is_deleted = false`
-      );
+      logger.info('Streak reset check completed', { totalPatients: patients.rows.length, resetCount });
 
     } catch (error) {
-      console.error('Streak check cron error:', error);
+      logger.error('Streak check cron error', { error });
     }
   });
 
-  console.log('✓ Streak check cron started');
+  logger.info('✓ Streak check cron started (runs daily at 01:00 UTC)');
 };

@@ -98,6 +98,9 @@ CREATE TABLE dose_confirmations (
     notes TEXT
 );
 
+-- Create unique index for dose confirmations per day instead of constraint
+CREATE UNIQUE INDEX idx_dose_confirmations_unique_per_day ON dose_confirmations(dose_id, DATE(scheduled_for));
+
 -- 7. Message Table (Chat)
 CREATE TABLE messages (
     message_id SERIAL PRIMARY KEY,
@@ -228,19 +231,7 @@ INSERT INTO users (email, password_hash, full_name, role, phone_number, date_of_
 ('diana.matei@example.com', '$2b$10$Ev6rrNO/Hxm.SPg2jMHnq.HDCWh9LYaj9FN5h.CdHpwd41tN9tBE6', 'Diana Matei', 'pacient', '+40738901234', '1993-08-14', false)
 ON CONFLICT (email) DO NOTHING;
 
--- Create patient profiles for all sample patients
-INSERT INTO patient_profiles (patient_id, nivel_xp, current_streak, longest_streak, progres_total, current_badge)
-SELECT user_id,
-       FLOOR(RANDOM() * 500) + 100,  -- Random XP between 100-600
-       FLOOR(RANDOM() * 10),          -- Random current streak 0-10
-       FLOOR(RANDOM() * 20) + 5,      -- Random longest streak 5-25
-       FLOOR(RANDOM() * 80) + 20,     -- Random progress 20-100
-       CASE
-           WHEN FLOOR(RANDOM() * 5) = 0 THEN 'bronze'
-           WHEN FLOOR(RANDOM() * 5) = 1 THEN 'silver'
-           WHEN FLOOR(RANDOM() * 5) = 2 THEN 'gold'
-           WHEN FLOOR(RANDOM() * 5) = 3 THEN 'platinum'
-           ELSE 'diamond'
-       END
-FROM users WHERE role = 'pacient'
+-- Ensure all patients have an empty patient_profile (defaults: 0/bronze)
+INSERT INTO patient_profiles (patient_id)
+SELECT user_id FROM users WHERE role = 'pacient'
 ON CONFLICT (patient_id) DO NOTHING;

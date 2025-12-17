@@ -169,6 +169,16 @@ router.patch(
         return res.status(404).json({ error: 'Invite not found or already responded' });
       }
 
+      const collab = result.rows[0];
+
+      // If accepted, ensure patient has profile
+      if (action === 'accept') {
+        await query(
+          `INSERT INTO patient_profiles (patient_id) VALUES ($1) ON CONFLICT DO NOTHING`,
+          [collab.patient_id]
+        );
+      }
+
       // Notify pacient
       const notificationMessage = action === 'accept' 
         ? 'Cererea ta de colaborare a fost acceptată' 
@@ -183,7 +193,7 @@ router.patch(
       // Send realtime notification via socket
       const io = req.app.get('io');
       if (io) {
-        io.to(`user:${result.rows[0].patient_id}`).emit('notification', {
+        io.to(`user:${collab.patient_id}`).emit('notification', {
           type: 'invite',
           title: 'Răspuns invitație',
           message: notificationMessage,
@@ -191,7 +201,6 @@ router.patch(
         });
       }
 
-      const collab = result.rows[0];
       res.json({
         id: collab.id,
         patientId: collab.patient_id,

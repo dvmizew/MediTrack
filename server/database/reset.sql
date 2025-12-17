@@ -25,3 +25,6 @@ DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 
 -- Now recreate everything from init.sql
 \i init.sql
+
+-- Load sample data
+\i sample-data.sql

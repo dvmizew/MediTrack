@@ -320,6 +320,7 @@
 		} else if ($isMedic) {
 			await loadDashboardData();
 		} else {
+			await refreshUserStats();
 			await loadMedications();
 			initializeCharts();
 
@@ -331,6 +332,7 @@
 			tick();
 			refreshInterval = setInterval(() => {
 				loadMedications();
+				refreshUserStats();
 				updateCharts();
 				// also advance countdown
 				tick();
@@ -426,7 +428,8 @@
 	async function refreshUserStats() {
 		try {
 			const user = await api.getProfile();
-			authStore.updateUser(user);
+			// normalize id for authStore consumers
+			authStore.updateUser({ ...user, id: (user as any).id ?? (user as any).userId });
 		} catch (error) {
 			console.error('Failed to refresh user stats:', error);
 		}
@@ -472,26 +475,45 @@
 		
 		const snoozed = todayMedications.filter((m) => isMedicationSnoozed(m, now)).length;
 
-		// Find next upcoming medication
-		const upcoming = todayMedications
+		// Find next upcoming medication; if none, fallback to most recent overdue
+		const candidates = todayMedications
 			.filter((m) => {
 				if (isMedicationTaken(m)) return false;
 				if (!m.ora) return false;
-				
-				const [hours, minutes] = m.ora.split(':').map(Number);
-				const scheduledTime = new Date();
-				scheduledTime.setHours(hours, minutes, 0, 0);
-				
-				return scheduledTime >= now;
+				return true;
 			})
 			.sort((a, b) => {
 				const [aH, aM] = a.ora.split(':').map(Number);
 				const [bH, bM] = b.ora.split(':').map(Number);
 				return (aH * 60 + aM) - (bH * 60 + bM);
-			})[0];
+			});
+
+		const upcoming = candidates.find((m) => {
+			const [hours, minutes] = m.ora.split(':').map(Number);
+			const scheduledTime = new Date();
+			scheduledTime.setHours(hours, minutes, 0, 0);
+			return scheduledTime >= now;
+		});
+
+		// If no upcoming left today, show the latest overdue pending dose
+		let latestOverdue: any | null = null;
+		if (!upcoming) {
+			const pastDue = candidates.filter((m) => {
+				const [hours, minutes] = m.ora.split(':').map(Number);
+				const scheduledTime = new Date();
+				scheduledTime.setHours(hours, minutes, 0, 0);
+				return scheduledTime < now;
+			});
+			pastDue.sort((a, b) => {
+				const [aH, aM] = a.ora.split(':').map(Number);
+				const [bH, bM] = b.ora.split(':').map(Number);
+				return (bH * 60 + bM) - (aH * 60 + aM);
+			});
+			latestOverdue = pastDue[0] || null;
+		}
 
 		// store next dose for countdown updates
-		nextDose = upcoming || null;
+		nextDose = upcoming || latestOverdue || null;
 		updateCountdown();
 
 		stats = {

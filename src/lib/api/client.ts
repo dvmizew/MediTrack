@@ -186,12 +186,12 @@ export const api = {
 
 	// Logs (Confirmations)
 	getTodayMedications: () => request('/confirmations/today'),
-	confirmMedication: (data: { medicationScheduleId: number; scheduledTime: string }) =>
+	confirmMedication: (data: { doseId: number; scheduledFor: string }) =>
 		request('/confirmations/confirm', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		}),
-	snoozeMedication: (data: { medicationScheduleId: number; scheduledTime: string }) =>
+	snoozeMedication: (data: { doseId: number; scheduledFor: string }) =>
 		request('/confirmations/snooze', {
 			method: 'POST',
 			body: JSON.stringify(data)

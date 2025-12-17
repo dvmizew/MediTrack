@@ -3,6 +3,7 @@ import { logger } from '../config/logger.js';
 import { body, validationResult } from 'express-validator';
 import { query } from '../config/database.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
+import { redis } from '../config/redis.js';
 
 const router: Router = express.Router();
 
@@ -134,7 +135,12 @@ router.post(
         );
       }
 
-      // Update patient profile stats
+      // Ensure patient profile exists, then update stats
+      await query(
+        `INSERT INTO patient_profiles (patient_id) VALUES ($1) ON CONFLICT DO NOTHING`,
+        [patientId]
+      );
+
       const statsResult = await query(
         `UPDATE patient_profiles 
          SET nivel_xp = nivel_xp + $1,
@@ -148,22 +154,27 @@ router.post(
         [XP_PER_DOSE, patientId]
       );
 
-      // Calculate badge
+      // Calculate badge based on current XP
       const stats = statsResult.rows[0];
-      let newBadge = null;
+      if (!stats) {
+        return res.status(500).json({ error: 'Failed to update patient profile' });
+      }
       
+      let newBadge = null;
       if (stats.nivel_xp >= BADGE_THRESHOLDS.diamond) newBadge = 'diamond';
       else if (stats.nivel_xp >= BADGE_THRESHOLDS.platinum) newBadge = 'platinum';
       else if (stats.nivel_xp >= BADGE_THRESHOLDS.gold) newBadge = 'gold';
       else if (stats.nivel_xp >= BADGE_THRESHOLDS.silver) newBadge = 'silver';
       else if (stats.nivel_xp >= BADGE_THRESHOLDS.bronze) newBadge = 'bronze';
 
+      // Update badge if changed
       if (newBadge && newBadge !== stats.current_badge) {
         await query(
           'UPDATE patient_profiles SET current_badge = $1 WHERE patient_id = $2',
           [newBadge, patientId]
         );
         
+        logger.info('Badge upgraded', { patientId, previousBadge: stats.current_badge, newBadge, totalXp: stats.nivel_xp });
         await query(
           `INSERT INTO notifications (user_id, tip, status_notif, title, message) 
            VALUES ($1, 'alert', 'sent', 'Badge Deblocat!', $2)`,
@@ -176,6 +187,14 @@ router.post(
         'UPDATE treatment_doses SET status = $1 WHERE dose_id = $2',
         ['confirmed', doseId]
       );
+
+      // Invalidate leaderboard cache since patient XP changed
+      try {
+        await redis.del('leaderboard:all');
+        logger.debug('Leaderboard cache invalidated after dose confirmation');
+      } catch (cacheErr) {
+        logger.warn('Failed to invalidate leaderboard cache', { error: cacheErr });
+      }
 
       res.json({
         confirmation: confirmResult.rows[0],
@@ -227,9 +246,14 @@ router.post(
 
       // Check if confirmation exists
       const existing = await query(
-        'SELECT confirm_id FROM dose_confirmations WHERE dose_id = $1 AND DATE(scheduled_for) = DATE($2::timestamp)',
+        'SELECT confirm_id, rezultat FROM dose_confirmations WHERE dose_id = $1 AND DATE(scheduled_for) = DATE($2::timestamp)',
         [doseId, scheduledFor]
       );
+
+      // Prevent snoozing if already confirmed (rezultat = 'pozitiv')
+      if (existing.rows.length > 0 && existing.rows[0].rezultat === 'pozitiv') {
+        return res.status(400).json({ error: 'Cannot snooze an already confirmed dose' });
+      }
 
       let result;
 

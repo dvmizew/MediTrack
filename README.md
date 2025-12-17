@@ -86,7 +86,6 @@ NEW_SECRET=$(openssl rand -base64 32) && sed -i "s|generate_random_32_char_secre
 
 # 4. Start infrastructure
 docker compose up -d
-sleep 5
 
 # 5. Start servers
 cd server && npm run dev &
