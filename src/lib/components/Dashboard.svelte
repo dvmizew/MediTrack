@@ -461,59 +461,36 @@
 		const total = todayMedications.length;
 		const taken = todayMedications.filter(isMedicationTaken).length;
 		
-		// Parse time from "HH:mm" format and compare with current time
+		// Overdue excludes snoozed items; uses effective scheduled time
 		const overdue = todayMedications.filter((m) => {
 			if (isMedicationTaken(m)) return false;
-			if (!m.ora) return false;
-			
-			const [hours, minutes] = m.ora.split(':').map(Number);
-			const scheduledTime = new Date();
-			scheduledTime.setHours(hours, minutes, 0, 0);
-			
+			if (isMedicationSnoozed(m, now)) return false;
+			const scheduledTime = getMedicationScheduledTime(m, now);
+			if (!scheduledTime) return false;
 			return scheduledTime < now;
 		}).length;
 		
 		const snoozed = todayMedications.filter((m) => isMedicationSnoozed(m, now)).length;
 
-		// Find next upcoming medication; if none, fallback to most recent overdue
-		const candidates = todayMedications
-			.filter((m) => {
-				if (isMedicationTaken(m)) return false;
-				if (!m.ora) return false;
-				return true;
-			})
-			.sort((a, b) => {
-				const [aH, aM] = a.ora.split(':').map(Number);
-				const [bH, bM] = b.ora.split(':').map(Number);
-				return (aH * 60 + aM) - (bH * 60 + bM);
-			});
+		// Find next upcoming medication considering snoozedUntil; if none, fallback to most recent overdue
+		const enriched = todayMedications
+			.filter((m) => !isMedicationTaken(m))
+			.map((m) => ({ med: m, when: getMedicationScheduledTime(m, now) }))
+			.filter((x) => x.when instanceof Date) as Array<{ med: any; when: Date }>;
 
-		const upcoming = candidates.find((m) => {
-			const [hours, minutes] = m.ora.split(':').map(Number);
-			const scheduledTime = new Date();
-			scheduledTime.setHours(hours, minutes, 0, 0);
-			return scheduledTime >= now;
-		});
+		enriched.sort((a, b) => a.when.getTime() - b.when.getTime());
 
-		// If no upcoming left today, show the latest overdue pending dose
-		let latestOverdue: any | null = null;
-		if (!upcoming) {
-			const pastDue = candidates.filter((m) => {
-				const [hours, minutes] = m.ora.split(':').map(Number);
-				const scheduledTime = new Date();
-				scheduledTime.setHours(hours, minutes, 0, 0);
-				return scheduledTime < now;
-			});
-			pastDue.sort((a, b) => {
-				const [aH, aM] = a.ora.split(':').map(Number);
-				const [bH, bM] = b.ora.split(':').map(Number);
-				return (bH * 60 + bM) - (aH * 60 + aM);
-			});
-			latestOverdue = pastDue[0] || null;
+		const upcomingEntry = enriched.find((x) => x.when.getTime() >= now.getTime()) || null;
+
+		let latestOverdueEntry: { med: any; when: Date } | null = null;
+		if (!upcomingEntry) {
+			const past = enriched.filter((x) => x.when.getTime() < now.getTime());
+			past.sort((a, b) => b.when.getTime() - a.when.getTime());
+			latestOverdueEntry = past[0] || null;
 		}
 
 		// store next dose for countdown updates
-		nextDose = upcoming || latestOverdue || null;
+		nextDose = (upcomingEntry?.med || latestOverdueEntry?.med) || null;
 		updateCountdown();
 
 		stats = {
@@ -532,20 +509,20 @@
 	let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
 	function updateCountdown() {
-		if (!nextDose || !nextDose.ora) {
+		if (!nextDose) {
 			countdownLabel = 'Nicio doză programată';
-			// reflect in stats for live render
-			stats = { ...stats, upcomingLabel: countdownLabel };
 			return;
 		}
 		const now = new Date();
-		const [hours, minutes] = String(nextDose.ora).split(':').map(Number);
-		const scheduledTime = new Date();
-		scheduledTime.setHours(hours, minutes, 0, 0);
+		const scheduledTime = getMedicationScheduledTime(nextDose, now);
+		if (!scheduledTime) {
+			countdownLabel = 'Nicio doză programată';
+			return;
+		}
 		const diffMs = scheduledTime.getTime() - now.getTime();
 		if (diffMs <= 0) {
-			countdownLabel = `${nextDose.ora} - ${nextDose.medicationName || 'Doză următoare'}`;
-			stats = { ...stats, upcomingLabel: countdownLabel };
+			const displayTime = nextDose.ora || scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+			countdownLabel = `${displayTime} - ${nextDose.medicationName || 'Doză următoare'}`;
 			return;
 		}
 		const totalSeconds = Math.floor(diffMs / 1000);
@@ -556,8 +533,8 @@
 		const mm = m.toString().padStart(2, '0');
 		const ss = s.toString().padStart(2, '0');
 		const label = `${hh}:${mm}:${ss}`;
-		countdownLabel = `${label} până la ${nextDose.medicationName || 'doza următoare'} (${nextDose.ora})`;
-		stats = { ...stats, upcomingLabel: countdownLabel };
+		const displayTime = nextDose.ora || scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+		countdownLabel = `${label} până la ${nextDose.medicationName || 'doza următoare'} (${displayTime})`;
 	}
 
 	async function confirmMedication(medication: any) {
@@ -594,11 +571,24 @@
 	}
 
 	function isMedicationTaken(med: any) {
-		return med.rezultat === 'pozitiv' || Boolean(med.timestampConfirmare);
+		return med.rezultat === 'pozitiv';
 	}
 
 	function isMedicationSnoozed(med: any, now = new Date()) {
 		return !isMedicationTaken(med) && med.snoozedUntil && new Date(med.snoozedUntil) > now;
+	}
+
+	// Determine the effective scheduled Date for a medication today
+	function getMedicationScheduledTime(med: any, now = new Date()): Date | null {
+		if (isMedicationTaken(med)) return null;
+		if (isMedicationSnoozed(med, now)) {
+			return new Date(med.snoozedUntil);
+		}
+		if (!med.ora) return null;
+		const [hours, minutes] = String(med.ora).split(':').map(Number);
+		const scheduled = new Date();
+		scheduled.setHours(hours, minutes, 0, 0);
+		return scheduled;
 	}
 
 	function buildTodayTimeline() {

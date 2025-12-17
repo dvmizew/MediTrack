@@ -37,7 +37,7 @@
 			// Find current user rank
 			if ($authStore.user && $isPacient) {
 				currentUserPosition = leaderboard.findIndex(
-					(u) => u.userId === $authStore.user.user_id
+					(u) => u.userId === $authStore.user.id
 				);
 			}
 		} catch (error) {
@@ -216,7 +216,7 @@
 				</div>
 			{:else}
 				{#each leaderboard as user, index (user.userId)}
-					{@const isCurrentUser = $authStore.user?.user_id === user.userId}
+					{@const isCurrentUser = $authStore.user?.id === user.userId}
 					{@const isTop3 = index < 3}
 					{@const progress = getProgressToNextBadge(user.xp, user.badge)}
 					

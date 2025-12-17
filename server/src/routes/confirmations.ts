@@ -191,6 +191,8 @@ router.post(
       // Invalidate leaderboard cache since patient XP changed
       try {
         await redis.del('leaderboard:all');
+        await redis.del('leaderboard:week');
+        await redis.del('leaderboard:month');
         logger.debug('Leaderboard cache invalidated after dose confirmation');
       } catch (cacheErr) {
         logger.warn('Failed to invalidate leaderboard cache', { error: cacheErr });
@@ -258,15 +260,17 @@ router.post(
       let result;
 
       if (existing.rows.length > 0) {
+        // Ensure snoozed records are not marked as taken
         result = await query(
-          'UPDATE dose_confirmations SET snoozed_until = $1 WHERE confirm_id = $2 RETURNING *',
+          'UPDATE dose_confirmations SET snoozed_until = $1, rezultat = \'negativ\', timestamp_confirmare = NULL WHERE confirm_id = $2 RETURNING *',
           [snoozedUntil, existing.rows[0].confirm_id]
         );
       } else {
+        // Explicitly set timestamp_confirmare NULL to avoid default current_timestamp
         result = await query(
           `INSERT INTO dose_confirmations 
-           (dose_id, scheduled_for, snoozed_until, rezultat) 
-           VALUES ($1, $2, $3, 'negativ') 
+           (dose_id, scheduled_for, timestamp_confirmare, rezultat, snoozed_until) 
+           VALUES ($1, $2, NULL, 'negativ', $3) 
            RETURNING *`,
           [doseId, scheduledFor, snoozedUntil]
         );

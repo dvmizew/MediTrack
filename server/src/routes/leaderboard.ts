@@ -9,7 +9,7 @@ const LEADERBOARD_CACHE_TTL = 300; // 5 minutes
 
 router.get('/', authenticate, async (req: Request, res: Response) => {
 	try {
-		const { filter = 'all' } = req.query;
+		const { filter = 'all' } = req.query as { filter?: 'all' | 'week' | 'month' };
 		const userId = (req as AuthRequest).user!.userId;
 		const cacheKey = `leaderboard:${filter}`;
 
@@ -27,25 +27,57 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
 
 		// If not in cache, fetch from DB
 		if (!leaderboard) {
-			const result = await query(
-				`
-				SELECT 
-					u.user_id,
-					u.full_name,
-					u.avatar_url,
-					COALESCE(pp.nivel_xp, 0) as xp,
-					COALESCE(pp.current_streak, 0) as streak,
-					COALESCE(pp.longest_streak, 0) as longest_streak,
-					COALESCE(pp.current_badge, 'bronze') as badge,
-					COALESCE(pp.progres_total, 0) as total_doses
-				FROM users u
-				LEFT JOIN patient_profiles pp ON u.user_id = pp.patient_id
-				WHERE u.role = 'pacient'
-				ORDER BY COALESCE(pp.nivel_xp, 0) DESC
-				LIMIT 100
-				`,
-				[]
-			);
+			let result;
+			if (filter === 'all') {
+				result = await query(
+					`
+					SELECT 
+						u.user_id,
+						u.full_name,
+						u.avatar_url,
+						COALESCE(pp.nivel_xp, 0) as xp,
+						COALESCE(pp.current_streak, 0) as streak,
+						COALESCE(pp.longest_streak, 0) as longest_streak,
+						COALESCE(pp.current_badge, 'bronze') as badge,
+						COALESCE(pp.progres_total, 0) as total_doses
+					FROM users u
+					LEFT JOIN patient_profiles pp ON u.user_id = pp.patient_id
+					WHERE u.role = 'pacient'
+					ORDER BY COALESCE(pp.nivel_xp, 0) DESC, COALESCE(pp.current_streak, 0) DESC, COALESCE(pp.longest_streak, 0) DESC
+					LIMIT 100
+					`,
+					[]
+				);
+			} else {
+				// week or month filter: order by XP earned within period
+				const days = filter === 'week' ? 7 : 30;
+				result = await query(
+					`
+					SELECT 
+						u.user_id,
+						u.full_name,
+						u.avatar_url,
+						COALESCE(SUM(CASE 
+							WHEN dc.rezultat = 'pozitiv' 
+								AND DATE(dc.scheduled_for) >= CURRENT_DATE - INTERVAL '1 day' * $1 
+							THEN dc.xp_earned ELSE 0 END), 0) AS xp,
+						COALESCE(pp.current_streak, 0) as streak,
+						COALESCE(pp.longest_streak, 0) as longest_streak,
+						COALESCE(pp.current_badge, 'bronze') as badge,
+						COALESCE(pp.progres_total, 0) as total_doses
+					FROM users u
+					LEFT JOIN patient_profiles pp ON u.user_id = pp.patient_id
+					LEFT JOIN treatment_plans tp ON tp.patient_id = u.user_id AND tp.is_deleted = false
+					LEFT JOIN treatment_doses td ON td.plan_id = tp.plan_id AND td.is_deleted = false
+					LEFT JOIN dose_confirmations dc ON dc.dose_id = td.dose_id
+					WHERE u.role = 'pacient'
+					GROUP BY u.user_id, u.full_name, u.avatar_url, pp.nivel_xp, pp.current_streak, pp.longest_streak, pp.current_badge, pp.progres_total
+					ORDER BY xp DESC, COALESCE(pp.current_streak, 0) DESC, COALESCE(pp.longest_streak, 0) DESC
+					LIMIT 100
+					`,
+					[days]
+				);
+			}
 
 			leaderboard = result.rows.map((row: any, index: number) => ({
 				rank: index + 1,
