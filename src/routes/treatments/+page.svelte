@@ -105,25 +105,25 @@
 						type="button"
 						class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-2 border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition cursor-pointer group text-left w-full"
 						onclick={() => viewDetails(treatment.planId)}
-						aria-label="Vezi detalii pentru {treatment.diagnoza}"
+						aria-label="Vezi detalii pentru {treatment.diagnosis}"
 						>
 							<div class="flex justify-between items-start mb-4">
 								<h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
-									{treatment.diagnoza}
+									{treatment.diagnosis}
 								</h3>
 								<span
 									class="px-3 py-1 text-xs font-semibold rounded-full shadow-sm"
-									class:bg-green-500={treatment.activ}
-									class:text-white={treatment.activ}
-									class:bg-gray-100={!treatment.activ}
-									class:text-gray-600={!treatment.activ}
+									class:bg-green-500={treatment.isActive}
+									class:text-white={treatment.isActive}
+									class:bg-gray-100={!treatment.isActive}
+									class:text-gray-600={!treatment.isActive}
 								>
-									{treatment.activ ? '✓ Activ' : '⏸ Inactiv'}
+									{treatment.isActive ? '✓ Activ' : '⏸ Inactiv'}
 								</span>
 							</div>
 
-							{#if treatment.descriere}
-								<p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">{treatment.descriere}</p>
+							{#if treatment.description}
+								<p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">{treatment.description}</p>
 							{/if}
 
 						<div class="space-y-2 text-sm mb-4">
@@ -162,7 +162,7 @@
 											d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
 										/>
 									</svg>
-									<span>{new Date(treatment.dataCreare).toLocaleDateString('ro-RO')}</span>
+								<span>{new Date(treatment.createdAt).toLocaleDateString('ro-RO')}</span>
 								</div>
 							</div>
 

@@ -28,14 +28,14 @@
 					<div class="flex items-center justify-between">
 						<div class="flex-1">
 							<div class="flex items-center gap-2 mb-1">
-								<h4 class="font-semibold text-gray-900 dark:text-gray-100">{treatment.diagnoza}</h4>
-								<span class="px-2 py-1 text-xs font-medium rounded-full {treatment.activ ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}">
-									{treatment.activ ? 'Activ' : 'Inactiv'}
+								<h4 class="font-semibold text-gray-900 dark:text-gray-100">{treatment.diagnosis}</h4>
+								<span class="px-2 py-1 text-xs font-medium rounded-full {treatment.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}">
+									{treatment.isActive ? 'Activ' : 'Inactiv'}
 								</span>
 							</div>
 							<p class="text-sm text-gray-500 dark:text-gray-400">Pacient: {treatment.patientName}</p>
 							<p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-								{new Date(treatment.dataCreare).toLocaleDateString('ro-RO')}
+								{new Date(treatment.createdAt).toLocaleDateString('ro-RO')}
 							</p>
 						</div>
 						<svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -521,7 +521,7 @@
 		}
 		const diffMs = scheduledTime.getTime() - now.getTime();
 		if (diffMs <= 0) {
-			const displayTime = nextDose.ora || scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+			const displayTime = nextDose.time || scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 			countdownLabel = `${displayTime} - ${nextDose.medicationName || 'Doză următoare'}`;
 			return;
 		}
@@ -533,7 +533,7 @@
 		const mm = m.toString().padStart(2, '0');
 		const ss = s.toString().padStart(2, '0');
 		const label = `${hh}:${mm}:${ss}`;
-		const displayTime = nextDose.ora || scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+		const displayTime = nextDose.time || scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 		countdownLabel = `${label} până la ${nextDose.medicationName || 'doza următoare'} (${displayTime})`;
 	}
 
@@ -571,7 +571,7 @@
 	}
 
 	function isMedicationTaken(med: any) {
-		return med.rezultat === 'pozitiv';
+		return med.result === 'pozitiv';
 	}
 
 	function isMedicationSnoozed(med: any, now = new Date()) {
@@ -584,8 +584,8 @@
 		if (isMedicationSnoozed(med, now)) {
 			return new Date(med.snoozedUntil);
 		}
-		if (!med.ora) return null;
-		const [hours, minutes] = String(med.ora).split(':').map(Number);
+		if (!med.time) return null;
+		const [hours, minutes] = String(med.time).split(':').map(Number);
 		const scheduled = new Date();
 		scheduled.setHours(hours, minutes, 0, 0);
 		return scheduled;

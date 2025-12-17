@@ -52,18 +52,18 @@ router.get('/today', authenticate, async (req: Request, res: Response) => {
       doseId: d.dose_id,
       planId: d.plan_id,
       medicationName: d.medication_name,
-      cantitate: d.cantitate,
-      ora: d.ora,
-      frecventa: d.frecventa,
+      quantity: d.cantitate,
+      time: d.ora,
+      frequency: d.frecventa,
       startDate: d.start_date,
       endDate: d.end_date,
-      instructiuni: d.instructiuni,
-      detaliiMedicament: d.detalii_medicament,
+      instructions: d.instructiuni,
+      medicationDetails: d.detalii_medicament,
       isActive: d.is_active,
       status: d.status,
-      confirmId: d.confirm_id,
-      timestampConfirmare: d.timestamp_confirmare,
-      rezultat: d.rezultat,
+      confirmationId: d.confirm_id,
+      confirmedAt: d.timestamp_confirmare,
+      result: d.rezultat,
       snoozedUntil: d.snoozed_until
     })));
   } catch (error) {
@@ -199,7 +199,15 @@ router.post(
       }
 
       res.json({
-        confirmation: confirmResult.rows[0],
+        confirmation: {
+          confirmationId: confirmResult.rows[0].confirm_id,
+          doseId: confirmResult.rows[0].dose_id,
+          scheduledFor: confirmResult.rows[0].scheduled_for,
+          confirmedAt: confirmResult.rows[0].timestamp_confirmare,
+          result: confirmResult.rows[0].rezultat,
+          xpEarned: confirmResult.rows[0].xp_earned,
+          notes: confirmResult.rows[0].notes
+        },
         stats: {
           totalXp: stats.nivel_xp,
           currentStreak: stats.current_streak,
@@ -287,10 +295,11 @@ router.post(
     const snooze = result.rows[0];
     res.json({
       confirmId: snooze.confirm_id,
+      confirmationId: snooze.confirm_id,
       doseId: snooze.dose_id,
       scheduledFor: snooze.scheduled_for,
-      timestampConfirmare: snooze.timestamp_confirmare,
-      rezultat: snooze.rezultat,
+      confirmedAt: snooze.timestamp_confirmare,
+      result: snooze.rezultat,
       xpEarned: snooze.xp_earned,
       notes: snooze.notes,
       snoozedUntil: snooze.snoozed_until

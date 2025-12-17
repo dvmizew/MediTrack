@@ -205,12 +205,12 @@
 	function startEditMedication(med: any) {
 		editingMedication = med;
 		newMedication.medicationName = med.medicationName;
-		newMedication.cantitate = med.cantitate;
-		newMedication.ora = med.ora;
-		newMedication.frecventa = med.frecventa;
+		newMedication.cantitate = med.quantity;
+		newMedication.ora = med.time;
+		newMedication.frecventa = med.frequency;
 		newMedication.startDate = med.startDate?.split('T')[0] || '';
 		newMedication.endDate = med.endDate?.split('T')[0] || '';
-		newMedication.instructiuni = med.instructiuni || '';
+		newMedication.instructiuni = med.instructions || '';
 		newMedication.detaliiMedicament = med.detaliiMedicament || '';
 	}
 
@@ -287,8 +287,8 @@
 
 	function startEditTreatment() {
 		editingTreatment = true;
-		treatmentForm.diagnostic = treatment.diagnoza;
-		treatmentForm.descriere = treatment.descriere || '';
+		treatmentForm.diagnostic = treatment.diagnosis;
+		treatmentForm.descriere = treatment.description || '';
 	}
 
 	function cancelTreatmentEdit() {
@@ -352,12 +352,12 @@
 				{#if !editingTreatment}
 					<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
 						<div class="flex-1 min-w-0">
-							<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 break-words">{treatment.diagnoza}</h1>
-							<p class="text-gray-600 dark:text-gray-400 break-words">{treatment.descriere || 'Fără descriere'}</p>
-						</div>
-						<div class="flex items-center gap-3 flex-shrink-0">
-							<span class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-full whitespace-nowrap {treatment.activ ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'}">
-								{treatment.activ ? 'Activ' : 'Inactiv'}
+					<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 break-words">{treatment.diagnosis}</h1>
+					<p class="text-gray-600 dark:text-gray-400 break-words">{treatment.description || 'Fără descriere'}</p>
+				</div>
+				<div class="flex items-center gap-3 flex-shrink-0">
+					<span class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-full whitespace-nowrap {treatment.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'}">
+						{treatment.isActive ? 'Activ' : 'Inactiv'}
 							</span>
 							{#if $isMedic}
 								{#if deleteConfirmToken}
@@ -449,7 +449,7 @@
 					</div>
 					<div>
 						<p class="text-gray-500 dark:text-gray-400">Data creării</p>
-						<p class="font-semibold text-gray-900 dark:text-gray-100">{formatDate(treatment.dataCreare)}</p>
+						<p class="font-semibold text-gray-900 dark:text-gray-100">{formatDate(treatment.createdAt)}</p>
 					</div>
 				</div>
 			</div>
@@ -579,13 +579,13 @@
 								<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
 									<div class="flex-1 min-w-0">
 										<h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 break-words">{med.medicationName}</h3>
-										<p class="text-gray-600 dark:text-gray-400 text-sm mt-1">{med.cantitate} • {med.frecventa}</p>
-										{#if med.instructiuni}
-											<p class="text-gray-500 dark:text-gray-400 text-sm mt-2 break-words">{med.instructiuni}</p>
+										<p class="text-gray-600 dark:text-gray-400 text-sm mt-1">{med.quantity} • {med.frequency}</p>
+										{#if med.instructions}
+											<p class="text-gray-500 dark:text-gray-400 text-sm mt-2 break-words">{med.instructions}</p>
 										{/if}
 									</div>
 									<div class="flex sm:flex-col items-center sm:items-end gap-2 flex-shrink-0">
-									<p class="text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{formatTime(med.ora)}</p>
+									<p class="text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{formatTime(med.time)}</p>
 										<span class="inline-block px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap {med.is_active ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'}">
 										{med.isActive ? 'Activ' : 'Inactiv'}
 										</span>
