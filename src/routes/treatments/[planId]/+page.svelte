@@ -211,7 +211,8 @@
 		newMedication.startDate = med.startDate?.split('T')[0] || '';
 		newMedication.endDate = med.endDate?.split('T')[0] || '';
 		newMedication.instructiuni = med.instructions || '';
-		newMedication.detaliiMedicament = med.detaliiMedicament || '';
+		// Preserve original details when present; fallback to medicationDetails from API
+		newMedication.detaliiMedicament = med.detaliiMedicament || med.medicationDetails || '';
 	}
 
 	function cancelEdit() {
@@ -583,10 +584,13 @@
 										{#if med.instructions}
 											<p class="text-gray-500 dark:text-gray-400 text-sm mt-2 break-words">{med.instructions}</p>
 										{/if}
+										{#if med.medicationDetails}
+											<p class="text-gray-500 dark:text-gray-400 text-xs mt-1 break-words">{med.medicationDetails}</p>
+										{/if}
 									</div>
 									<div class="flex sm:flex-col items-center sm:items-end gap-2 flex-shrink-0">
 									<p class="text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{formatTime(med.time)}</p>
-										<span class="inline-block px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap {med.is_active ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'}">
+										<span class="inline-block px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap {med.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'}">
 										{med.isActive ? 'Activ' : 'Inactiv'}
 										</span>
 										{#if $isMedic}
