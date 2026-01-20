@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { Chart } from 'chart.js/auto';
-	import { api } from '$lib/api/client';
+	import { api, adminReportsApi } from '$lib/api/client';
 	import { authStore, isPacient, isMedic } from '$lib/stores/auth';
 	import { themeStore } from '$lib/stores/theme';
 	import { goto } from '$app/navigation';
@@ -290,12 +290,7 @@
 		try {
 			adminLoading = true;
 			adminError = null;
-			const token = $authStore.token;
-			const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/admin/reports/overview`, {
-				headers: { 'Authorization': `Bearer ${token}` }
-			});
-			if (!res.ok) throw new Error('Failed to load admin overview');
-			adminOverview = await res.json();
+			adminOverview = await adminReportsApi.getOverview();
 			setTimeout(renderAdminCharts, 0);
 		} catch (e: any) {
 			adminError = e.message || 'Failed to load admin overview';
@@ -938,8 +933,8 @@
 						{/each}
 					</div>
 					
-					<!-- Action Button (1 column, taller) -->
-					<div class="lg:col-span-1 flex">
+					<!-- Action Buttons (1 column, stacked) -->
+					<div class="lg:col-span-1 flex flex-col gap-4">
 						<ActionButton 
 							label="Gestionează Utilizatori"
 							description="Vizualizează, editează și monitorizează"
@@ -948,6 +943,15 @@
 							iconBg="bg-blue-100 dark:bg-blue-900/30"
 							iconColor="text-blue-600 dark:text-blue-400"
 							iconPath="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+						/>
+						<ActionButton 
+							label="Rapoarte"
+							description="Overview și rapoarte detaliate"
+							href="/admin/reports"
+							borderHover="border-emerald-400 dark:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10"
+							iconBg="bg-emerald-100 dark:bg-emerald-900/30"
+							iconColor="text-emerald-600 dark:text-emerald-400"
+							iconPath="M9 17v-6a2 2 0 012-2h8m-4-4l4 4-4 4"
 						/>
 					</div>
 				</div>
