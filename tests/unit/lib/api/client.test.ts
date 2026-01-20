@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { get } from 'svelte/store';
-import { authStore } from '../stores/auth';
+import { authStore } from '$lib/stores/auth';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -47,7 +47,7 @@ describe('API client', () => {
 				json: async () => ({ success: true })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			await api.getProfile();
 
 			expect(mockFetch).toHaveBeenCalledWith(
@@ -67,7 +67,7 @@ describe('API client', () => {
 				json: async () => ({ success: true })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			await api.login({ email: 'test@example.com', password: 'password' });
 
 			const callArgs = mockFetch.mock.calls[0];
@@ -82,7 +82,7 @@ describe('API client', () => {
 				json: async () => ({ success: true })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			await api.getProfile();
 
 			const callArgs = mockFetch.mock.calls[0];
@@ -108,7 +108,7 @@ describe('API client', () => {
 				json: async () => ({ error: 'Unauthorized' })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			
 			await expect(api.getProfile()).rejects.toThrow('Unauthorized');
 			// Verify user was NOT logged out (has token, non-auth endpoint)
@@ -124,14 +124,14 @@ describe('API client', () => {
 				json: async () => ({ error: 'Internal Server Error' })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			await expect(api.getProfile()).rejects.toThrow('Internal Server Error');
 		});
 
 		it('should handle network errors', async () => {
 			mockFetch.mockRejectedValueOnce(new Error('Network failure'));
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			await expect(api.getProfile()).rejects.toThrow('Network failure');
 		});
 	});
@@ -144,7 +144,7 @@ describe('API client', () => {
 				json: async () => ({ success: true, userId: 1 })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			const result = await api.register({
 				email: 'new@example.com',
 				password: 'password123',
@@ -168,7 +168,7 @@ describe('API client', () => {
 				json: async () => ({ token: 'jwt-token', user: {} })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			const result = await api.login({
 				email: 'test@example.com',
 				password: 'password123'
@@ -201,7 +201,7 @@ describe('API client', () => {
 				json: async () => ({ token: 'new-token' })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			const result = await api.refreshToken();
 
 			expect(mockFetch).toHaveBeenCalledWith(
@@ -235,7 +235,7 @@ describe('API client', () => {
 				json: async () => ({ id: 1, email: 'test@example.com', totalXp: 100 })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			const result = await api.getProfile();
 
 			expect(mockFetch).toHaveBeenCalledWith(
@@ -252,7 +252,7 @@ describe('API client', () => {
 				json: async () => ({ success: true })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			await api.updateProfile({ fullName: 'Updated Name' });
 
 			expect(mockFetch).toHaveBeenCalledWith(
@@ -271,7 +271,7 @@ describe('API client', () => {
 				json: async () => ({ success: true })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			await api.updatePassword({
 				currentPassword: 'old123',
 				newPassword: 'new456'
@@ -307,7 +307,7 @@ describe('API client', () => {
 				json: async () => ({ success: true, inviteId: 1 })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			const result = await api.sendInvite('doctor@example.com');
 
 			expect(mockFetch).toHaveBeenCalledWith(
@@ -327,7 +327,7 @@ describe('API client', () => {
 				json: async () => ({ invites: [] })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			const result = await api.getPendingInvites();
 
 			expect(mockFetch).toHaveBeenCalledWith(
@@ -344,7 +344,7 @@ describe('API client', () => {
 				json: async () => ({ success: true })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			await api.respondToInvite(1, 'accept');
 
 			expect(mockFetch).toHaveBeenCalledWith(
@@ -378,7 +378,7 @@ describe('API client', () => {
 				json: async () => ({ success: true, treatmentId: 1 })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			const result = await api.createTreatment({
 				pacientId: 1,
 				diagnosis: 'Diabetes',
@@ -402,7 +402,7 @@ describe('API client', () => {
 				json: async () => ({ treatments: [] })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			const result = await api.getTreatments();
 
 			expect(mockFetch).toHaveBeenCalledWith(
@@ -419,7 +419,7 @@ describe('API client', () => {
 				json: async () => ({ id: 1, diagnosis: 'Diabetes' })
 			});
 
-			const { api } = await import('./client');
+			const { api } = await import('$lib/api/client');
 			const result = await api.getTreatmentDetails(1);
 
 			expect(mockFetch).toHaveBeenCalledWith(

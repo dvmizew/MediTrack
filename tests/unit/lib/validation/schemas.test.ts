@@ -8,7 +8,7 @@ import {
   messageSchema,
   treatmentSchema,
   parseWithFriendlyErrors 
-} from './schemas.js';
+} from '$lib/validation/schemas.js';
 
 describe('Validation Schemas', () => {
   describe('emailSchema', () => {
