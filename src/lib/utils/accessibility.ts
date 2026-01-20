@@ -1,6 +1,3 @@
-/**
- * Check if element is keyboard focusable
- */
 export function isFocusable(element: HTMLElement): boolean {
 	if (element.hasAttribute('disabled')) return false;
 	if (element.hasAttribute('tabindex')) {
@@ -12,9 +9,6 @@ export function isFocusable(element: HTMLElement): boolean {
 	return focusableTags.includes(element.tagName);
 }
 
-/**
- * Restore focus to previously focused element
- */
 export class FocusManager {
 	private previousElement: HTMLElement | null = null;
 

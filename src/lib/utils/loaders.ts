@@ -1,9 +1,5 @@
 import { api } from '$lib/api/client';
 
-/**
- * Load current user profile with stats
- * Reusable across profile and settings pages
- */
 export async function loadUserProfile() {
 	const profile = await api.getProfile();
 	
@@ -14,16 +10,14 @@ export async function loadUserProfile() {
 			currentStreak: profile.currentStreak || profile.current_streak || 0,
 			longestStreak: profile.longestStreak || profile.longest_streak || 0,
 			currentBadge: profile.currentBadge || profile.current_badge || 'bronze',
+			adherenceRate: profile.adherenceRate || profile.adherence_rate || 0,
+			totalMedications: profile.totalMedications || profile.total_medications || 0,
 			completedTreatments: 0,
 			activeTreatments: 0
 		}
 	};
 }
 
-/**
- * Load collaborations for current user
- * Normalizes patient data from doctor_patient table
- */
 export async function loadCollaborations() {
 	const data = await api.getMyCollaborations();
 	

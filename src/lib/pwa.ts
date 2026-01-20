@@ -2,10 +2,6 @@
 let registration: ServiceWorkerRegistration | null = null;
 let newWorkerAvailable = false;
 
-/**
- * Register and manage the Service Worker
- * Handles updates and offline fallback
- */
 export async function registerServiceWorker(): Promise<void> {
 	// Disable SW in dev to avoid caching issues during development
 	// SvelteKit + Vite HMR works best without SW in dev
@@ -46,9 +42,6 @@ export async function registerServiceWorker(): Promise<void> {
 	}
 }
 
-/**
- * Handle service worker update found
- */
 function handleUpdateFound(): void {
 	const newWorker = registration?.installing;
 	if (!newWorker) return;
@@ -68,9 +61,6 @@ function handleUpdateFound(): void {
 	});
 }
 
-/**
- * Handle messages from service worker
- */
 function handleServiceWorkerMessage(event: any): void {
 	const { type, data } = event.data;
 
@@ -88,10 +78,6 @@ function handleServiceWorkerMessage(event: any): void {
 	}
 }
 
-/**
- * Activate a pending service worker update
- * Call this when user accepts the "new version available" prompt
- */
 export async function activateNewServiceWorker(): Promise<void> {
 	if (!newWorkerAvailable || !registration?.waiting) {
 		console.warn('No new service worker available');
@@ -112,9 +98,6 @@ export async function activateNewServiceWorker(): Promise<void> {
 	});
 }
 
-/**
- * Setup offline detection and handling
- */
 function setupOfflineDetection(): void {
 	// Initial status
 	const isOnline = navigator.onLine;

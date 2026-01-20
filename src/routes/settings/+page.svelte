@@ -2,8 +2,9 @@
 	import { onMount } from 'svelte';
 	import { authStore, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
-    import { mfaApi } from '$lib/api/client';
+	import { mfaApi } from '$lib/api/client';
 	import { loadUserProfile } from '$lib/utils/loaders';
+	import { BADGES, getBadgeMeta } from '$lib/constants/badges';
 
 	type TabType = 'general' | 'security' | 'stats' | 'privacy';
 
@@ -12,18 +13,15 @@
 	let savingPassword = $state(false);
 	let activeTab = $state<TabType>('general');
 	
-	// Profile form
 	let fullName = $state('');
 	let email = $state('');
 	let avatarUrl = $state('');
 	
-	// Password form
 	let currentPassword = $state('');
 	let newPassword = $state('');
 	let confirmPassword = $state('');
 	let showPasswords = $state(false);
 
-	// MFA state
 	let mfaStep = $state<'idle' | 'setup' | 'verify' | 'done'>('idle');
 	let mfaQr = $state('');
 	let mfaSecret = $state('');
@@ -114,12 +112,10 @@
 		URL.revokeObjectURL(url);
 	}
 	
-	// Privacy settings
 	let profileVisibility = $state<'private' | 'public'>('private');
 	let shareStatistics = $state(false);
 	let savingPrivacy = $state(false);
 	
-	// Stats (for patients)
 	let stats = $state({
 		totalXp: 0,
 		currentStreak: 0,
@@ -130,21 +126,6 @@
 		completedTreatments: 0,
 		activeTreatments: 0
 	});
-
-	type BadgeMeta = {
-		id: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
-		name: string;
-		xp: number;
-		gradient: string;
-	};
-
-	const BADGES: BadgeMeta[] = [
-		{ id: 'bronze', name: 'Bronz', xp: 0, gradient: 'from-orange-600 to-orange-800' },
-		{ id: 'silver', name: 'Argint', xp: 1000, gradient: 'from-gray-400 to-gray-600' },
-		{ id: 'gold', name: 'Aur', xp: 2000, gradient: 'from-yellow-400 to-yellow-600' },
-		{ id: 'platinum', name: 'Platină', xp: 3000, gradient: 'from-blue-400 to-blue-600' },
-		{ id: 'diamond', name: 'Diamant', xp: 4000, gradient: 'from-purple-500 to-purple-700' }
-	];
 
 	const tabs = [
 		{ id: 'general' as TabType, name: 'General', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
@@ -231,10 +212,6 @@
 		}
 	}
 
-	function getBadgeMeta(badge: string) {
-		return BADGES.find((b) => b.id === badge) || BADGES[0];
-	}
-
 	function getBadgeColor(badge: string) {
 		return getBadgeMeta(badge).gradient;
 	}
@@ -259,7 +236,6 @@
 			<div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
 		</div>
 	{:else}
-		<!-- Header -->
 		<div class="mb-8">
 			<div class="flex items-center gap-4">
 				<div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -279,9 +255,7 @@
 			</div>
 		</div>
 
-		<!-- Tabs Layout -->
 		<div class="flex flex-col md:flex-row gap-6">
-			<!-- Vertical Tabs - Left Sidebar -->
 			<div class="md:w-64 flex-shrink-0">
 				<nav class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-2 space-y-1">
 					{#each tabs as tab}
@@ -300,9 +274,7 @@
 				</nav>
 			</div>
 
-			<!-- Content Area -->
 			<div class="flex-1 min-w-0">
-				<!-- General Tab -->
 				{#if activeTab === 'general'}
 					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Informații generale</h2>
@@ -378,7 +350,6 @@
 					</div>
 				{/if}
 
-				<!-- Security Tab -->
 				{#if activeTab === 'security'}
 					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Securitate</h2>
@@ -460,7 +431,6 @@
 						</form>
 					</div>
 
-					<!-- MFA / 2FA -->
 					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
 						<div class="flex items-center gap-3 mb-6">
 							<div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -659,10 +629,8 @@
 					</div>
 				{/if}
 
-				<!-- Stats Tab (Patients Only) -->
 				{#if activeTab === 'stats' && $isPacient}
 					<div class="space-y-6">
-						<!-- Badge Card -->
 						<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
 							<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Statistici și realizări</h2>
 							
@@ -676,7 +644,6 @@
 								<p class="text-lg text-gray-600 dark:text-gray-400">{stats.totalXp} XP</p>
 							</div>
 
-							<!-- Stats Grid -->
 							<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 								<div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
 									<p class="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.currentStreak}</p>
@@ -697,7 +664,6 @@
 							</div>
 						</div>
 
-						<!-- Progress Info -->
 						<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
 							<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Progresie badge-uri</h3>
 							<div class="space-y-4">
@@ -722,7 +688,6 @@
 					</div>
 				{/if}
 
-				<!-- Privacy Tab -->
 				{#if activeTab === 'privacy'}
 					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Confidențialitate</h2>

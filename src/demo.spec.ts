@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
 describe('getTodayMedications response validation', () => {
-	/**
-	 * Mock response from /confirmations/today endpoint.
-	 * This validates the expected shape of medication data.
-	 */
 	const mockMedicationResponse = [
 		{
 			doseId: 1,
