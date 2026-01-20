@@ -2,8 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api/client';
 	import { authStore } from '$lib/stores/auth';
-	import { toastStore } from '$lib/stores/notifications';
 	import { treatmentSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
+	import { loadCollaborations as loadCollabs } from '$lib/utils/loaders';
 
 	let user = $derived($authStore.user);
 	let isMedic = $derived(user?.role === 'medic');
@@ -27,33 +27,18 @@
 
 	async function loadCollaborations() {
 		try {
-			const data = await api.getMyCollaborations();
-			// API already returns only accepted; normalize to use patientId/user_id
-			collaborations = data.map((c: any) => ({
-				...c,
-				patientId: c.patientId ?? c.user_id, // user_id is unified field from backend
-				patientName: c.pacientName ?? c.name
-			}));
+			collaborations = await loadCollabs();
 			loading = false;
 		} catch (err) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: 'Nu s-au putut încărca pacienții',
-				duration: 3000
-			});
+			console.error('Failed to load collaborations:', err);
+			alert('Nu s-au putut încărca pacienții');
 			loading = false;
 		}
 	}
 
 	async function handleSubmit() {
 		if (!formData.patientId || !formData.diagnostic.trim()) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: 'Completează câmpurile obligatorii',
-				duration: 3000
-			});
+			alert('Completează câmpurile obligatorii');
 			return;
 		}
 
@@ -64,12 +49,7 @@
 				dosage: 'N/A'
 			});
 			if (!parsed.success) {
-				toastStore.add({
-					type: 'error',
-					title: 'Validare',
-					message: parsed.errors.join('\n'),
-					duration: 4000
-				});
+				alert(parsed.errors.join('\n'));
 				return;
 			}
 
@@ -79,21 +59,12 @@
 				description: formData.descriere || undefined
 			});
 
-			toastStore.add({
-				type: 'success',
-				title: 'Succes',
-				message: 'Tratament creat cu succes',
-				duration: 2000
-			});
+			alert('Tratament creat cu succes');
 
 			goto(`/treatments/${result.planId}`);
 		} catch (err: any) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: err.message || 'Nu s-a putut crea tratamentul',
-				duration: 3000
-			});
+			console.error('Failed to create treatment:', err);
+			alert(err?.message || 'Nu s-a putut crea tratamentul');
 		}
 	}
 </script>

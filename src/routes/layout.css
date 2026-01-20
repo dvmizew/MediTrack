@@ -4,6 +4,28 @@
 /* Enable class-based dark mode */
 @variant dark (.dark &);
 
+/* ============================================
+   MEDICAL COLOR PALETTE - Psychology-Based
+   ============================================
+   
+   PRIMARY (Blue): #0369A1 (blue-700) - Trust, professionalism, calm
+   - Reduces patient anxiety (medical psychology studies)
+   - Associated with healthcare institutions
+   - Use for: CTAs, primary buttons, links
+   
+   SECONDARY (Green): #047857 (green-700) - Health, healing, balance
+   - Symbolizes health and wellbeing
+   - Calming effect
+   - Use for: success states, positive feedback, confirmations
+   
+   ACCENT (Purple): #7C3AED (purple-600) - Motivation, achievement
+   - Gamification elements (badges, XP, rewards)
+   - Premium feel
+   - Use for: gamification, highlights, special features
+   
+   All colors meet WCAG 2.1 AA contrast standards.
+   ============================================ */
+
 /* Set root background colors to prevent flash */
 html {
 	background-color: #ffffff;
@@ -15,6 +37,25 @@ html.dark {
 
 body {
 	background-color: transparent;
+	/* Improved font size for elderly users */
+	font-size: 16px;
+	line-height: 1.6;
+}
+
+/* Larger headings for better readability */
+h1 {
+	font-size: 2.5rem; /* increased from default */
+	line-height: 1.2;
+}
+
+h2 {
+	font-size: 2rem; /* increased from default */
+	line-height: 1.3;
+}
+
+h3 {
+	font-size: 1.75rem;
+	line-height: 1.3;
 }
 
 * {
@@ -54,6 +95,41 @@ button:disabled:hover, a:disabled:hover, [disabled]:hover {
 	transform: none !important;
 	box-shadow: none !important;
 	scale: 1 !important;
+}
+
+/* Enhanced minimum touch target size for elderly users (WCAG 2.1 AAA) */
+button:not(.icon-only), 
+a.button,
+[role="button"]:not(.icon-only),
+input[type="submit"],
+input[type="button"] {
+	min-height: 48px; /* Increased from standard 44px */
+	min-width: 48px;
+	padding: 0.75rem 1.5rem; /* Generous padding */
+}
+
+/* Larger form inputs for elderly users */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+	min-height: 48px;
+	font-size: 16px; /* Prevent zoom on mobile iOS */
+	padding: 0.75rem 1rem;
+}
+
+/* Generous spacing for better visual separation */
+.medication-item,
+.treatment-card,
+.patient-card,
+.card {
+	margin-bottom: 1.5rem; /* Increased from 1rem */
+	padding: 1.5rem; /* Increased from 1rem */
 }
 
 /* Custom animations for enhanced UX */

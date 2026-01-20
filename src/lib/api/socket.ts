@@ -1,9 +1,8 @@
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
-import { SOCKET_URL } from '../config';
-import { authStore } from '../stores/auth';
-import { notificationStore } from '../stores/notifications';
-import { notificationService } from '../services/notificationService';
+import { SOCKET_URL } from '../config.js';
+import { authStore } from '../stores/auth.js';
+import { notificationStore } from '../stores/notifications.js';
 import { get } from 'svelte/store';
 
 class SocketClient {
@@ -28,12 +27,12 @@ class SocketClient {
 		});
 
 		this.socket.on('connect', () => {
-			console.log('✓ Connected to socket server');
+			// Socket connected
 			this.reconnectAttempts = 0;
 		});
 
 		this.socket.on('disconnect', () => {
-			console.log('✗ Disconnected from socket server');
+			// Socket disconnected
 		});
 
 		this.socket.on('connect_error', (error) => {
@@ -42,7 +41,6 @@ class SocketClient {
 
 			if (this.reconnectAttempts >= this.maxReconnectAttempts) {
 				console.error('Max reconnection attempts reached');
-				notificationService.error('Eroare conexiune', 'Aplicația nu se poate reconecta', 0);
 				this.disconnect();
 			}
 		});
@@ -70,57 +68,6 @@ class SocketClient {
 				};
 
 				notificationStore.add(notification);
-
-				// Show toast notification with appropriate type
-				let toastType: 'success' | 'error' | 'warning' | 'info' = 'info';
-				let sound = false;
-				let duration = 4000;
-
-				switch (data.type) {
-					case 'alert':
-					case 'error':
-						toastType = 'error';
-						sound = true;
-						duration = 6000;
-						break;
-					case 'reminder':
-					case 'warning':
-						toastType = 'warning';
-						sound = true;
-						duration = 5000;
-						break;
-					case 'success':
-						toastType = 'success';
-						sound = true;
-						duration = 4000;
-						break;
-					case 'chat':
-					case 'message':
-						toastType = 'info';
-						sound = false;
-						duration = 3000;
-						break;
-				}
-
-				notificationService.showToast({
-					type: toastType,
-					title: notification.title,
-					message: notification.message,
-					duration: duration,
-					sound: sound,
-					vibrate: true
-				});
-
-				if (notificationService.getPermissionStatus() === 'granted' && data.type !== 'chat') {
-					notificationService.showPushNotification({
-						type: toastType,
-						title: notification.title,
-						message: notification.message,
-						url: data.url || '/dashboard',
-						tag: data.type,
-						sound: sound
-					});
-				}
 
 				// Dispatch custom event for component listeners
 				if (typeof window !== 'undefined') {
@@ -174,7 +121,6 @@ class SocketClient {
 		// Error handling for socket events
 		this.socket.on('error', (error) => {
 			console.error('Socket error:', error);
-			notificationService.error('Eroare server', 'A apărut o eroare în comunicarea cu serverul', 5000);
 		});
 	}
 

@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
+	import { loadCollaborations as loadCollabs } from '$lib/utils/loaders';
 
 	let collaborations = $state<any[]>([]);
 	let loading = $state(true);
@@ -32,7 +33,7 @@
 		try {
 			loading = true;
 			error = '';
-			const data = await api.getMyCollaborations();
+			const data = await loadCollabs();
 			collaborations = data;
 			
 			// Load status for each user

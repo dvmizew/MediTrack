@@ -68,7 +68,7 @@
 		},
 		{
 			title: 'Streak',
-			value: $authStore.user.currentStreak || 0,
+			value: $authStore.user?.currentStreak || 0,
 			sub: 'zile consecutive',
 			accent: 'text-green-600 dark:text-green-400'
 		}
@@ -110,7 +110,7 @@
 			label: 'Tratament Nou',
 			description: 'Crează un plan de tratament',
 			href: '/treatments/new',
-			bg: 'border-blue-400 dark:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10',
+			borderHover: 'border-blue-400 dark:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10',
 			iconBg: 'bg-blue-100 dark:bg-blue-900/30',
 			iconColor: 'text-blue-600 dark:text-blue-400',
 			iconPath: 'M12 4v16m8-8H4'
@@ -119,7 +119,7 @@
 			label: 'Vezi Invitații',
 			description: 'Gestionează colaborările',
 			href: '/collaborations',
-			bg: 'border-green-400 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/10',
+			borderHover: 'border-green-400 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/10',
 			iconBg: 'bg-green-100 dark:bg-green-900/30',
 			iconColor: 'text-green-600 dark:text-green-400',
 			iconPath: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
@@ -128,7 +128,7 @@
 			label: 'Mesaje',
 			description: 'Comunică cu pacienții',
 			href: '/chat',
-			bg: 'border-purple-400 dark:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/10',
+			borderHover: 'border-purple-400 dark:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/10',
 			iconBg: 'bg-purple-100 dark:bg-purple-900/30',
 			iconColor: 'text-purple-600 dark:text-purple-400',
 			iconPath: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z'
@@ -213,8 +213,8 @@
 						position: 'bottom',
 						labels: { 
 							boxWidth: 12, 
-							padding: 8, 
-							font: { size: 10, weight: '500' }, 
+							padding: 8,
+							font: { size: 10, weight: 500 },
 							color: textColor 
 						}
 					},
@@ -265,7 +265,7 @@
 					y: { 
 						beginAtZero: true, 
 						ticks: { 
-							font: { size: 11, weight: '500' }, 
+							font: { size: 11, weight: 500 },
 							color: textColor,
 							stepSize: Math.ceil(Math.max(thirty.scheduled, thirty.confirmed) / 5)
 						}, 
@@ -276,7 +276,7 @@
 					},
 					x: { 
 						ticks: { 
-							font: { size: 11, weight: '500' }, 
+							font: { size: 11, weight: 500 },
 							color: textColor 
 						}, 
 						grid: { display: false } 
@@ -692,7 +692,7 @@
 							position: 'bottom',
 							labels: { 
 								color: textColor,
-								font: { size: 11, weight: '500' }
+								font: { size: 11, weight: 500 }
 							}
 						},
 						title: {
@@ -740,7 +740,7 @@
 						legend: {
 							labels: { 
 								color: textColor,
-								font: { size: 11, weight: '500' }
+								font: { size: 11, weight: 500 }
 							}
 						},
 						tooltip: {
@@ -760,14 +760,14 @@
 							max: 100,
 							ticks: { 
 								color: textColor,
-								font: { size: 11, weight: '500' }
+								font: { size: 11, weight: 500 }
 							},
 							grid: { color: gridColor }
 						},
 						x: {
 							ticks: { 
 								color: textColor,
-								font: { size: 11, weight: '500' }
+								font: { size: 11, weight: 500 }
 							},
 							grid: { color: gridColor }
 						}
@@ -815,14 +815,14 @@
 							ticks: { 
 								stepSize: 1,
 								color: textColor,
-								font: { size: 11, weight: '500' }
+								font: { size: 11, weight: 500 }
 							},
 							grid: { color: gridColor }
 						},
 						x: {
 							ticks: { 
 								color: textColor,
-								font: { size: 11, weight: '500' }
+								font: { size: 11, weight: 500 }
 							},
 							grid: { display: false }
 						}
@@ -888,7 +888,7 @@
 	<!-- Medic Dashboard -->
 	<div class="space-y-4 md:space-y-6">
 		<!-- Welcome Card -->
-		<WelcomeCard name={$authStore.user.fullName} subtitle={`Ai grijă de ${medicStats.totalPatients} pacienți astăzi`} />
+		<WelcomeCard name={$authStore.user?.fullName || ''} subtitle={`Ai grijă de ${medicStats.totalPatients} pacienți astăzi`} />
 
 		<!-- Quick Stats -->
 		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
@@ -900,7 +900,7 @@
 		<!-- Quick Actions -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 			{#each medicActions as action}
-				<ActionButton href={action.href} label={action.label} description={action.description} iconPath={action.iconPath} iconBg={action.iconBg} iconColor={action.iconColor} borderHover={action.bg} />
+				<ActionButton href={action.href} label={action.label} description={action.description} iconPath={action.iconPath} iconBg={action.iconBg} iconColor={action.iconColor} borderHover={action.borderHover} />
 			{/each}
 		</div>
 
@@ -944,7 +944,7 @@
 							label="Gestionează Utilizatori"
 							description="Vizualizează, editează și monitorizează"
 							href="/admin/users"
-							bg="border-blue-400 dark:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10"
+							borderHover="border-blue-400 dark:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10"
 							iconBg="bg-blue-100 dark:bg-blue-900/30"
 							iconColor="text-blue-600 dark:text-blue-400"
 							iconPath="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
@@ -1106,7 +1106,7 @@
 	<!-- Patient Dashboard -->
 <div class="space-y-4 md:space-y-6">
 	<!-- Welcome Card (patient, same design) -->
-	<WelcomeCard name={$authStore.user.fullName} subtitle={`${$authStore.user.totalXp || 0} XP • Streak: ${$authStore.user.currentStreak || 0} zile`} />
+	<WelcomeCard name={$authStore.user?.fullName || ''} subtitle={`${$authStore.user?.totalXp || 0} XP • Streak: ${$authStore.user?.currentStreak || 0} zile`} />
 
 	<!-- Quick Stats -->
 	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">

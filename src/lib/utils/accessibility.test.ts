@@ -25,12 +25,12 @@ describe('Color Contrast (WCAG 2.1 AA)', () => {
 
 	it('should verify all color pairs meet WCAG AA', () => {
 		const results = validateColorContrast();
-		const failures = results.filter(r => r.status === 'fail');
+		const failures = results.filter((r: { status: string }) => r.status === 'fail');
 		
 		// Log any failures for debugging
 		if (failures.length > 0) {
 			console.log('Contrast failures:');
-			failures.forEach(f => {
+			failures.forEach((f: { context: string; ratio: number }) => {
 				console.log(`  - ${f.context}: ${f.ratio}:1 (needs 4.5:1)`);
 			});
 		}

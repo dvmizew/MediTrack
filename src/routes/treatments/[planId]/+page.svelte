@@ -4,11 +4,11 @@
 	import { goto } from '$app/navigation';
 	import { authStore, isMedic } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
-	import { toastStore } from '$lib/stores/notifications';
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 
-	let planId = $derived(parseInt($page.params.planId));
+	const planIdParam = $derived($page.params.planId ?? '0');
+	let planId = $derived(parseInt(planIdParam, 10));
 	let treatment = $state<any>(null);
 	let medications = $state<any[]>([]);
 	let loading = $state(true);
@@ -53,6 +53,10 @@
 	onMount(async () => {
 		if (!$authStore.isAuthenticated) {
 			goto('/');
+			return;
+		}
+		if (Number.isNaN(planId)) {
+			goto('/treatments');
 			return;
 		}
 		await loadTreatmentDetails();
@@ -102,20 +106,10 @@
 			deleteExpiresAt = response.expiresAt;
 			updateCountdown();
 			deleteCountdownTimer = setInterval(updateCountdown, 250);
-			toastStore.add({
-				type: 'warning',
-				title: 'Confirmă ștergerea',
-				message: 'Confirmă în 5 secunde pentru a șterge planul',
-				duration: 1500
-			});
+			alert('Confirmă în 5 secunde pentru a șterge planul');
 		} catch (err: any) {
 			resetDeleteState();
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: err.message || 'Nu s-a putut iniția ștergerea',
-				duration: 3000
-			});
+			alert('Nu s-a putut iniția ștergerea');
 		}
 	}
 
@@ -125,12 +119,7 @@
 		deleteCountdown = Math.max(0, Math.ceil(remainingMs / 1000));
 		if (remainingMs <= 0) {
 			resetDeleteState();
-			toastStore.add({
-				type: 'error',
-				title: 'Expirat',
-				message: 'Fereastra de confirmare a expirat',
-				duration: 2500
-			});
+			alert('Fereastra de confirmare a expirat');
 		}
 	}
 
@@ -138,21 +127,11 @@
 		if (!deleteConfirmToken) return;
 		try {
 			await api.deleteTreatment(planId, deleteConfirmToken);
-			toastStore.add({
-				type: 'success',
-				title: 'Șters',
-				message: 'Planul de tratament a fost șters',
-				duration: 2000
-			});
+			alert('Planul de tratament a fost șters');
 			resetDeleteState();
 			goto('/treatments');
 		} catch (err: any) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: err.message || 'Nu s-a putut șterge planul',
-				duration: 3000
-			});
+			alert('Nu s-a putut șterge planul');
 			resetDeleteState();
 		}
 	}
@@ -171,12 +150,7 @@
 				detaliiMedicament: newMedication.detaliiMedicament || newMedication.medicationName
 			});
 
-			toastStore.add({
-				type: 'success',
-				title: 'Succes',
-				message: 'Medicament adăugat cu succes',
-				duration: 2000
-			});
+			alert('Medicament adăugat cu succes');
 
 			showAddMedication = false;
 			newMedication = {
@@ -193,12 +167,7 @@
 			await loadTreatmentDetails();
 		} catch (err: any) {
 			console.error('Failed to add medication:', err);
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: 'Nu s-a putut adăuga medicamentul',
-				duration: 3000
-			});
+			alert('Nu s-a putut adăuga medicamentul');
 		}
 	}
 
@@ -245,22 +214,12 @@
 				detaliiMedicament: newMedication.detaliiMedicament || newMedication.medicationName
 			});
 
-			toastStore.add({
-				type: 'success',
-				title: 'Succes',
-				message: 'Medicament actualizat',
-				duration: 2000
-			});
+			alert('Medicament actualizat');
 			
 			cancelEdit();
 			await loadTreatmentDetails();
 		} catch (err) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: 'Eroare la actualizarea medicamentului',
-				duration: 3000
-			});
+			alert('Eroare la actualizarea medicamentului');
 		}
 	}
 
@@ -270,20 +229,10 @@
 
 		try {
 			await api.deleteMedication(doseId);
-			toastStore.add({
-				type: 'success',
-				title: 'Șters',
-				message: 'Medicament șters cu succes',
-				duration: 2000
-			});
+			alert('Medicament șters cu succes');
 			await loadTreatmentDetails();
 		} catch (err: any) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: err.message || 'Nu s-a putut șterge medicamentul',
-				duration: 3000
-			});
+			alert('Nu s-a putut șterge medicamentul');
 		}
 	}
 
@@ -306,22 +255,12 @@
 				description: treatmentForm.descriere
 			});
 
-			toastStore.add({
-				type: 'success',
-				title: 'Succes',
-				message: 'Tratament actualizat',
-				duration: 2000
-			});
+			alert('Tratament actualizat');
 
 			cancelTreatmentEdit();
 			await loadTreatmentDetails();
 		} catch (err) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: 'Eroare la actualizarea tratamentului',
-				duration: 3000
-			});
+			alert('Eroare la actualizarea tratamentului');
 		}
 	}
 </script>

@@ -88,7 +88,7 @@
 		
 		// Only add messages RECEIVED from the other user (not sent by me)
 		// Messages I send are shown immediately via optimistic UI
-		if (message.sender_id === otherUserId && message.receiver_id === $authStore.user?.userId) {
+		if (message.sender_id === otherUserId && message.receiver_id === $authStore.user?.id) {
 			// Check if message already exists (avoid duplicates)
 			const exists = messages.some(m => m.message_id === message.message_id);
 			if (!exists) {
@@ -133,7 +133,7 @@
 		if (!conversation || conversation.length === 0) return null;
 
 		const sample = conversation[conversation.length - 1];
-		const isSender = sample?.sender_id === $authStore.user?.userId;
+		const isSender = sample?.sender_id === $authStore.user?.id;
 		const assumedRole = $isMedic ? 'pacient' : 'medic';
 
 		return {
@@ -273,7 +273,7 @@
 		// Optimistic UI - add message immediately with temporary ID
 		const tempMessage = {
 			message_id: `temp-${Date.now()}`,
-			sender_id: $authStore.user?.userId,
+			sender_id: $authStore.user?.id,
 			receiver_id: otherUserId,
 			continut: messageText,
 			timestamp_mesaj: new Date().toISOString(),
@@ -363,7 +363,7 @@
 	}
 
 	function isMyMessage(message: any) {
-		return message.sender_id === $authStore.user?.userId;
+		return message.sender_id === $authStore.user?.id;
 	}
 
 	function viewTreatments() {

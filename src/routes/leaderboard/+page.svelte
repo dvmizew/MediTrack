@@ -2,7 +2,6 @@
 	import { onMount } from 'svelte';
 	import { authStore, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
-	import { notificationService } from '$lib/services/notificationService';
 
 	let loading = $state(true);
 	let leaderboard = $state<any[]>([]);
@@ -22,7 +21,6 @@
 			await loadLeaderboard();
 		} else {
 			console.warn('User not authenticated');
-			notificationService.error('Eroare', 'Trebuie să fii autentificat', 5000);
 		}
 		loading = false;
 	});
@@ -35,18 +33,16 @@
 			leaderboard = data;
 
 			// Find current user rank
-			if ($authStore.user && $isPacient) {
+			const user = $authStore.user;
+			if (user && $isPacient) {
 				currentUserPosition = leaderboard.findIndex(
-					(u) => u.userId === $authStore.user.id
+					(u) => u.userId === user.id || u.id === user.id
 				);
+			} else {
+				currentUserPosition = -1;
 			}
 		} catch (error) {
 			console.error('Failed to load leaderboard:', error);
-			notificationService.error(
-				'Eroare',
-				'Nu s-a putut încărca leaderboard-ul',
-				5000
-			);
 		} finally {
 			loading = false;
 			refreshing = false;

@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { authStore, isPacient, isMedic } from '$lib/stores/auth';
+	import { authStore, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
     import { mfaApi } from '$lib/api/client';
-	import { toastStore } from '$lib/stores/notifications';
-	import NotificationPermission from '$lib/components/NotificationPermission.svelte';
+	import { loadUserProfile } from '$lib/utils/loaders';
 
-	type TabType = 'general' | 'security' | 'stats' | 'notifications' | 'privacy';
+	type TabType = 'general' | 'security' | 'stats' | 'privacy';
 
 	let loading = $state(true);
 	let savingProfile = $state(false);
@@ -56,9 +55,7 @@
 			const res = await mfaApi.verifySetup(mfaSecret, mfaTotp);
 			mfaBackupCodes = res.backupCodes || [];
 			mfaStep = 'done';
-			// Optionally refresh profile so other parts of UI see changes
 			try { const updated = await api.getProfile(); /* keep local state in sync */ } catch {}
-			toastStore.add({ type: 'success', title: '2FA activat', message: 'Notează codurile de backup', duration: 4000 });
 		} catch (e: any) {
 			mfaError = e?.message || 'Cod invalid';
 		} finally {
@@ -72,7 +69,6 @@
 			await mfaApi.disable(password);
 			mfaStep = 'idle'; mfaQr = ''; mfaSecret=''; mfaTotp=''; mfaBackupCodes=[];
 			try { const updated = await api.getProfile(); /* keep local state in sync */ } catch {}
-			toastStore.add({ type: 'success', title: '2FA dezactivat', message: 'Ai dezactivat autentificarea în doi pași', duration: 3000 });
 		} catch (e: any) {
 			mfaError = e?.message || 'Nu s-a putut dezactiva 2FA';
 		} finally {
@@ -88,7 +84,6 @@
 			mfaBackupCodes = res.backupCodes || [];
 			showRegenerateModal = false;
 			regenerateTotp = '';
-			toastStore.add({ type: 'success', title: 'Coduri regenerate', message: 'Noile coduri de backup au fost generate', duration: 3000 });
 		} catch (e: any) {
 			mfaError = e?.message || 'Nu s-au putut regenera codurile';
 		} finally {
@@ -101,10 +96,9 @@
 		const text = mfaBackupCodes.join('\n');
 		navigator.clipboard.writeText(text).then(() => {
 			copiedCode = true;
-			toastStore.add({ type: 'success', title: 'Copiat!', message: 'Codurile de backup au fost copiate', duration: 2000 });
 			setTimeout(() => copiedCode = false, 2000);
 		}).catch(() => {
-			toastStore.add({ type: 'error', title: 'Eroare', message: 'Nu s-au putut copia codurile', duration: 2000 });
+			mfaError = 'Nu s-au putut copia codurile';
 		});
 	}
 
@@ -118,18 +112,10 @@
 		a.download = `meditrack-backup-codes-${Date.now()}.txt`;
 		a.click();
 		URL.revokeObjectURL(url);
-		toastStore.add({ type: 'success', title: 'Descărcat!', message: 'Codurile au fost salvate', duration: 2000 });
 	}
 	
-	// Notification preferences
-	let emailNotifications = $state(true);
-	let pushNotifications = $state(true);
-	let reminderNotifications = $state(true);
-	let treatmentUpdates = $state(true);
-	let savingNotifications = $state(false);
-	
 	// Privacy settings
-	let profileVisibility = $state<'public' | 'private'>('private');
+	let profileVisibility = $state<'private' | 'public'>('private');
 	let shareStatistics = $state(false);
 	let savingPrivacy = $state(false);
 	
@@ -145,67 +131,53 @@
 		activeTreatments: 0
 	});
 
+	type BadgeMeta = {
+		id: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
+		name: string;
+		xp: number;
+		gradient: string;
+	};
+
+	const BADGES: BadgeMeta[] = [
+		{ id: 'bronze', name: 'Bronz', xp: 0, gradient: 'from-orange-600 to-orange-800' },
+		{ id: 'silver', name: 'Argint', xp: 1000, gradient: 'from-gray-400 to-gray-600' },
+		{ id: 'gold', name: 'Aur', xp: 2000, gradient: 'from-yellow-400 to-yellow-600' },
+		{ id: 'platinum', name: 'Platină', xp: 3000, gradient: 'from-blue-400 to-blue-600' },
+		{ id: 'diamond', name: 'Diamant', xp: 4000, gradient: 'from-purple-500 to-purple-700' }
+	];
+
 	const tabs = [
 		{ id: 'general' as TabType, name: 'General', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
 		{ id: 'security' as TabType, name: 'Securitate', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
 		{ id: 'stats' as TabType, name: 'Statistici', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', show: $isPacient },
-		{ id: 'notifications' as TabType, name: 'Notificări', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' },
 		{ id: 'privacy' as TabType, name: 'Confidențialitate', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' }
 	];
 
 	onMount(async () => {
 		await loadProfile();
-		if ($isPacient) {
-			await loadStats();
-		}
 		loading = false;
 	});
 
 	async function loadProfile() {
 		try {
-			const user = await api.getProfile();
+			const profile = await loadUserProfile();
+			const user = profile.user;
 			fullName = user.fullName || '';
 			email = user.email || '';
 			avatarUrl = user.avatarUrl || '';
-			// Reflect MFA status in UI based on profile
+			profileVisibility = user.profileVisibility === 'public' ? 'public' : 'private';
+			shareStatistics = Boolean(user.shareStatistics);
 			mfaStep = user.mfaEnabled ? 'done' : 'idle';
+			if ($isPacient) {
+				stats = profile.stats;
+			}
 		} catch (error) {
 			console.error('Failed to load profile:', error);
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: 'Nu s-a putut încărca profilul',
-				duration: 3000
-			});
-		}
-	}
-
-	async function loadStats() {
-		try {
-			const user = await api.getProfile();
-			stats = {
-				totalXp: user.totalXp || 0,
-				currentStreak: user.currentStreak || 0,
-				longestStreak: user.longestStreak || 0,
-				currentBadge: user.currentBadge || 'bronze',
-				adherenceRate: 0,
-				totalMedications: 0,
-				completedTreatments: 0,
-				activeTreatments: 0
-			};
-		} catch (error) {
-			console.error('Failed to load stats:', error);
 		}
 	}
 
 	async function handleSaveProfile() {
 		if (!fullName.trim()) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: 'Numele este obligatoriu',
-				duration: 3000
-			});
 			return;
 		}
 
@@ -219,20 +191,8 @@
 			
 			const updatedUser = await api.getProfile();
 			authStore.updateUser(updatedUser);
-			
-			toastStore.add({
-				type: 'success',
-				title: 'Succes',
-				message: 'Profilul a fost actualizat',
-				duration: 3000
-			});
 		} catch (error: any) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: error.message || 'Nu s-a putut actualiza profilul',
-				duration: 3000
-			});
+			alert(error.message || 'Nu s-au putut salva modificările');
 		} finally {
 			savingProfile = false;
 		}
@@ -240,32 +200,17 @@
 
 	async function handleChangePassword() {
 		if (!currentPassword || !newPassword || !confirmPassword) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: 'Toate câmpurile sunt obligatorii',
-				duration: 3000
-			});
+			alert('Toate câmpurile sunt obligatorii');
 			return;
 		}
 
 		if (newPassword !== confirmPassword) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: 'Parolele nu coincid',
-				duration: 3000
-			});
+			alert('Parolele noi nu coincid');
 			return;
 		}
 
 		if (newPassword.length < 6) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: 'Parola trebuie să aibă minim 6 caractere',
-				duration: 3000
-			});
+			alert('Parola nouă trebuie să aibă cel puțin 6 caractere');
 			return;
 		}
 
@@ -279,88 +224,29 @@
 			currentPassword = '';
 			newPassword = '';
 			confirmPassword = '';
-			
-			toastStore.add({
-				type: 'success',
-				title: 'Succes',
-				message: 'Parola a fost schimbată',
-				duration: 3000
-			});
 		} catch (error: any) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: error.message || 'Nu s-a putut schimba parola',
-				duration: 3000
-			});
+			alert(error.message || 'Nu s-a putut schimba parola');
 		} finally {
 			savingPassword = false;
 		}
 	}
 
+	function getBadgeMeta(badge: string) {
+		return BADGES.find((b) => b.id === badge) || BADGES[0];
+	}
+
 	function getBadgeColor(badge: string) {
-		const colors: Record<string, string> = {
-			bronze: 'from-orange-600 to-orange-800',
-			silver: 'from-gray-400 to-gray-600',
-			gold: 'from-yellow-400 to-yellow-600',
-			platinum: 'from-blue-400 to-blue-600',
-			diamond: 'from-purple-500 to-purple-700'
-		};
-		return colors[badge] || colors.bronze;
+		return getBadgeMeta(badge).gradient;
 	}
 
 	function getBadgeName(badge: string) {
-		const names: Record<string, string> = {
-			bronze: 'Bronz',
-			silver: 'Argint',
-			gold: 'Aur',
-			platinum: 'Platină',
-			diamond: 'Diamant'
-		};
-		return names[badge] || 'Bronz';
-	}
-
-	async function handleSaveNotifications() {
-		savingNotifications = true;
-		try {
-			// API call would go here
-			await new Promise(resolve => setTimeout(resolve, 500));
-			toastStore.add({
-				type: 'success',
-				title: 'Succes',
-				message: 'Preferințele de notificare au fost actualizate',
-				duration: 3000
-			});
-		} catch (error: any) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: error.message || 'Nu s-au putut salva preferințele',
-				duration: 3000
-			});
-		} finally {
-			savingNotifications = false;
-		}
+		return getBadgeMeta(badge).name;
 	}
 
 	async function handleSavePrivacy() {
 		savingPrivacy = true;
 		try {
-			// API call would go here
-			await new Promise(resolve => setTimeout(resolve, 500));
-			toastStore.add({
-				type: 'success',
-				title: 'Succes',
-				message: 'Setările de confidențialitate au fost actualizate',
-				duration: 3000
-			});
-		} catch (error: any) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: error.message || 'Nu s-au putut salva setările',
-				duration: 3000
-			});
+			alert('Setările de confidențialitate vor fi disponibile în curând');
 		} finally {
 			savingPrivacy = false;
 		}
@@ -815,18 +701,18 @@
 						<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
 							<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Progresie badge-uri</h3>
 							<div class="space-y-4">
-								{#each ['bronze', 'silver', 'gold', 'platinum', 'diamond'] as badge, i}
+								{#each BADGES as badge}
 									<div class="flex items-center gap-4">
-										<div class="w-12 h-12 bg-gradient-to-br {getBadgeColor(badge)} rounded-full flex items-center justify-center flex-shrink-0">
+										<div class="w-12 h-12 bg-gradient-to-br {badge.gradient} rounded-full flex items-center justify-center flex-shrink-0">
 											<svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
 												<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
 											</svg>
 										</div>
 										<div class="flex-1">
-											<p class="font-medium text-gray-900 dark:text-gray-100">{getBadgeName(badge)}</p>
-											<p class="text-sm text-gray-600 dark:text-gray-400">{i * 1000} XP necesar</p>
+											<p class="font-medium text-gray-900 dark:text-gray-100">{badge.name}</p>
+											<p class="text-sm text-gray-600 dark:text-gray-400">{badge.xp} XP necesar</p>
 										</div>
-										{#if stats.currentBadge === badge}
+										{#if stats.currentBadge === badge.id}
 											<span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-full">Curent</span>
 										{/if}
 									</div>
@@ -835,111 +721,6 @@
 						</div>
 					</div>
 				{/if}
-
-				<!-- Notifications Tab -->
-				{#if activeTab === 'notifications'}
-				<div class="space-y-6">
-					<!-- Push Notifications Control -->
-					<NotificationPermission />
-
-					<!-- Notification Preferences -->
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-						<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Preferințe notificări</h2>
-						<form onsubmit={(e) => { e.preventDefault(); handleSaveNotifications(); }} class="space-y-6">
-							<div class="space-y-4">
-								<div class="flex items-start">
-									<div class="flex items-center h-5">
-										<input
-											type="checkbox"
-											id="emailNotifications"
-											bind:checked={emailNotifications}
-											class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
-										/>
-									</div>
-									<div class="ml-3">
-										<label for="emailNotifications" class="font-medium text-gray-900 dark:text-gray-100">
-											Notificări email
-										</label>
-										<p class="text-sm text-gray-600 dark:text-gray-400">Primește notificări importante pe email</p>
-									</div>
-								</div>
-
-								<div class="flex items-start">
-									<div class="flex items-center h-5">
-										<input
-											type="checkbox"
-											id="pushNotifications"
-											bind:checked={pushNotifications}
-											class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
-										/>
-									</div>
-									<div class="ml-3">
-										<label for="pushNotifications" class="font-medium text-gray-900 dark:text-gray-100">
-											Notificări push
-										</label>
-										<p class="text-sm text-gray-600 dark:text-gray-400">Notificări în browser când aplicația este deschisă</p>
-									</div>
-								</div>
-
-								<div class="flex items-start">
-									<div class="flex items-center h-5">
-										<input
-											type="checkbox"
-											id="reminderNotifications"
-											bind:checked={reminderNotifications}
-											class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
-										/>
-									</div>
-									<div class="ml-3">
-										<label for="reminderNotifications" class="font-medium text-gray-900 dark:text-gray-100">
-											Mementouri medicamente
-										</label>
-										<p class="text-sm text-gray-600 dark:text-gray-400">Primește reminder-uri pentru medicamente</p>
-									</div>
-								</div>
-
-								<div class="flex items-start">
-									<div class="flex items-center h-5">
-										<input
-											type="checkbox"
-											id="treatmentUpdates"
-											bind:checked={treatmentUpdates}
-											class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
-										/>
-									</div>
-									<div class="ml-3">
-										<label for="treatmentUpdates" class="font-medium text-gray-900 dark:text-gray-100">
-											Actualizări tratamente
-										</label>
-										<p class="text-sm text-gray-600 dark:text-gray-400">Notificări când medicul actualizează tratamentul</p>
-									</div>
-								</div>
-							</div>
-
-							<div class="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
-								<button
-									type="submit"
-									disabled={savingNotifications}
-									class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
-								>
-									{#if savingNotifications}
-										<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-											<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-											<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-										</svg>
-										Se salvează...
-									{:else}
-										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-										</svg>
-										Salvează preferințele
-									{/if}
-								</button>
-							</div>
-						</form>
-					</div>
-				</div>
-			{/if}
 
 				<!-- Privacy Tab -->
 				{#if activeTab === 'privacy'}

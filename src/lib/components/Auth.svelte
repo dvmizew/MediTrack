@@ -106,7 +106,7 @@
 	}
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 px-4 py-8 animate-fade-in relative">
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-green-50 to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 px-4 py-8 animate-fade-in relative">
 	<!-- Skip to main content link for keyboard users -->
 	<a href="#auth-form" class="skip-link">Sari la formular</a>
 
@@ -132,7 +132,7 @@
 	<div class="max-w-md w-full animate-slide-up">
 		<!-- Logo & Title -->
 		<div class="text-center mb-6 md:mb-8" role="banner">
-			<div class="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg mb-3 md:mb-4 hover:scale-110 hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300 animate-bounce-gentle" aria-hidden="true">
+			<div class="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-lg mb-3 md:mb-4 hover:scale-110 hover:shadow-xl hover:shadow-blue-600/50 transition-all duration-300 animate-bounce-gentle" aria-hidden="true">
 				<svg class="w-8 h-8 md:w-9 md:h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
 				</svg>
@@ -257,7 +257,7 @@
 				type="submit"
 				disabled={loading}
 				aria-busy={loading}
-				class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 hover:shadow-xl hover:shadow-blue-500/50 hover:scale-[1.02] focus:ring-4 focus:ring-blue-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg touch-manipulation active:scale-95"
+				class="w-full min-h-[48px] bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 hover:shadow-xl hover:shadow-blue-600/50 hover:scale-[1.02] focus:ring-4 focus:ring-blue-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg touch-manipulation active:scale-95"
 			>
 				{loading ? 'Se procesează...' : isRegister ? 'Creează cont' : 'Intră în cont'}
 			</button>

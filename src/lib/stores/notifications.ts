@@ -10,14 +10,6 @@ export interface Notification {
 	referenceId?: number;
 }
 
-export interface Toast {
-	id: number;
-	type: 'success' | 'error' | 'warning' | 'info';
-	title: string;
-	message: string;
-	duration?: number;
-}
-
 function createNotificationStore() {
 	const { subscribe, set, update } = writable<Notification[]>([]);
 
@@ -38,43 +30,4 @@ function createNotificationStore() {
 	};
 }
 
-function createToastStore() {
-	const { subscribe, update } = writable<Toast[]>([]);
-	let idCounter = 0;
-
-	return {
-		subscribe,
-		add: (toast: Omit<Toast, 'id'>) => {
-			const id = ++idCounter;
-			const newToast = { ...toast, id };
-			update((toasts) => [...toasts, newToast]);
-
-			const duration = toast.duration ?? 5000;
-			if (duration > 0) {
-				setTimeout(() => {
-					update((toasts) => toasts.filter((t) => t.id !== id));
-				}, duration);
-			}
-
-			return id;
-		},
-		remove: (id: number) => {
-			update((toasts) => toasts.filter((t) => t.id !== id));
-		},
-		success: (title: string, message: string, duration?: number) => {
-			return toastStore.add({ type: 'success', title, message, duration });
-		},
-		error: (title: string, message: string, duration?: number) => {
-			return toastStore.add({ type: 'error', title, message, duration });
-		},
-		warning: (title: string, message: string, duration?: number) => {
-			return toastStore.add({ type: 'warning', title, message, duration });
-		},
-		info: (title: string, message: string, duration?: number) => {
-			return toastStore.add({ type: 'info', title, message, duration });
-		}
-	};
-}
-
 export const notificationStore = createNotificationStore();
-export const toastStore = createToastStore();

@@ -3,7 +3,6 @@
 	import { goto } from '$app/navigation';
 	import { authStore, isMedic, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
-	import { toastStore } from '$lib/stores/notifications';
 
 	let collaborations = $state<any[]>([]);
 	let pendingInvites = $state<any[]>([]);
@@ -34,12 +33,7 @@
 	} catch (err: any) {
 		console.error('Failed to load data:', err);
 		error = err.message || 'Nu s-au putut încărca datele';
-			toastStore.add({ 
-				type: 'error', 
-				title: 'Eroare la încărcare', 
-				message: error, 
-				duration: 4000 
-			});
+		alert(error);
 		} finally {
 			loading = false;
 		}
@@ -53,24 +47,14 @@
 			error = '';
 			await api.sendInvite(medicEmail);
 			
-			toastStore.add({ 
-				type: 'success', 
-				title: '✉️ Invitație trimisă!', 
-				message: `Am trimis invitația către ${medicEmail}`, 
-				duration: 4000 
-			});
+			alert(`Am trimis invitația către ${medicEmail}`);
 			
 			medicEmail = '';
 			await loadData();
 		} catch (err: any) {
 			console.error('Failed to send invite:', err);
 			error = err.message || 'Nu s-a putut trimite invitația';
-			toastStore.add({ 
-				type: 'error', 
-				title: 'Eroare la trimitere', 
-				message: error, 
-				duration: 4000 
-			});
+			alert(error);
 		} finally {
 			sending = false;
 		}
@@ -83,31 +67,16 @@
 			await api.respondToInvite(inviteId, action);
 			
 			if (action === 'accept') {
-				toastStore.add({ 
-					type: 'success', 
-					title: '✅ Invitație acceptată!', 
-					message: 'Colaborarea a fost adăugată cu succes', 
-					duration: 4000 
-				});
-			} else {
-				toastStore.add({ 
-					type: 'info', 
-					title: '❌ Invitație refuzată', 
-					message: 'Invitația a fost respinsă', 
-					duration: 3000 
-				});
+			alert('Colaborarea a fost adăugată cu succes');
+		} else {
+			alert('Invitația a fost respinsă');
 			}
 			
 			await loadData();
 		} catch (err: any) {
 			console.error('Failed to respond to invite:', err);
 			error = err.message || 'Nu s-a putut răspunde la invitație';
-			toastStore.add({ 
-				type: 'error', 
-				title: 'Eroare la răspuns', 
-				message: error, 
-				duration: 4000 
-			});
+			alert(error);
 		} finally {
 			respondingToInvite = null;
 		}

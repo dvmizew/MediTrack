@@ -2,7 +2,6 @@ import { goto } from '$app/navigation';
 import { authStore } from '$lib/stores/auth';
 import { api } from '$lib/api/client';
 import { socketClient } from '$lib/api/socket';
-import { notificationService } from './notificationService';
 
 /**
  * Session Manager
@@ -43,11 +42,7 @@ function resetInactivityTimer(): void {
 	warningTimer = setTimeout(() => {
 		if (!warningShown) {
 			warningShown = true;
-			notificationService.warning(
-				'Sesiune inactivă',
-				'Veți fi deconectat în 2 minute din cauza inactivității',
-				10000
-			);
+			console.warn('Sesiune inactivă: deconectare în 2 minute');
 		}
 	}, INACTIVITY_TIMEOUT - WARNING_BEFORE_LOGOUT);
 
@@ -61,14 +56,6 @@ function resetInactivityTimer(): void {
  * Handle auto-logout due to inactivity
  */
 async function handleAutoLogout(): Promise<void> {
-	console.log('Auto-logout due to inactivity');
-	
-	notificationService.info(
-		'Sesiune expirată',
-		'Ați fost deconectat din cauza inactivității',
-		5000
-	);
-
 	// Clear all timers
 	stopSessionManager();
 
@@ -87,22 +74,15 @@ async function handleAutoLogout(): Promise<void> {
  */
 async function refreshAuthToken(): Promise<void> {
 	try {
-		console.log('Refreshing authentication token...');
 		const response = await api.refreshToken();
 		
 		if (response.token && response.user) {
 			// Update auth store with new token
 			authStore.login(response.token, response.user);
-			console.log('Token refreshed successfully');
 		}
 	} catch (error) {
 		console.error('Token refresh failed:', error);
 		// If refresh fails, logout user
-		notificationService.error(
-			'Sesiune expirată',
-			'Vă rugăm să vă autentificați din nou',
-			5000
-		);
 		stopSessionManager();
 		socketClient.disconnect();
 		authStore.logout();
@@ -115,8 +95,6 @@ async function refreshAuthToken(): Promise<void> {
  * Initializes inactivity detection and token refresh
  */
 export function startSessionManager(): void {
-	console.log('Starting session manager...');
-
 	// Reset timer on user activity
 	activityEvents.forEach((event) => {
 		window.addEventListener(event, resetInactivityTimer, true);
@@ -136,8 +114,6 @@ export function startSessionManager(): void {
  * Removes all event listeners and clears timers
  */
 export function stopSessionManager(): void {
-	console.log('Stopping session manager...');
-
 	// Remove event listeners
 	activityEvents.forEach((event) => {
 		window.removeEventListener(event, resetInactivityTimer, true);

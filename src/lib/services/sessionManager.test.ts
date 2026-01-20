@@ -8,7 +8,7 @@ import {
   logout, 
   getRemainingTime,
   isSessionManagerActive 
-} from './sessionManager';
+} from './sessionManager.js';
 
 // Mock dependencies
 vi.mock('$app/navigation', () => ({
@@ -33,14 +33,6 @@ vi.mock('$lib/api/socket', () => ({
   socketClient: {
     connect: vi.fn(),
     disconnect: vi.fn()
-  }
-}));
-
-vi.mock('./notificationService', () => ({
-  notificationService: {
-    info: vi.fn(),
-    warning: vi.fn(),
-    error: vi.fn()
   }
 }));
 
