@@ -54,23 +54,33 @@ export const startStreakCheckCron = () => {
             [patient.patient_id, yesterdayStr]
           );
 
-          // If NO confirmed doses, reset streak to 0
+          // If NO confirmed doses, reset streak to 0 AND apply XP penalty
           if (confirmedDoses.rows[0]?.count === 0) {
+            // Calculate XP penalty: 5 XP per day of streak lost
+            const xpPenalty = patient.current_streak * 5;
+            
             await query(
               `UPDATE patient_profiles 
-               SET current_streak = 0, updated_at = CURRENT_TIMESTAMP 
-               WHERE patient_id = $1`,
-              [patient.patient_id]
+               SET 
+                 current_streak = 0,
+                 nivel_xp = GREATEST(0, nivel_xp - $1),
+                 updated_at = CURRENT_TIMESTAMP 
+               WHERE patient_id = $2`,
+              [xpPenalty, patient.patient_id]
             );
 
             await query(
               `INSERT INTO notifications (user_id, tip, status_notif, title, message) 
-               VALUES ($1, 'alert', 'sent', 'Streak Pierdut', 'Seria ta de medicație a fost resetată. Începe din nou astăzi!')`,
-              [patient.patient_id]
+               VALUES ($1, 'alert', 'sent', 'Streak Pierdut', $2)`,
+              [patient.patient_id, `Ai pierdut seria de ${patient.current_streak} zile. -${xpPenalty} XP penalizare. Începe din nou astăzi!`]
             );
 
             resetCount++;
-            logger.info('Streak reset for patient', { patientId: patient.patient_id, previousStreak: patient.current_streak });
+            logger.info('Streak reset for patient with XP penalty', { 
+              patientId: patient.patient_id, 
+              previousStreak: patient.current_streak,
+              xpPenalty 
+            });
           }
         }
       }
