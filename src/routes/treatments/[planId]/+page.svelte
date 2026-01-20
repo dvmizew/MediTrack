@@ -6,6 +6,7 @@
 	import { api } from '$lib/api/client';
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+	import Modal from '$lib/components/Modal.svelte';
 
 	const planIdParam = $derived($page.params.planId ?? '0');
 	let planId = $derived(parseInt(planIdParam, 10));
@@ -16,15 +17,26 @@
 	let showAddMedication = $state(false);
 	let editingMedication = $state<any>(null);
 	let editingTreatment = $state(false);
+	
+	// Modal state
+	let modalState = $state({
+		isOpen: false,
+		title: '',
+		content: '',
+		type: 'info' as 'info' | 'warning' | 'error' | 'success',
+		showCancel: false,
+		confirmText: 'OK',
+		cancelText: 'Anulează',
+		onConfirm: undefined as (() => void | Promise<void>) | undefined,
+		onCancel: undefined as (() => void) | undefined
+	});
+
 	let treatmentForm = $state({
 		diagnostic: '',
 		descriere: ''
 	});
 
 	let deleteConfirmToken = $state<string | null>(null);
-	let deleteExpiresAt = $state<number | null>(null);
-	let deleteCountdown = $state<number>(0);
-	let deleteCountdownTimer: ReturnType<typeof setInterval> | null = null;
 
 	function formatDate(value: string | Date) {
 		if (!value) return '–';
@@ -36,6 +48,33 @@
 	function formatTime(value: string) {
 		if (!value) return '–';
 		return value.slice(0, 5);
+	}
+
+	function showModal(options: {
+		title: string;
+		content: string;
+		type?: 'info' | 'warning' | 'error' | 'success';
+		showCancel?: boolean;
+		confirmText?: string;
+		cancelText?: string;
+		onConfirm?: (() => void | Promise<void>) | undefined;
+		onCancel?: (() => void) | undefined;
+	}) {
+		modalState.isOpen = true;
+		modalState.title = options.title;
+		modalState.content = options.content;
+		modalState.type = options.type || 'info';
+		modalState.showCancel = options.showCancel || false;
+		modalState.confirmText = options.confirmText || 'OK';
+		modalState.cancelText = options.cancelText || 'Anulează';
+		modalState.onConfirm = options.onConfirm;
+		modalState.onCancel = options.onCancel;
+	}
+
+	function closeModal() {
+		modalState.isOpen = false;
+		modalState.onConfirm = undefined;
+		modalState.onCancel = undefined;
 	}
 
 	// Add medication form
@@ -62,9 +101,8 @@
 		await loadTreatmentDetails();
 	});
 
-	onDestroy(() => {
-		clearDeleteTimers();
-	});
+	// No special teardown needed
+	onDestroy(() => {});
 
 	async function loadTreatmentDetails() {
 		try {
@@ -85,41 +123,30 @@
 		}
 	}
 
-	function clearDeleteTimers() {
-		if (deleteCountdownTimer) {
-			clearInterval(deleteCountdownTimer);
-			deleteCountdownTimer = null;
-		}
-	}
-
 	function resetDeleteState() {
-		clearDeleteTimers();
 		deleteConfirmToken = null;
-		deleteExpiresAt = null;
-		deleteCountdown = 0;
 	}
 
 	async function startTreatmentDelete() {
 		try {
 			const response = await api.deleteTreatment(planId);
 			deleteConfirmToken = response.confirmToken;
-			deleteExpiresAt = response.expiresAt;
-			updateCountdown();
-			deleteCountdownTimer = setInterval(updateCountdown, 250);
-			alert('Confirmă în 5 secunde pentru a șterge planul');
+			showModal({
+				title: 'Confirmare ștergere',
+				content: 'Sigur vrei să ștergi planul de tratament? Acțiunea este permanentă.',
+				type: 'warning',
+				showCancel: true,
+				confirmText: 'Șterge',
+				cancelText: 'Anulează',
+				onConfirm: confirmTreatmentDelete
+			});
 		} catch (err: any) {
 			resetDeleteState();
-			alert('Nu s-a putut iniția ștergerea');
-		}
-	}
-
-	function updateCountdown() {
-		if (!deleteExpiresAt) return;
-		const remainingMs = deleteExpiresAt - Date.now();
-		deleteCountdown = Math.max(0, Math.ceil(remainingMs / 1000));
-		if (remainingMs <= 0) {
-			resetDeleteState();
-			alert('Fereastra de confirmare a expirat');
+			showModal({
+				title: 'Eroare',
+				content: 'Nu s-a putut iniția ștergerea',
+				type: 'error'
+			});
 		}
 	}
 
@@ -127,11 +154,20 @@
 		if (!deleteConfirmToken) return;
 		try {
 			await api.deleteTreatment(planId, deleteConfirmToken);
-			alert('Planul de tratament a fost șters');
 			resetDeleteState();
-			goto('/treatments');
+			closeModal();
+			showModal({
+				title: 'Succes',
+				content: 'Planul de tratament a fost șters cu succes.',
+				type: 'success',
+				onConfirm: () => goto('/treatments')
+			});
 		} catch (err: any) {
-			alert('Nu s-a putut șterge planul');
+			showModal({
+				title: 'Eroare',
+				content: 'Nu s-a putut șterge planul',
+				type: 'error'
+			});
 			resetDeleteState();
 		}
 	}
@@ -150,7 +186,11 @@
 				detaliiMedicament: newMedication.detaliiMedicament || newMedication.medicationName
 			});
 
-			alert('Medicament adăugat cu succes');
+			showModal({
+				title: 'Succes',
+				content: 'Medicament adăugat cu succes',
+				type: 'success'
+			});
 
 			showAddMedication = false;
 			newMedication = {
@@ -167,7 +207,11 @@
 			await loadTreatmentDetails();
 		} catch (err: any) {
 			console.error('Failed to add medication:', err);
-			alert('Nu s-a putut adăuga medicamentul');
+			showModal({
+				title: 'Eroare',
+				content: 'Nu s-a putut adăuga medicamentul',
+				type: 'error'
+			});
 		}
 	}
 
@@ -214,26 +258,51 @@
 				detaliiMedicament: newMedication.detaliiMedicament || newMedication.medicationName
 			});
 
-			alert('Medicament actualizat');
+			showModal({
+				title: 'Succes',
+				content: 'Medicament actualizat',
+				type: 'success'
+			});
 			
 			cancelEdit();
 			await loadTreatmentDetails();
 		} catch (err) {
-			alert('Eroare la actualizarea medicamentului');
+			showModal({
+				title: 'Eroare',
+				content: 'Eroare la actualizarea medicamentului',
+				type: 'error'
+			});
 		}
 	}
 
 	async function handleDeleteMedication(doseId: number) {
-		const confirmDelete = confirm('Ștergi acest medicament?');
-		if (!confirmDelete) return;
-
-		try {
-			await api.deleteMedication(doseId);
-			alert('Medicament șters cu succes');
-			await loadTreatmentDetails();
-		} catch (err: any) {
-			alert('Nu s-a putut șterge medicamentul');
-		}
+		showModal({
+			title: 'Confirmă ștergere',
+			content: 'Sigur vrei să ștergi acest medicament? Această acțiune nu poate fi anulată.',
+			type: 'warning',
+			showCancel: true,
+			confirmText: 'Șterge',
+			cancelText: 'Anulează',
+			onConfirm: async () => {
+				try {
+					await api.deleteMedication(doseId);
+					closeModal();
+					showModal({
+						title: 'Succes',
+						content: 'Medicament șters cu succes',
+						type: 'success'
+					});
+					await loadTreatmentDetails();
+				} catch (err: any) {
+					closeModal();
+					showModal({
+						title: 'Eroare',
+						content: 'Nu s-a putut șterge medicamentul',
+						type: 'error'
+					});
+				}
+			}
+		});
 	}
 
 	function startEditTreatment() {
@@ -255,12 +324,20 @@
 				description: treatmentForm.descriere
 			});
 
-			alert('Tratament actualizat');
+			showModal({
+				title: 'Succes',
+				content: 'Tratament actualizat',
+				type: 'success'
+			});
 
 			cancelTreatmentEdit();
 			await loadTreatmentDetails();
 		} catch (err) {
-			alert('Eroare la actualizarea tratamentului');
+			showModal({
+				title: 'Eroare',
+				content: 'Eroare la actualizarea tratamentului',
+				type: 'error'
+			});
 		}
 	}
 </script>
@@ -307,7 +384,7 @@
 											onclick={confirmTreatmentDelete}
 											class="px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition whitespace-nowrap"
 										>
-											Confirmă ștergerea ({deleteCountdown}s)
+											Confirmă ștergerea
 										</button>
 										<button
 											onclick={resetDeleteState}
@@ -563,3 +640,17 @@
 		{/if}
 	</main>
 {/if}
+
+	<!-- Modal pentru confirmări și mesaje -->
+	<Modal
+		isOpen={modalState.isOpen}
+		title={modalState.title}
+		content={modalState.content}
+		type={modalState.type}
+		showCancel={modalState.showCancel}
+		confirmText={modalState.confirmText}
+		cancelText={modalState.cancelText}
+		onConfirm={modalState.onConfirm}
+		onCancel={modalState.onCancel}
+		onClose={closeModal}
+	/>

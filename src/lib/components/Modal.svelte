@@ -1,24 +1,43 @@
 <script lang="ts">
 	import { scale } from 'svelte/transition';
-	interface Props {
+
+	export interface Props {
 		isOpen: boolean;
 		title?: string;
+		content?: string;
 		onClose: () => void;
 		closeOnBackdrop?: boolean;
 		closeOnEscape?: boolean;
 		size?: 'sm' | 'md' | 'lg';
+		type?: 'info' | 'warning' | 'error' | 'success';
+		showCancel?: boolean;
+		confirmText?: string;
+		cancelText?: string;
+		onConfirm?: () => void | Promise<void>;
+		onCancel?: () => void;
 		children?: any;
+		isLoading?: boolean;
 	}
 
 	let {
 		isOpen = false,
 		title,
+		content,
 		onClose,
 		closeOnBackdrop = true,
 		closeOnEscape = true,
 		size = 'md',
-		children
+		type = 'info',
+		showCancel = false,
+		confirmText = 'OK',
+		cancelText = 'Anulează',
+		onConfirm,
+		onCancel,
+		children,
+		isLoading = false
 	}: Props = $props();
+
+	let isProcessing = $state(false);
 
 	const sizeClasses = {
 		sm: 'max-w-sm',
@@ -26,16 +45,49 @@
 		lg: 'max-w-lg'
 	};
 
+	const typeClasses = {
+		info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
+		warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800',
+		error: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
+		success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+	};
+
+	const typeIcons = {
+		info: '🔵',
+		warning: '⚠️',
+		error: '❌',
+		success: '✓'
+	};
+
 	function handleBackdropClick() {
-		if (closeOnBackdrop) {
+		if (closeOnBackdrop && !isProcessing) {
 			onClose();
 		}
 	}
 
 	function handleKeyDown(e: KeyboardEvent) {
-		if (closeOnEscape && e.key === 'Escape') {
+		if (closeOnEscape && e.key === 'Escape' && !isProcessing) {
 			onClose();
 		}
+	}
+
+	async function handleConfirm() {
+		if (onConfirm) {
+			isProcessing = true;
+			try {
+				await onConfirm();
+			} finally {
+				isProcessing = false;
+			}
+		}
+		onClose();
+	}
+
+	function handleCancel() {
+		if (onCancel) {
+			onCancel();
+		}
+		onClose();
 	}
 </script>
 
@@ -56,14 +108,25 @@
 			aria-labelledby={title ? 'modal-title' : undefined}
 			tabindex="-1"
 		>
-			{#if title}
-				<div class="flex justify-between items-center mb-4">
-					<h2 id="modal-title" class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
-						{title}
-					</h2>
+			<!-- Header with type indicator -->
+			{#if title || type !== 'info'}
+				<div class="flex justify-between items-start mb-4">
+					<div class="flex items-start gap-3 flex-1">
+						{#if type !== 'info'}
+							<span class="text-2xl flex-shrink-0 pt-1" aria-hidden="true">
+								{typeIcons[type]}
+							</span>
+						{/if}
+						{#if title}
+							<h2 id="modal-title" class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+								{title}
+							</h2>
+						{/if}
+					</div>
 					<button
 						onclick={onClose}
-						class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+						disabled={isProcessing}
+						class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition disabled:opacity-50"
 						aria-label="Închide"
 						type="button"
 					>
@@ -74,7 +137,53 @@
 				</div>
 			{/if}
 
-			{@render children?.()}
+			<!-- Content -->
+			<div class="mb-6">
+				{#if content}
+					<p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+						{content}
+					</p>
+				{/if}
+				{#if children}
+					<div>
+						{@render children?.()}
+					</div>
+				{/if}
+			</div>
+
+			<!-- Footer with actions -->
+			{#if showCancel || onConfirm}
+				<div class="flex gap-3 justify-end">
+					{#if showCancel}
+						<button
+							type="button"
+							onclick={handleCancel}
+							disabled={isProcessing}
+							class="px-4 py-2 text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							{cancelText}
+						</button>
+					{/if}
+					{#if onConfirm}
+						<button
+							type="button"
+							onclick={handleConfirm}
+							disabled={isProcessing}
+							class="px-4 py-2 text-sm sm:text-base font-medium text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed
+								{type === 'error' || type === 'warning'
+									? 'bg-red-600 hover:bg-red-700'
+									: type === 'success'
+										? 'bg-green-600 hover:bg-green-700'
+										: 'bg-blue-600 hover:bg-blue-700'}"
+						>
+							{#if isProcessing}
+								<span class="inline-block animate-spin mr-2">⏳</span>
+							{/if}
+							{confirmText}
+						</button>
+					{/if}
+				</div>
+			{/if}
 		</div>
 	</div>
 {/if}
