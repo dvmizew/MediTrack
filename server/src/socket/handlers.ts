@@ -27,7 +27,7 @@ export const setupSocketHandlers = (io: Server) => {
 
   io.on('connection', async (socket: AuthSocket) => {
     const userId = socket.user!.userId;
-    console.log(`User ${userId} connected to socket`);
+    // Socket user connection handler
 
     socket.join(`user:${userId}`);
 
@@ -150,7 +150,7 @@ export const setupSocketHandlers = (io: Server) => {
     });
 
     socket.on('disconnect', async () => {
-      console.log(`User ${userId} disconnected`);
+      // Socket disconnection handler
       
       clearInterval(heartbeatInterval);
       

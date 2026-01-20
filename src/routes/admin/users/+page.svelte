@@ -3,7 +3,6 @@
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
-	import { toastStore } from '$lib/stores/notifications';
 
 	let user = $derived($authStore.user);
 	let isAdmin = $derived(user?.role === 'admin');
@@ -36,12 +35,8 @@
 			users = data;
 			applyFilters();
 		} catch (err) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: 'Nu s-au putut încărca utilizatorii',
-				duration: 3000
-			});
+			console.error('Nu s-au putut încărca utilizatorii', err);
+			alert('Nu s-au putut încărca utilizatorii');
 		} finally {
 			loading = false;
 		}
@@ -68,40 +63,22 @@
 	async function handleRoleChange(userId: number, newRole: string) {
 		try {
 			await api.updateUserRole(userId, newRole);
-			toastStore.add({
-				type: 'success',
-				title: 'Succes',
-				message: 'Rol actualizat',
-				duration: 2000
-			});
+			alert('Rol actualizat');
 			await loadUsers();
 		} catch (err) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: 'Nu s-a putut actualiza rolul',
-				duration: 3000
-			});
+			console.error('Nu s-a putut actualiza rolul', err);
+			alert('Nu s-a putut actualiza rolul');
 		}
 	}
 
 	async function toggleUserStatus(userId: number, currentStatus: boolean) {
 		try {
 			await api.toggleUserStatus(userId);
-			toastStore.add({
-				type: 'success',
-				title: 'Succes',
-				message: currentStatus ? 'Utilizator dezactivat' : 'Utilizator activat',
-				duration: 2000
-			});
+			alert(currentStatus ? 'Utilizator dezactivat' : 'Utilizator activat');
 			await loadUsers();
 		} catch (err) {
-			toastStore.add({
-				type: 'error',
-				title: 'Eroare',
-				message: 'Nu s-a putut schimba statusul',
-				duration: 3000
-			});
+			console.error('Nu s-a putut schimba statusul', err);
+			alert('Nu s-a putut schimba statusul');
 		}
 	}
 
@@ -265,10 +242,10 @@
 									<td class="px-6 py-4 text-right">
 										<div class="flex items-center justify-end gap-2">
 											<button
-												onclick={() => toggleUserStatus(u.userId, u.isActive)}
-												disabled={u.userId === user?.userId}
-												class="px-4 py-2 {u.isActive ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40' : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40'} text-sm font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap border {u.isActive ? 'border-red-200 dark:border-red-800' : 'border-green-200 dark:border-green-800'}"
-												title={u.userId === user?.userId ? 'Nu puteți modifica propriul account' : ''}
+												onclick={() => toggleUserStatus(u.id, u.isActive)}
+												disabled={u.id === user?.id}
+												class="px-4 py-2 {u.isActive ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40' : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hoverbg-green-900/40'} text-sm font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap border {u.isActive ? 'border-red-200 dark:border-red-800' : 'border-green-200 dark:border-green-800'}"
+												title={u.id === user?.id ? 'Nu puteți modifica propriul account' : ''}
 											>
 												{u.isActive ? '🚫 Dezactivează' : '✅ Activează'}
 											</button>
@@ -320,19 +297,19 @@
 							<!-- Actions -->
 							<div class="flex gap-2 pt-2">
 								<button
-									onclick={() => toggleUserStatus(u.userId, u.isActive)}
-									disabled={u.userId === user?.userId}
+									onclick={() => toggleUserStatus(u.id, u.isActive)}
+									disabled={u.id === user?.id}
 									class="flex-1 px-3 py-2.5 {u.isActive ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/40' : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/40'} text-sm font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-									title={u.userId === user?.userId ? 'Nu puteți modifica propriul account' : ''}
+									title={u.id === user?.id ? 'Nu puteți modifica propriul account' : ''}
 								>
 									{u.isActive ? '🚫 Dezactivează' : '✅ Activează'}
 								</button>
 								<select
 									value={u.role}
-									onchange={(e) => handleRoleChange(u.userId, e.currentTarget.value)}
-									disabled={u.userId === user?.userId}
+									onchange={(e) => handleRoleChange(u.id, e.currentTarget.value)}
+									disabled={u.id === user?.id}
 									class="px-3 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition"
-									title={u.userId === user?.userId ? 'Nu puteți modifica propriul rol' : ''}
+									title={u.id === user?.id ? 'Nu puteți modifica propriul rol' : ''}
 								>
 									<option value="admin">👑</option>
 									<option value="medic">👨‍⚕️</option>

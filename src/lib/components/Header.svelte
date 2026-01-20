@@ -5,7 +5,7 @@
 	import { page } from '$app/stores';
 	import { authStore, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
-	import { notificationStore, toastStore } from '$lib/stores/notifications';
+	import { notificationStore } from '$lib/stores/notifications';
 	import { themeStore } from '$lib/stores/theme';
 	import { logout as sessionLogout } from '$lib/services/sessionManager';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -81,19 +81,6 @@
 		notifications = [newNotification, ...notifications];
 		notificationStore.add(newNotification);
 		
-		// Show toast notification
-		let toastType: 'success' | 'info' | 'warning' | 'error' = 'info';
-		if (data.type === 'reminder') toastType = 'warning';
-		else if (data.type === 'alert') toastType = 'success';
-		else if (data.type === 'chat') toastType = 'info';
-		
-		toastStore.add({
-			type: toastType,
-			title: newNotification.title,
-			message: newNotification.message,
-			duration: 5000
-		});
-		
 		// Play notification sound if browser supports it
 		if (typeof Audio !== 'undefined') {
 			try {
@@ -126,10 +113,8 @@
 		try {
 			await api.markAllNotificationsRead();
 			notifications = notifications.map((n) => ({ ...n, isRead: true }));
-			toastStore.add({ type: 'success', title: 'Succes', message: 'Notificări marcate ca citite', duration: 2000 });
 		} catch (error) {
 			console.error('Failed to mark all notifications:', error);
-			toastStore.add({ type: 'error', title: 'Eroare', message: 'Nu s-au putut marca notificările', duration: 2000 });
 		}
 	}
 
@@ -149,7 +134,6 @@
 				console.error('Failed to auto mark all as read:', error);
 				// Revert if API fails
 				notifications = prev;
-				toastStore.add({ type: 'error', title: 'Eroare', message: 'Nu s-au putut marca notificările', duration: 2000 });
 			}
 		}
 	}
@@ -161,11 +145,9 @@
 			try {
 				await api.deleteAllNotifications();
 				notifications = [];
-				toastStore.add({ type: 'success', title: 'Șterse', message: 'Toate notificările au fost șterse', duration: 2000 });
 				isConfirmOpen = false;
 			} catch (error) {
 				console.error('Failed to clear notifications:', error);
-				toastStore.add({ type: 'error', title: 'Eroare', message: 'Nu s-au putut șterge notificările', duration: 2000 });
 				isConfirmOpen = false;
 			}
 		};
@@ -181,7 +163,6 @@
 			notifications = notifications.filter(n => n.id !== id);
 		} catch (error) {
 			console.error('Failed to delete notification:', error);
-			toastStore.add({ type: 'error', title: 'Eroare', message: 'Nu s-a putut șterge notificarea', duration: 2000 });
 		}
 	}
 

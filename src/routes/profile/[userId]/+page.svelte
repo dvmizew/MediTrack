@@ -29,7 +29,7 @@
 		try {
 			// Check if viewing own profile - compare as numbers
 			const currentUserId = $authStore.user?.id;
-			const profileUserId = parseInt(userId);
+			const profileUserId = parseInt(userId || '0');
 			
 			if (currentUserId === profileUserId) {
 				goto('/profile');
@@ -37,7 +37,7 @@
 			}
 
 			// Load other user's profile using API client
-			const userData = await api.getUserProfile(userId);
+			const userData = await api.getUserProfile(userId || '');
 			if (!userData) {
 				throw new Error('Nu s-a putut încărca profilul');
 			}

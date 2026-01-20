@@ -1,12 +1,25 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { authStore, isMedic, isPacient } from '$lib/stores/auth';
+	import { authStore, isMedic } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
+	import Modal from '$lib/components/Modal.svelte';
+	import { loadCollaborations as loadCollabs } from '$lib/utils/loaders';
+	import { treatmentSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
 
 	let treatments = $state<any[]>([]);
 	let loading = $state(true);
 	let error = $state('');
+	let showNewTreatmentModal = $state(false);
+	let isSubmitting = $state(false);
+	let collaborations = $state<any[]>([]);
+	let loadingCollabs = $state(false);
+
+	let formData = $state({
+		patientId: '',
+		diagnostic: '',
+		descriere: ''
+	});
 
 	onMount(async () => {
 		if (!$authStore.isAuthenticated) {
@@ -33,145 +46,273 @@
 	function viewDetails(treatmentId: number) {
 		goto(`/treatments/${treatmentId}`);
 	}
+
+	async function loadCollaborations() {
+		try {
+			loadingCollabs = true;
+			collaborations = await loadCollabs();
+		} catch (err) {
+			console.error('Failed to load collaborations:', err);
+		} finally {
+			loadingCollabs = false;
+		}
+	}
+
+	function openNewTreatmentModal() {
+		formData.patientId = '';
+		formData.diagnostic = '';
+		formData.descriere = '';
+		if (collaborations.length === 0) {
+			loadCollaborations();
+		}
+		showNewTreatmentModal = true;
+	}
+
+	function closeNewTreatmentModal() {
+		showNewTreatmentModal = false;
+	}
+
+	async function handleCreateTreatment() {
+		if (!formData.patientId || !formData.diagnostic.trim()) {
+			return;
+		}
+
+		try {
+			isSubmitting = true;
+			const parsed = parseWithFriendlyErrors(treatmentSchema, {
+				name: formData.diagnostic,
+				description: formData.descriere || undefined,
+				dosage: 'N/A'
+			});
+			if (!parsed.success) {
+				return;
+			}
+
+			const result = await api.createTreatment({
+				pacientId: parseInt(formData.patientId),
+				diagnosis: formData.diagnostic,
+				description: formData.descriere || undefined
+			});
+
+			closeNewTreatmentModal();
+			await loadTreatments();
+			goto(`/treatments/${result.planId}`);
+		} catch (err: any) {
+			console.error('Failed to create treatment:', err);
+		} finally {
+			isSubmitting = false;
+		}
+	}
 </script>
 
 {#if $authStore.isAuthenticated}
 	<main class="page-transition max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-			<div class="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-				<div>
-					<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">📋 Planuri de Tratament</h1>
-					<p class="text-gray-600 dark:text-gray-400">
+		<div class="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+			<div>
+				<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">📋 Planuri de Tratament</h1>
+				<p class="text-gray-600 dark:text-gray-400">
+					{#if $isMedic}
+						Gestionează planurile de tratament pentru pacienții tăi
+					{:else}
+						Vezi și gestionează planurile tale de tratament
+					{/if}
+				</p>
+			</div>
+			{#if $isMedic}
+				<button
+					onclick={openNewTreatmentModal}
+					class="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2 whitespace-nowrap flex-shrink-0"
+				>
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+					</svg>
+					Tratament Nou
+				</button>
+			{/if}
+		</div>
+
+		{#if loading}
+			<div class="flex justify-center py-20">
+				<div class="animate-spin rounded-full h-14 w-14 border-4 border-blue-600 border-t-transparent"></div>
+			</div>
+		{:else if error}
+			<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6 flex items-start gap-3 animate-shake">
+				<svg class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+				</svg>
+				<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
+			</div>
+		{:else if treatments.length === 0}
+			<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-16 text-center animate-scale-in">
+				<div class="max-w-sm mx-auto">
+					<svg
+						class="mx-auto h-20 w-20 text-gray-300 dark:text-gray-600 mb-4"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+						/>
+					</svg>
+					<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Niciun tratament încă</h3>
+					<p class="text-gray-500 dark:text-gray-400">
 						{#if $isMedic}
-							Gestionează planurile de tratament pentru pacienții tăi
+							Începe prin a crea un plan de tratament pentru unul dintre pacienții tăi
 						{:else}
-							Vezi și gestionează planurile tale de tratament
+							Medicul tău va crea planuri de tratament aici
 						{/if}
 					</p>
 				</div>
-				{#if $isMedic}
-					<button
-						onclick={() => goto('/treatments/new')}
-						class="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2 whitespace-nowrap flex-shrink-0"
-					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-						</svg>
-						Tratament Nou
-					</button>
-				{/if}
 			</div>
-
-			{#if loading}
-				<div class="flex justify-center py-20">
-					<div class="animate-spin rounded-full h-14 w-14 border-4 border-blue-600 border-t-transparent"></div>
-				</div>
-			{:else if error}
-				<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6 flex items-start gap-3 animate-shake">
-					<svg class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-					</svg>
-					<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
-				</div>
-			{:else if treatments.length === 0}
-				<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-16 text-center animate-scale-in">
-					<div class="max-w-sm mx-auto">
-						<svg
-							class="mx-auto h-20 w-20 text-gray-300 dark:text-gray-600 mb-4"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
+		{:else}
+			<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+				{#each treatments as treatment}
+				<button
+					type="button"
+					class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-2 border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition cursor-pointer group text-left w-full"
+					onclick={() => viewDetails(treatment.planId)}
+					aria-label="Vezi detalii pentru {treatment.diagnosis}"
+				>
+					<div class="flex justify-between items-start mb-4">
+						<h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+							{treatment.diagnosis}
+						</h3>
+						<span
+							class="px-3 py-1 text-xs font-semibold rounded-full shadow-sm"
+							class:bg-green-500={treatment.isActive}
+							class:text-white={treatment.isActive}
+							class:bg-gray-100={!treatment.isActive}
+							class:text-gray-600={!treatment.isActive}
 						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-							/>
-						</svg>
-						<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Niciun tratament încă</h3>
-						<p class="text-gray-500 dark:text-gray-400">
-							{#if $isMedic}
-								Începe prin a crea un plan de tratament pentru unul dintre pacienții tăi
-							{:else}
-								Medicul tău va crea planuri de tratament aici
-							{/if}
-						</p>
+							{treatment.isActive ? '✓ Activ' : '⏸ Inactiv'}
+						</span>
 					</div>
-				</div>
-			{:else}
-				<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-					{#each treatments as treatment}
-					<button
-						type="button"
-						class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-2 border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition cursor-pointer group text-left w-full"
-						onclick={() => viewDetails(treatment.planId)}
-						aria-label="Vezi detalii pentru {treatment.diagnosis}"
-						>
-							<div class="flex justify-between items-start mb-4">
-								<h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
-									{treatment.diagnosis}
-								</h3>
-								<span
-									class="px-3 py-1 text-xs font-semibold rounded-full shadow-sm"
-									class:bg-green-500={treatment.isActive}
-									class:text-white={treatment.isActive}
-									class:bg-gray-100={!treatment.isActive}
-									class:text-gray-600={!treatment.isActive}
-								>
-									{treatment.isActive ? '✓ Activ' : '⏸ Inactiv'}
-								</span>
+
+					{#if treatment.description}
+						<p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">{treatment.description}</p>
+					{/if}
+
+					<div class="space-y-2 text-sm mb-4">
+						{#if $isMedic}
+							<div class="flex items-center text-gray-600 dark:text-gray-400">
+								<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+									/>
+								</svg>
+								<span>{treatment.patientName}</span>
 							</div>
-
-							{#if treatment.description}
-								<p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">{treatment.description}</p>
-							{/if}
-
-						<div class="space-y-2 text-sm mb-4">
-							{#if $isMedic}
-								<div class="flex items-center text-gray-600 dark:text-gray-400">
-									<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-											/>
-										</svg>
-										<span>{treatment.patientName}</span>
-								</div>
-							{:else}
-								<div class="flex items-center text-gray-600 dark:text-gray-400">
-										<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-											/>
-										</svg>
-										<span>Dr. {treatment.doctorName}</span>
-								</div>
-							{/if}
-
-								<div class="flex items-center text-gray-500 dark:text-gray-400">
-									<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-										/>
-									</svg>
-								<span>{new Date(treatment.createdAt).toLocaleDateString('ro-RO')}</span>
-								</div>
+						{:else}
+							<div class="flex items-center text-gray-600 dark:text-gray-400">
+								<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+									/>
+								</svg>
+								<span>Dr. {treatment.doctorName}</span>
 							</div>
+						{/if}
 
-						<div class="flex items-center justify-end pt-3 border-t border-gray-100 dark:border-gray-700">
-							<span class="text-sm text-blue-600 dark:text-blue-400 font-medium group-hover:underline">Vezi detalii →</span>
+						<div class="flex items-center text-gray-500 dark:text-gray-400">
+							<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+								/>
+							</svg>
+							<span>{new Date(treatment.createdAt).toLocaleDateString('ro-RO')}</span>
 						</div>
-					</button>
-					{/each}
+					</div>
+
+					<div class="flex items-center justify-end pt-3 border-t border-gray-100 dark:border-gray-700">
+						<span class="text-sm text-blue-600 dark:text-blue-400 font-medium group-hover:underline">Vezi detalii →</span>
+					</div>
+				</button>
+				{/each}
 			</div>
 		{/if}
 	</main>
+
+	{#if showNewTreatmentModal}
+		<Modal
+			isOpen={showNewTreatmentModal}
+			title="📋 Tratament Nou"
+			size="md"
+			showCancel={true}
+			confirmText={isSubmitting ? 'Se salvează...' : 'Creează'}
+			cancelText="Anulează"
+			isLoading={isSubmitting}
+			onConfirm={handleCreateTreatment}
+			onCancel={closeNewTreatmentModal}
+			onClose={closeNewTreatmentModal}
+		>
+			<div class="space-y-4">
+				{#if loadingCollabs}
+					<div class="flex justify-center py-4">
+						<div class="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+					</div>
+				{:else}
+					<div>
+						<label for="patient" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+							Pacient *
+						</label>
+						<select
+							id="patient"
+							bind:value={formData.patientId}
+							required
+							class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 truncate"
+						>
+							<option value="">Selectează pacient</option>
+							{#each collaborations as collab}
+								{#if collab.patientId}
+									<option value={collab.patientId}>
+										{collab.patientName}
+									</option>
+								{/if}
+							{/each}
+						</select>
+					</div>
+
+					<div>
+						<label for="diagnostic" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+							Diagnostic *
+						</label>
+						<input
+							id="diagnostic"
+							type="text"
+							bind:value={formData.diagnostic}
+							required
+							placeholder="ex: Hipertensiune arterială"
+							class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
+						/>
+					</div>
+
+					<div>
+						<label for="descriere" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+							Descriere
+						</label>
+						<textarea
+							id="descriere"
+							bind:value={formData.descriere}
+							rows="3"
+							placeholder="Descrierea completă a tratamentului..."
+							class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 resize-none"
+						></textarea>
+					</div>
+				{/if}
+			</div>
+		</Modal>
+	{/if}
 {/if}

@@ -5,31 +5,18 @@
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import { socketClient } from '$lib/api/socket';
-	import { toastStore, type Toast } from '$lib/stores/notifications';
-	import { notificationService } from '$lib/services/notificationService';
 	import { themeStore } from '$lib/stores/theme';
 	import { startSessionManager, stopSessionManager } from '$lib/services/sessionManager';
-	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import KeyboardNav from '$lib/components/KeyboardNav.svelte';
-	import { registerServiceWorker, setupInstallPrompt, setupNetworkDetection } from '$lib/pwa';
-	import { initializePushNotifications } from '$lib/services/pushNotifications';
+	import { registerServiceWorker } from '$lib/pwa';
+	import CookieConsent from '$lib/components/CookieConsent.svelte';
 	import './layout.css';
 
 	let { children } = $props();
-	let toasts = $state<Toast[]>([]);
-
-	// Subscribe to toast store with proper cleanup
-	const unsubscribeToasts = toastStore.subscribe((value: Toast[]) => {
-		toasts = value;
-	});
 
 	const handleNetworkStatus = ((event: CustomEvent) => {
-		if (event.detail.online) {
-			// Silently handle online status
-		} else {
-			notificationService.error('Conectare pierdută', 'Funcții limitate offline', 5000);
-		}
+		// Just listen for network changes, no notifications
 	}) as EventListener;
 
 	// When tab becomes visible, optimistically refresh token to keep session alive
@@ -57,17 +44,6 @@
 		
 		// Initialize PWA features
 		registerServiceWorker();
-		setupInstallPrompt();
-		setupNetworkDetection();
-		
-		// Initialize push notifications (only on HTTPS or non-localhost)
-		try {
-			if (window.location.protocol === 'https:' || window.location.hostname !== 'localhost') {
-				await initializePushNotifications();
-			}
-		} catch (error) {
-			console.warn('Push notifications initialization failed:', error);
-		}
 		
 		// Listen for network status changes
 		window.addEventListener('network-status', handleNetworkStatus);
@@ -100,9 +76,6 @@
 	onDestroy(() => {
 		if (!browser) return;
 		
-		// Cleanup subscriptions
-		unsubscribeToasts();
-		
 		// Cleanup event listeners
 		window.removeEventListener('network-status', handleNetworkStatus);
 		document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -117,7 +90,6 @@
 	});
 </script>
 
-<ToastContainer bind:toasts />
 <KeyboardNav />
 
 {#if $authStore.isAuthenticated}
@@ -140,3 +112,6 @@
 		{@render children()}
 	</main>
 {/if}
+
+<!-- GDPR Cookie Consent (global) -->
+<CookieConsent />

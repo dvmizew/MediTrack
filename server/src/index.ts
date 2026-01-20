@@ -50,7 +50,6 @@ const getAllowedOrigins = () => {
 };
 
 const allowedOrigins = getAllowedOrigins();
-console.log('Allowed CORS origins:', allowedOrigins);
 
 const io = new Server(httpServer, {
   cors: {

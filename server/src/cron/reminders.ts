@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { query } from '../config/database.js';
 import { redis } from '../config/redis.js';
+import { logger } from '../config/logger.js';
 
 export const startReminderCron = () => {
   // Run every minute to check for medication reminders
@@ -88,5 +89,5 @@ export const startReminderCron = () => {
     }
   });
 
-  console.log('✓ Medication reminder cron started');
+  logger.info('Medication reminder cron started');
 };
