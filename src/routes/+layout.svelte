@@ -94,9 +94,6 @@
 
 {#if $authStore.isAuthenticated}
 	<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-		<!-- Skip to main content link -->
-		<a href="#main-content" class="skip-link">Sari la conținutul principal</a>
-		
 		<!-- Fixed Header visible everywhere -->
 		<div class="fixed top-0 left-0 right-0 z-50">
 			<Header />
