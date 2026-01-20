@@ -8,7 +8,7 @@ import {
   logout, 
   getRemainingTime,
   isSessionManagerActive 
-} from './sessionManager.js';
+} from '$lib/services/sessionManager.js';
 
 // Mock dependencies
 vi.mock('$app/navigation', () => ({

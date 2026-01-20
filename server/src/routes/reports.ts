@@ -5,8 +5,67 @@ import { logger } from '../config/logger.js';
 
 const router: Router = express.Router();
 
+// Store performance metrics
+const performanceMetrics: Array<{
+  endpoint: string;
+  duration: number;
+  timestamp: Date;
+  userId?: number;
+}> = [];
+
+function recordMetric(endpoint: string, duration: number, userId?: number) {
+  performanceMetrics.push({
+    endpoint,
+    duration,
+    timestamp: new Date(),
+    userId
+  });
+  
+  // Keep only last 1000 metrics
+  if (performanceMetrics.length > 1000) {
+    performanceMetrics.shift();
+  }
+}
+
+// Metrics endpoint for monitoring
+router.get('/metrics', authenticate, authorize('admin'), (req: Request, res: Response) => {
+  const summary = performanceMetrics.reduce((acc, metric) => {
+    if (!acc[metric.endpoint]) {
+      acc[metric.endpoint] = {
+        count: 0,
+        totalDuration: 0,
+        avgDuration: 0,
+        maxDuration: 0,
+        minDuration: Infinity
+      };
+    }
+    
+    const stats = acc[metric.endpoint];
+    stats.count++;
+    stats.totalDuration += metric.duration;
+    stats.maxDuration = Math.max(stats.maxDuration, metric.duration);
+    stats.minDuration = Math.min(stats.minDuration, metric.duration);
+    
+    return acc;
+  }, {} as Record<string, any>);
+  
+  // Calculate averages
+  Object.keys(summary).forEach(endpoint => {
+    const stats = summary[endpoint];
+    stats.avgDuration = Math.round(stats.totalDuration / stats.count);
+    stats.minDuration = stats.minDuration === Infinity ? 0 : stats.minDuration;
+  });
+  
+  res.json({
+    totalRequests: performanceMetrics.length,
+    summary,
+    recentRequests: performanceMetrics.slice(-50).reverse()
+  });
+});
+
 // Overview metrics for admin dashboard
 router.get('/overview', authenticate, authorize('admin'), async (req: Request, res: Response) => {
+  const startTime = Date.now();
   try {
     const [usersByRole, usersActive, collabCounts, treatmentCounts, doseCounts, adherence7, adherence30] = await Promise.all([
       query(`SELECT role, COUNT(*)::int as count FROM users GROUP BY role`),
@@ -77,6 +136,10 @@ router.get('/overview', authenticate, authorize('admin'), async (req: Request, r
         },
       },
     });
+    
+    const duration = Date.now() - startTime;
+    recordMetric('/admin/reports/overview', duration, (req as any).user?.userId);
+    logger.info('Admin overview report generated', { duration: `${duration}ms`, userId: (req as any).user?.userId });
   } catch (error) {
     logger.error('Admin reports overview error', { error });
     res.status(500).json({ error: 'Failed to fetch overview reports' });
@@ -85,6 +148,7 @@ router.get('/overview', authenticate, authorize('admin'), async (req: Request, r
 
 // Per-user adherence and activity
 router.get('/user/:userId', authenticate, authorize('admin'), async (req: Request, res: Response) => {
+  const startTime = Date.now();
   try {
     const { userId } = req.params;
     const [user, stats, treatments, confirmations] = await Promise.all([
@@ -102,6 +166,10 @@ router.get('/user/:userId', authenticate, authorize('admin'), async (req: Reques
       return res.status(404).json({ error: 'User not found' });
     }
 
+    const duration = Date.now() - startTime;
+    recordMetric('/admin/reports/user/:userId', duration, (req as any).user?.userId);
+    logger.info('User report generated', { duration: `${duration}ms`, targetUserId: userId, adminUserId: (req as any).user?.userId });
+
     res.json({
       user: user.rows[0],
       stats: stats.rows[0] || null,
@@ -116,6 +184,7 @@ router.get('/user/:userId', authenticate, authorize('admin'), async (req: Reques
 
 // Per-medic workload
 router.get('/medic/:userId', authenticate, authorize('admin'), async (req: Request, res: Response) => {
+  const startTime = Date.now();
   try {
     const { userId } = req.params;
     const [medic, patientsCount, plansCount, messagesCount, inviteAcceptance] = await Promise.all([
@@ -137,6 +206,10 @@ router.get('/medic/:userId', authenticate, authorize('admin'), async (req: Reque
     const inv = inviteAcceptance.rows[0];
     const totalResp = (inv.accepted + inv.rejected) || 0;
     const acceptanceRate = totalResp > 0 ? +(inv.accepted / totalResp).toFixed(2) : 0;
+
+    const duration = Date.now() - startTime;
+    recordMetric('/admin/reports/medic/:userId', duration, (req as any).user?.userId);
+    logger.info('Medic report generated', { duration: `${duration}ms`, medicId: userId, adminUserId: (req as any).user?.userId });
 
     res.json({
       medic: medic.rows[0],

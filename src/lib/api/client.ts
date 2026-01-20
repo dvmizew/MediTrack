@@ -231,6 +231,13 @@ export const api = {
 		request(`/leaderboard${timeFilter ? `?filter=${timeFilter}` : ''}`)
 };
 
+// Admin reports
+export const adminReportsApi = {
+	getOverview: () => request('/admin/reports/overview'),
+	getUserReport: (userId: number | string) => request(`/admin/reports/user/${userId}`),
+	getMedicReport: (userId: number | string) => request(`/admin/reports/medic/${userId}`)
+};
+
 // MFA API
 export const mfaApi = {
 	startSetup: () =>
