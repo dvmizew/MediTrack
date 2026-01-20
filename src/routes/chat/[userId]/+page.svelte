@@ -270,7 +270,6 @@
 		newMessage = '';
 		sending = true;
 
-		// Optimistic UI - add message immediately with temporary ID
 		const tempMessage = {
 			message_id: `temp-${Date.now()}`,
 			sender_id: $authStore.user?.id,

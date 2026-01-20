@@ -23,7 +23,6 @@
 		localStorage.setItem('cookieConsent', 'rejected');
 		localStorage.setItem('cookieConsentDate', new Date().toISOString());
 		showBanner = false;
-		// În producție, ar trebui să dezactivăm cookies ne-esențiale aici
 	}
 </script>
 

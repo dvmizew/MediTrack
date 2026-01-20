@@ -112,10 +112,6 @@
 		URL.revokeObjectURL(url);
 	}
 	
-	let profileVisibility = $state<'private' | 'public'>('private');
-	let shareStatistics = $state(false);
-	let savingPrivacy = $state(false);
-	
 	let stats = $state({
 		totalXp: 0,
 		currentStreak: 0,

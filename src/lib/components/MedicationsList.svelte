@@ -32,5 +32,3 @@
 		</div>
 	{/if}
 </div>
-
-<!-- Import at top-level script to avoid duplicate script blocks -->

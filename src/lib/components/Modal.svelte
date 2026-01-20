@@ -34,7 +34,6 @@
 		onConfirm,
 		onCancel,
 		children,
-		isLoading = false
 	}: Props = $props();
 
 	let isProcessing = $state(false);

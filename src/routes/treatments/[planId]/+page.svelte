@@ -101,7 +101,6 @@
 		await loadTreatmentDetails();
 	});
 
-	// No special teardown needed
 	onDestroy(() => {});
 
 	async function loadTreatmentDetails() {
@@ -641,16 +640,15 @@
 	</main>
 {/if}
 
-	<!-- Modal pentru confirmări și mesaje -->
-	<Modal
-		isOpen={modalState.isOpen}
-		title={modalState.title}
-		content={modalState.content}
-		type={modalState.type}
-		showCancel={modalState.showCancel}
-		confirmText={modalState.confirmText}
-		cancelText={modalState.cancelText}
-		onConfirm={modalState.onConfirm}
-		onCancel={modalState.onCancel}
-		onClose={closeModal}
-	/>
+<Modal
+	isOpen={modalState.isOpen}
+	title={modalState.title}
+	content={modalState.content}
+	type={modalState.type}
+	showCancel={modalState.showCancel}
+	confirmText={modalState.confirmText}
+	cancelText={modalState.cancelText}
+	onConfirm={modalState.onConfirm}
+	onCancel={modalState.onCancel}
+	onClose={closeModal}
+/>
