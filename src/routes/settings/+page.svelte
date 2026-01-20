@@ -6,7 +6,7 @@
 	import { loadUserProfile } from '$lib/utils/loaders';
 	import { BADGES, getBadgeMeta } from '$lib/constants/badges';
 
-	type TabType = 'general' | 'security' | 'stats' | 'privacy';
+	type TabType = 'general' | 'security' | 'stats';
 
 	let loading = $state(true);
 	let savingProfile = $state(false);
@@ -130,8 +130,7 @@
 	const tabs = [
 		{ id: 'general' as TabType, name: 'General', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
 		{ id: 'security' as TabType, name: 'Securitate', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
-		{ id: 'stats' as TabType, name: 'Statistici', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', show: $isPacient },
-		{ id: 'privacy' as TabType, name: 'Confidențialitate', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' }
+		{ id: 'stats' as TabType, name: 'Statistici', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', show: $isPacient }
 	];
 
 	onMount(async () => {
@@ -146,8 +145,7 @@
 			fullName = user.fullName || '';
 			email = user.email || '';
 			avatarUrl = user.avatarUrl || '';
-			profileVisibility = user.profileVisibility === 'public' ? 'public' : 'private';
-			shareStatistics = Boolean(user.shareStatistics);
+
 			mfaStep = user.mfaEnabled ? 'done' : 'idle';
 			if ($isPacient) {
 				stats = profile.stats;
@@ -218,15 +216,6 @@
 
 	function getBadgeName(badge: string) {
 		return getBadgeMeta(badge).name;
-	}
-
-	async function handleSavePrivacy() {
-		savingPrivacy = true;
-		try {
-			alert('Setările de confidențialitate vor fi disponibile în curând');
-		} finally {
-			savingPrivacy = false;
-		}
 	}
 </script>
 
@@ -685,89 +674,6 @@
 								{/each}
 							</div>
 						</div>
-					</div>
-				{/if}
-
-				{#if activeTab === 'privacy'}
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-						<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Confidențialitate</h2>
-						<form onsubmit={(e) => { e.preventDefault(); handleSavePrivacy(); }} class="space-y-6">
-							<div>
-								<p class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-									Vizibilitate profil
-								</p>
-								<div class="space-y-3">
-									<div class="flex items-center">
-										<input
-											type="radio"
-											id="profilePrivate"
-											name="profileVisibility"
-											value="private"
-											bind:group={profileVisibility}
-											class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 focus:ring-blue-500"
-										/>
-										<label for="profilePrivate" class="ml-3">
-											<span class="font-medium text-gray-900 dark:text-gray-100">Privat</span>
-											<p class="text-sm text-gray-600 dark:text-gray-400">Doar medicii cu care colaborezi pot vedea profilul</p>
-										</label>
-									</div>
-									<div class="flex items-center">
-										<input
-											type="radio"
-											id="profilePublic"
-											name="profileVisibility"
-											value="public"
-											bind:group={profileVisibility}
-											class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 focus:ring-blue-500"
-										/>
-										<label for="profilePublic" class="ml-3">
-											<span class="font-medium text-gray-900 dark:text-gray-100">Public</span>
-											<p class="text-sm text-gray-600 dark:text-gray-400">Profilul poate fi vizualizat de toți utilizatorii</p>
-										</label>
-									</div>
-								</div>
-							</div>
-
-							<div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-								<div class="flex items-start">
-									<div class="flex items-center h-5">
-										<input
-											type="checkbox"
-											id="shareStatistics"
-											bind:checked={shareStatistics}
-											class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
-										/>
-									</div>
-									<div class="ml-3">
-										<label for="shareStatistics" class="font-medium text-gray-900 dark:text-gray-100">
-											Partajează statisticile
-										</label>
-										<p class="text-sm text-gray-600 dark:text-gray-400">Permite medicilor să vadă statisticile tale de conformitate</p>
-									</div>
-								</div>
-							</div>
-
-							<div class="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
-								<button
-									type="submit"
-									disabled={savingPrivacy}
-									class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
-								>
-									{#if savingPrivacy}
-										<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-											<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-											<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-										</svg>
-										Se salvează...
-									{:else}
-										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-										</svg>
-										Salvează setările
-									{/if}
-								</button>
-							</div>
-						</form>
 					</div>
 				{/if}
 			</div>

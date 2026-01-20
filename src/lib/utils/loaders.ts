@@ -12,8 +12,8 @@ export async function loadUserProfile() {
 			currentBadge: profile.currentBadge || profile.current_badge || 'bronze',
 			adherenceRate: profile.adherenceRate || profile.adherence_rate || 0,
 			totalMedications: profile.totalMedications || profile.total_medications || 0,
-			completedTreatments: 0,
-			activeTreatments: 0
+			completedTreatments: profile.completedTreatments || profile.completed_treatments || 0,
+			activeTreatments: profile.activeTreatments || profile.active_treatments || 0
 		}
 	};
 }
