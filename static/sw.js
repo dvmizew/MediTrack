@@ -1,6 +1,7 @@
-const CACHE_NAME = 'meditrack-v2';
-const STATIC_CACHE = 'meditrack-static-v2';
-const API_CACHE = 'meditrack-api-v2';
+const CACHE_NAME = 'meditrack-v3';
+const STATIC_CACHE = 'meditrack-static-v3';
+const MAX_CACHE_SIZE = 52428800; // 50MB limit for static cache
+const CACHE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
 
 const STATIC_ASSETS = [
 	'/',
@@ -22,16 +23,36 @@ self.addEventListener('install', (event) => {
 	);
 });
 
-// Activate event - cleanup old caches
+// Activate event - cleanup old caches and remove expired entries
 self.addEventListener('activate', (event) => {
 	event.waitUntil(
 		caches.keys()
 			.then((cacheNames) => {
 				return Promise.all(
 					cacheNames.map((cacheName) => {
-						if (cacheName !== STATIC_CACHE && cacheName !== API_CACHE) {
+						// Delete old versioned caches
+						if (cacheName !== STATIC_CACHE) {
 							return caches.delete(cacheName);
 						}
+						// Clean expired entries from static cache
+						return caches.open(STATIC_CACHE).then((cache) => {
+							return cache.keys().then((requests) => {
+								return Promise.all(
+									requests.map((request) => {
+										return cache.match(request).then((response) => {
+											if (!response) return;
+											const dateStr = response.headers.get('date');
+											if (dateStr) {
+												const date = new Date(dateStr).getTime();
+												if (Date.now() - date > CACHE_MAX_AGE) {
+													return cache.delete(request);
+												}
+											}
+										});
+									})
+								);
+							});
+						});
 					})
 				);
 			})
@@ -62,34 +83,16 @@ self.addEventListener('fetch', (event) => {
 		return;
 	}
 
-	// API requests - Network first, fallback to cache
+	// API requests - Never cache, always network
+	// For medical data, we must always fetch fresh from server
 	if (url.pathname.startsWith('/api/')) {
 		event.respondWith(
 			fetch(request)
-				.then((response) => {
-					// Clone response before caching
-					const responseToCache = response.clone();
-					
-					// Only cache successful responses
-					if (response.status === 200) {
-						caches.open(API_CACHE).then((cache) => {
-							cache.put(request, responseToCache);
-						});
-					}
-					
-					return response;
-				})
 				.catch(() => {
-					// If network fails, try cache
-					return caches.match(request).then((response) => {
-						if (response) {
-							return response;
-						}
-						// If no cache, return offline page for navigation requests
-						if (request.mode === 'navigate') {
-							return caches.match('/offline.html');
-						}
-						return new Response('Offline', { status: 503 });
+					// If offline, return 503 Service Unavailable
+					return new Response(JSON.stringify({ error: 'Offline - API unavailable' }), {
+						status: 503,
+						headers: { 'Content-Type': 'application/json' }
 					});
 				})
 		);
@@ -151,3 +154,67 @@ async function syncConfirmations() {
 	// Retrieve pending confirmations from IndexedDB and sync with server
 	// Implementation would use IndexedDB to store pending actions
 }
+
+// Push notification event handler
+self.addEventListener('push', (event) => {
+	if (!event.data) {
+		return;
+	}
+
+	try {
+		const data = event.data.json();
+		const options = {
+			body: data.body || 'Ai o notificare nouă',
+			icon: data.icon || '/icon-192.png',
+			badge: data.badge || '/icon-192.png',
+			vibrate: [200, 100, 200],
+			data: {
+				url: data.data?.url || '/dashboard',
+				timestamp: data.data?.timestamp || Date.now()
+			},
+			actions: [
+				{
+					action: 'open',
+					title: 'Deschide'
+				},
+				{
+					action: 'close',
+					title: 'Închide'
+				}
+			]
+		};
+
+		event.waitUntil(
+			self.registration.showNotification(data.title || 'MediTrack', options)
+		);
+	} catch (error) {
+		console.error('Push notification error:', error);
+	}
+});
+
+// Notification click handler
+self.addEventListener('notificationclick', (event) => {
+	event.notification.close();
+
+	if (event.action === 'close') {
+		return;
+	}
+
+	const urlToOpen = event.notification.data?.url || '/dashboard';
+
+	event.waitUntil(
+		clients.matchAll({ type: 'window', includeUncontrolled: true })
+			.then((clientList) => {
+				// Check if there's already a window open
+				for (const client of clientList) {
+					if (client.url.includes(urlToOpen) && 'focus' in client) {
+						return client.focus();
+					}
+				}
+				// If no window is open, open a new one
+				if (clients.openWindow) {
+					return clients.openWindow(urlToOpen);
+				}
+			})
+	);
+});

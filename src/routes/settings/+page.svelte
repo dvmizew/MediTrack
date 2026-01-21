@@ -1,15 +1,20 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { authStore, isPacient } from '$lib/stores/auth';
-	import { api } from '$lib/api/client';
-	import { mfaApi } from '$lib/api/client';
+	import { api, mfaApi } from '$lib/api/client';
 	import { loadUserProfile } from '$lib/utils/loaders';
 	import { BADGES, getBadgeMeta } from '$lib/constants/badges';
 	import { toast } from '$lib/utils/toast';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import {
+		subscribeToPush,
+		unsubscribeFromPush,
+		isPushSubscribed,
+		getNotificationPermission,
+		sendTestPushNotification
+	} from '$lib/utils/pushNotifications';
 	import Modal from '$lib/components/Modal.svelte';
 
-	type TabType = 'general' | 'security' | 'stats';
+	type TabType = 'general' | 'security' | 'notifications' | 'stats';
 
 	let loading = $state(true);
 	let savingProfile = $state(false);
@@ -39,6 +44,12 @@
 	let copiedCode = $state(false);
 	let showRegenerateModal = $state(false);
 	let regenerateTotp = $state('');
+
+	// Push notifications state
+	let pushSubscribed = $state(false);
+	let pushLoading = $state(false);
+	let pushPermission = $state<NotificationPermission>('default');
+	let testingPush = $state(false);
 
 	async function startMfaSetup() {
 		try {
@@ -170,13 +181,35 @@
 	const tabs = [
 		{ id: 'general' as TabType, name: 'General', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
 		{ id: 'security' as TabType, name: 'Securitate', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
+		{ id: 'notifications' as TabType, name: 'Notificări', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' },
 		{ id: 'stats' as TabType, name: 'Statistici', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', show: $isPacient }
 	];
 
 	onMount(async () => {
-		await loadProfile();
-		loading = false;
+		try {
+			if (!$authStore.token) {
+				window.location.href = '/';
+				return;
+			}
+			await loadProfile();
+			await checkPushStatus();
+		} catch (error) {
+			console.error('Settings initialization error:', error);
+		} finally {
+			loading = false;
+		}
 	});
+
+	async function checkPushStatus() {
+		try {
+			pushPermission = getNotificationPermission();
+			pushSubscribed = await isPushSubscribed();
+		} catch (error) {
+			console.error('Failed to check push status:', error);
+			pushPermission = 'default';
+			pushSubscribed = false;
+		}
+	}
 
 	async function loadProfile() {
 		try {
@@ -192,6 +225,9 @@
 			}
 		} catch (error) {
 			console.error('Failed to load profile:', error);
+			fullName = $authStore.user?.fullName || 'User';
+			email = $authStore.user?.email || '';
+			avatarUrl = '';
 		}
 	}
 
@@ -264,6 +300,52 @@
 	function getBadgeName(badge: string) {
 		return getBadgeMeta(badge).name;
 	}
+
+	async function handleTogglePushNotifications() {
+		if (pushLoading) return;
+
+		try {
+			pushLoading = true;
+
+			if (pushSubscribed) {
+				// Unsubscribe
+				await unsubscribeFromPush();
+				pushSubscribed = false;
+				toast.success('Notificările push au fost dezactivate');
+			} else {
+				// Subscribe
+				await subscribeToPush();
+				pushSubscribed = true;
+				pushPermission = getNotificationPermission();
+				toast.success('Notificările push au fost activate!');
+			}
+		} catch (error: any) {
+			console.error('Toggle push error:', error);
+			toast.error(error.message || 'Eroare la configurarea notificărilor');
+		} finally {
+			pushLoading = false;
+		}
+	}
+
+	async function handleTestPushNotification() {
+		if (testingPush) return;
+
+		try {
+			testingPush = true;
+			const result = await sendTestPushNotification();
+			
+			if (result.success && result.sent > 0) {
+				toast.success(`Notificare trimisă! (${result.sent}/${result.total})`);
+			} else {
+				toast.warning('Nu s-au putut trimite notificări. Verifică dacă ești abonat.');
+			}
+		} catch (error: any) {
+			console.error('Test push error:', error);
+			toast.error(error.message || 'Eroare la trimiterea notificării de test');
+		} finally {
+			testingPush = false;
+		}
+	}
 </script>
 
 <main class="page-transition max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -278,7 +360,7 @@
 					{#if avatarUrl}
 						<img src={avatarUrl} alt={fullName} class="w-full h-full rounded-full object-cover" />
 					{:else}
-						<span class="text-white text-3xl font-bold">{fullName.charAt(0).toUpperCase()}</span>
+						<span class="text-white text-3xl font-bold">{fullName ? fullName.charAt(0).toUpperCase() : 'U'}</span>
 					{/if}
 				</div>
 				<div>
@@ -662,6 +744,131 @@
 								</div>
 							</div>
 						{/if}
+					</div>
+				{/if}
+
+				{#if activeTab === 'notifications'}
+					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+						<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Setări notificări</h2>
+
+						<!-- Push Notifications Section -->
+						<div class="space-y-6">
+							<div class="flex items-center gap-3 mb-4">
+								<div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center flex-shrink-0">
+									<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+									</svg>
+								</div>
+								<div>
+									<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Notificări Push</h3>
+									<p class="text-sm text-gray-500 dark:text-gray-400">Primește notificări pentru medicamente și mesaje</p>
+								</div>
+							</div>
+
+							<!-- Permission Status -->
+							<div class="p-4 rounded-lg border {pushPermission === 'granted' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : pushPermission === 'denied' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'}">
+								<div class="flex items-start gap-3">
+									{#if pushPermission === 'granted'}
+										<svg class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+										</svg>
+										<div>
+											<p class="font-medium text-green-900 dark:text-green-100">Permisiuni acordate</p>
+											<p class="text-sm text-green-700 dark:text-green-300 mt-1">Browser-ul tău poate trimite notificări push</p>
+										</div>
+									{:else if pushPermission === 'denied'}
+										<svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+										</svg>
+										<div>
+											<p class="font-medium text-red-900 dark:text-red-100">Permisiuni refuzate</p>
+											<p class="text-sm text-red-700 dark:text-red-300 mt-1">Activează notificările în setările browser-ului</p>
+										</div>
+									{:else}
+										<svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+										</svg>
+										<div>
+											<p class="font-medium text-blue-900 dark:text-blue-100">Permisiuni necesare</p>
+											<p class="text-sm text-blue-700 dark:text-blue-300 mt-1">Activează notificările pentru a primi alerte</p>
+										</div>
+									{/if}
+								</div>
+							</div>
+
+							<!-- Subscription Toggle -->
+							<div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+								<div class="flex-1">
+									<h4 class="font-medium text-gray-900 dark:text-gray-100">Notificări Push Active</h4>
+									<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+										{#if pushSubscribed}
+											Vei primi notificări pentru medicamente și mesaje
+										{:else}
+											Activează pentru a primi notificări în timp real
+										{/if}
+									</p>
+								</div>
+								<button
+									onclick={handleTogglePushNotifications}
+									disabled={pushLoading || pushPermission === 'denied'}
+									aria-label={pushSubscribed ? 'Dezactivează notificările push' : 'Activează notificările push'}
+									class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed {pushSubscribed ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}"
+								>
+									<span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {pushSubscribed ? 'translate-x-5' : 'translate-x-0'}"></span>
+								</button>
+							</div>
+
+							<!-- Test Notification (Admin Only) -->
+							{#if $authStore.user?.role === 'admin'}
+								<div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+									<div class="flex items-start gap-3">
+										<svg class="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+										</svg>
+										<div class="flex-1">
+											<p class="font-medium text-purple-900 dark:text-purple-100 mb-1">Test Notificare (Admin)</p>
+											<p class="text-sm text-purple-700 dark:text-purple-300 mb-3">Trimite o notificare de test pentru a verifica configurarea</p>
+											<button
+												onclick={handleTestPushNotification}
+												disabled={testingPush || !pushSubscribed}
+												class="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 flex items-center gap-2 text-sm font-medium hover:shadow-lg hover:scale-105 active:scale-95"
+											>
+												{#if testingPush}
+													<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+														<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+														<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+													</svg>
+													Se trimite...
+												{:else}
+													<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+													</svg>
+													Trimite notificare test
+												{/if}
+											</button>
+										</div>
+									</div>
+								</div>
+							{/if}
+
+							<!-- Info Card -->
+							<div class="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+								<div class="flex items-start gap-3">
+									<svg class="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+									</svg>
+									<div class="text-sm text-gray-600 dark:text-gray-400">
+										<p class="font-medium mb-1">Despre notificările push</p>
+										<ul class="list-disc list-inside space-y-1">
+											<li>Primești alerte instant pentru medicamente</li>
+											<li>Notificări pentru mesaje noi de la medic</li>
+											<li>Funcționează chiar dacă aplicația este închisă</li>
+											<li>Poți dezactiva oricând din acest meniu</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+						</div>
 					</div>
 				{/if}
 
