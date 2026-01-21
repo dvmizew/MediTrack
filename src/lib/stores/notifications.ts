@@ -30,4 +30,4 @@ function createNotificationStore() {
 	};
 }
 
-export const notificationStore = createNotificationStore();
+export const systemNotificationStore = createNotificationStore();

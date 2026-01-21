@@ -376,7 +376,7 @@
 
 	function createTreatment() {
 		showOptionsMenu = false;
-		goto(`/treatments/new?pacientId=${otherUserId}`);
+		goto(`/treatments?createNew=true&pacientId=${otherUserId}`);
 	}	function viewProfile() {
 		showOptionsMenu = false;
 		// Navigate to user's profile

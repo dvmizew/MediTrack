@@ -5,20 +5,15 @@
 	import { page } from '$app/stores';
 	import { authStore, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
-	import { notificationStore } from '$lib/stores/notifications';
+	import { systemNotificationStore } from '$lib/stores/notifications';
 	import { themeStore } from '$lib/stores/theme';
 	import { logout as sessionLogout } from '$lib/services/sessionManager';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 
 	let notifications = $state<any[]>([]);
 	let showNotifications = $state(false);
 	let showUserMenu = $state(false);
 	let showMobileMenu = $state(false);
 	let notificationFilter = $state<'all' | 'unread'>('all');
-	let isConfirmOpen = $state(false);
-	let confirmTitle = $state('');
-	let confirmMessage = $state('');
-	let confirmAction = $state<(() => Promise<void>) | null>(null);
 	let unreadCount = $derived(notifications.filter((n) => !n.isRead).length);
 	let filteredNotifications = $derived(
 		notificationFilter === 'unread' 
@@ -79,7 +74,7 @@
 		};
 		
 		notifications = [newNotification, ...notifications];
-		notificationStore.add(newNotification);
+		systemNotificationStore.add(newNotification);
 		
 		// Play notification sound if browser supports it
 		if (typeof Audio !== 'undefined') {
@@ -139,19 +134,12 @@
 	}
 
 	async function clearAllNotifications() {
-		confirmTitle = 'Șterge toate notificările?';
-		confirmMessage = 'Această acțiune nu poate fi anulată. Toate notificările vor fi șterse permanent.';
-		confirmAction = async () => {
-			try {
-				await api.deleteAllNotifications();
-				notifications = [];
-				isConfirmOpen = false;
-			} catch (error) {
-				console.error('Failed to clear notifications:', error);
-				isConfirmOpen = false;
-			}
-		};
-		isConfirmOpen = true;
+		try {
+			await api.deleteAllNotifications();
+			notifications = [];
+		} catch (error) {
+			console.error('Failed to clear notifications:', error);
+		}
 	}
 
 	async function deleteNotification(id: number, event?: MouseEvent) {
@@ -690,21 +678,4 @@
 		{/if}
 	</nav>
 
-	<!-- Confirmation Dialog -->
-	<ConfirmDialog
-		isOpen={isConfirmOpen}
-		title={confirmTitle}
-		message={confirmMessage}
-		confirmText="Șterge"
-		cancelText="Anulează"
-		isDangerous={true}
-		onConfirm={async () => {
-			if (confirmAction) {
-				await confirmAction();
-			}
-		}}
-		onCancel={() => {
-			isConfirmOpen = false;
-		}}
-	/>
 </header>

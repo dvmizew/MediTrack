@@ -5,6 +5,9 @@
 	import { mfaApi } from '$lib/api/client';
 	import { loadUserProfile } from '$lib/utils/loaders';
 	import { BADGES, getBadgeMeta } from '$lib/constants/badges';
+	import { toast } from '$lib/utils/toast';
+	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 
 	type TabType = 'general' | 'security' | 'stats';
 
@@ -21,6 +24,10 @@
 	let newPassword = $state('');
 	let confirmPassword = $state('');
 	let showPasswords = $state(false);
+	
+	// MFA disable modal state
+	let showDisableMfaDialog = $state(false);
+	let disableMfaPassword = $state('');
 
 	let mfaStep = $state<'idle' | 'setup' | 'verify' | 'done'>('idle');
 	let mfaQr = $state('');
@@ -66,6 +73,8 @@
 			mfaWorking = true; mfaError = '';
 			await mfaApi.disable(password);
 			mfaStep = 'idle'; mfaQr = ''; mfaSecret=''; mfaTotp=''; mfaBackupCodes=[];
+			showDisableMfaDialog = false;
+			disableMfaPassword = '';
 			try { const updated = await api.getProfile(); /* keep local state in sync */ } catch {}
 		} catch (e: any) {
 			mfaError = e?.message || 'Nu s-a putut dezactiva 2FA';
@@ -73,10 +82,45 @@
 			mfaWorking = false;
 		}
 	}
+	
+	function openDisableMfaDialog() {
+		showDisableMfaDialog = true;
+		disableMfaPassword = '';
+		mfaError = '';
+	}
+	
+	function closeDisableMfaDialog() {
+		showDisableMfaDialog = false;
+		disableMfaPassword = '';
+		mfaError = '';
+	}
+	
+	async function confirmDisableMfa() {
+		if (!disableMfaPassword.trim()) {
+			mfaError = 'Introdu parola';
+			return;
+		}
+		await disableMfa(disableMfaPassword);
+	}
 
 	async function regenerateBackupCodes() {
 		try {
-			mfaWorking = true; mfaError = '';
+			mfaWorking = true;
+			mfaError = '';
+			// Open inline modal for TOTP entry instead of separate modal
+			showRegenerateModal = true;
+			regenerateTotp = '';
+		} catch (e: any) {
+			mfaError = e?.message || 'Nu s-au putut regenera codurile';
+		} finally {
+			mfaWorking = false;
+		}
+	}
+
+	async function confirmRegenerateBackupCodes() {
+		try {
+			mfaWorking = true; 
+			mfaError = '';
 			if (!/^\d{6}$/.test(regenerateTotp)) { throw new Error('Cod TOTP invalid'); }
 			const res = await mfaApi.generateBackupCodes(regenerateTotp);
 			mfaBackupCodes = res.backupCodes || [];
@@ -167,7 +211,7 @@
 			const updatedUser = await api.getProfile();
 			authStore.updateUser(updatedUser);
 		} catch (error: any) {
-			alert(error.message || 'Nu s-au putut salva modificările');
+			toast.error(error.message || 'Nu s-au putut salva modificările');
 		} finally {
 			savingProfile = false;
 		}
@@ -175,21 +219,27 @@
 
 	async function handleChangePassword() {
 		if (!currentPassword || !newPassword || !confirmPassword) {
-			alert('Toate câmpurile sunt obligatorii');
+			toast.warning('Toate câmpurile sunt obligatorii');
 			return;
 		}
 
 		if (newPassword !== confirmPassword) {
-			alert('Parolele noi nu coincid');
+			toast.warning('Parolele noi nu coincid');
 			return;
 		}
 
 		if (newPassword.length < 6) {
-			alert('Parola nouă trebuie să aibă cel puțin 6 caractere');
+			toast.warning('Parola nouă trebuie să aibă cel puțin 6 caractere');
 			return;
 		}
-
+		
+		// Direct password change without confirmation dialog
+		await confirmPasswordChange();
+	}
+	
+	async function confirmPasswordChange() {
 		savingPassword = true;
+		
 		try {
 			await api.updatePassword({
 				currentPassword,
@@ -199,8 +249,9 @@
 			currentPassword = '';
 			newPassword = '';
 			confirmPassword = '';
-		} catch (error: any) {
-			alert(error.message || 'Nu s-a putut schimba parola');
+		toast.success('Parola a fost schimbată cu succes');
+	} catch (error: any) {
+		toast.error(error.message || 'Nu s-a putut schimba parola');
 		} finally {
 			savingPassword = false;
 		}
@@ -591,7 +642,7 @@
 								<div class="flex flex-wrap gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
 									<button 
 										class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 text-white rounded-lg transition-all duration-200 flex items-center gap-2 font-medium" 
-										onclick={() => { showRegenerateModal = true; }} 
+										onclick={regenerateBackupCodes} 
 										disabled={mfaWorking}
 									>
 										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -601,7 +652,7 @@
 									</button>
 									<button 
 										class="px-5 py-2.5 bg-red-600 hover:bg-red-700 hover:shadow-lg hover:scale-105 active:scale-95 text-white rounded-lg transition-all duration-200 flex items-center gap-2 font-medium" 
-										onclick={async ()=>{ const pwd = prompt('Introdu parola pentru a dezactiva 2FA:'); if (pwd) await disableMfa(pwd); }}
+										onclick={openDisableMfaDialog}
 									>
 										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -678,73 +729,87 @@
 </main>
 
 <!-- Regenerate Backup Codes Modal -->
-{#if showRegenerateModal}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-		<div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 space-y-5 animate-in zoom-in-95 duration-200">
-			<div class="flex items-start gap-3">
-				<div class="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-					<svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-					</svg>
-				</div>
-				<div class="flex-1">
-					<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Generează coduri noi</h3>
-					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Codurile vechi vor fi invalidate. Introdu un cod TOTP pentru confirmare.</p>
-				</div>
-			</div>
-
-			<div>
-				<label for="regenerateTotp" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-					Cod autentificator (6 cifre)
-				</label>
-				<input 
-					id="regenerateTotp" 
-					type="text"
-					class="w-full px-4 py-2.5 text-lg tracking-widest text-center border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all font-mono" 
-					bind:value={regenerateTotp} 
-					maxlength={6} 
-					placeholder="000000"
-					autocomplete="off"
-					oninput={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); }}
-				/>
-			</div>
-
-			{#if mfaError}
-				<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-					<svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-					</svg>
-					<p class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
-				</div>
-			{/if}
-
-			<div class="flex gap-3">
-				<button 
-					class="flex-1 px-5 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all font-medium"
-					onclick={() => { showRegenerateModal = false; regenerateTotp = ''; mfaError = ''; }}
-					disabled={mfaWorking}
-				>
-					Anulează
-				</button>
-				<button 
-					class="flex-1 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:hover:scale-100 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-medium hover:shadow-lg hover:scale-105 active:scale-95"
-					onclick={regenerateBackupCodes}
-					disabled={mfaWorking || regenerateTotp.length !== 6}
-				>
-					{#if mfaWorking}
-						<svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-						</svg>
-						Procesează...
-					{:else}
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-						</svg>
-						Generează
-					{/if}
-				</button>
-			</div>
+<Modal
+	isOpen={showRegenerateModal}
+	title="Generează coduri noi"
+	type="warning"
+	size="md"
+	showCancel={true}
+	confirmText={mfaWorking ? 'Procesează...' : 'Generează'}
+	cancelText="Anulează"
+	isLoading={mfaWorking}
+	onConfirm={confirmRegenerateBackupCodes}
+	onCancel={() => { showRegenerateModal = false; regenerateTotp = ''; mfaError = ''; }}
+	onClose={() => { showRegenerateModal = false; regenerateTotp = ''; mfaError = ''; }}
+>
+	<div class="space-y-4">
+		<p class="text-sm text-gray-600 dark:text-gray-400">
+			Codurile vechi vor fi invalidate. Introdu un cod TOTP pentru confirmare.
+		</p>
+		<div>
+			<label for="regenerateTotp" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+				Cod autentificator (6 cifre)
+			</label>
+			<input 
+				id="regenerateTotp" 
+				type="text"
+				class="w-full px-4 py-2.5 text-lg tracking-widest text-center border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all font-mono" 
+				bind:value={regenerateTotp} 
+				maxlength={6} 
+				placeholder="000000"
+				autocomplete="off"
+				oninput={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); }}
+			/>
 		</div>
+		{#if mfaError}
+			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+				<svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+				</svg>
+				<p class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
+			</div>
+		{/if}
 	</div>
-{/if}
+</Modal>
+
+<!-- Disable MFA Modal -->
+<Modal
+	isOpen={showDisableMfaDialog}
+	title="Dezactivează 2FA"
+	type="error"
+	size="md"
+	showCancel={true}
+	confirmText={mfaWorking ? 'Procesează...' : 'Dezactivează 2FA'}
+	cancelText="Anulează"
+	isLoading={mfaWorking}
+	onConfirm={confirmDisableMfa}
+	onCancel={closeDisableMfaDialog}
+	onClose={closeDisableMfaDialog}
+>
+	<div class="space-y-4">
+		<p class="text-sm text-gray-600 dark:text-gray-400">
+			Autentificarea cu doi factori va fi dezactivată complet. Introdu parola pentru confirmare.
+		</p>
+		<div>
+			<label for="disableMfaPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+				Parola ta
+			</label>
+			<input 
+				id="disableMfaPassword" 
+				type="password"
+				class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" 
+				bind:value={disableMfaPassword} 
+				placeholder="Introdu parola"
+				autocomplete="current-password"
+			/>
+		</div>
+		{#if mfaError}
+			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+				<svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+				</svg>
+				<p class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
+			</div>
+		{/if}
+	</div>
+</Modal>

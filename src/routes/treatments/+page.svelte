@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { authStore, isMedic } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import Modal from '$lib/components/Modal.svelte';
@@ -27,6 +28,14 @@
 			return;
 		}
 		await loadTreatments();
+		
+		// Check if we should open the new treatment modal
+		const createNew = $page.url.searchParams.get('createNew');
+		const pacientId = $page.url.searchParams.get('pacientId');
+		if (createNew === 'true' && pacientId) {
+			formData.patientId = pacientId;
+			showNewTreatmentModal = true;
+		}
 	});
 
 	async function loadTreatments() {
@@ -245,74 +254,72 @@
 		{/if}
 	</main>
 
-	{#if showNewTreatmentModal}
-		<Modal
-			isOpen={showNewTreatmentModal}
-			title="📋 Tratament Nou"
-			size="md"
-			showCancel={true}
-			confirmText={isSubmitting ? 'Se salvează...' : 'Creează'}
-			cancelText="Anulează"
-			isLoading={isSubmitting}
-			onConfirm={handleCreateTreatment}
-			onCancel={closeNewTreatmentModal}
-			onClose={closeNewTreatmentModal}
-		>
-			<div class="space-y-4">
-				{#if loadingCollabs}
-					<div class="flex justify-center py-4">
-						<div class="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
-					</div>
-				{:else}
-					<div>
-						<label for="patient" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Pacient *
-						</label>
-						<select
-							id="patient"
-							bind:value={formData.patientId}
-							required
-							class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 truncate"
-						>
-							<option value="">Selectează pacient</option>
-							{#each collaborations as collab}
-								{#if collab.patientId}
-									<option value={collab.patientId}>
-										{collab.patientName}
-									</option>
-								{/if}
-							{/each}
-						</select>
-					</div>
+	<Modal
+		isOpen={showNewTreatmentModal}
+		title="📋 Tratament Nou"
+		size="md"
+		showCancel={true}
+		confirmText={isSubmitting ? 'Se salvează...' : 'Creează'}
+		cancelText="Anulează"
+		isLoading={isSubmitting}
+		onConfirm={handleCreateTreatment}
+		onCancel={closeNewTreatmentModal}
+		onClose={closeNewTreatmentModal}
+	>
+		<div class="space-y-4">
+			{#if loadingCollabs}
+				<div class="flex justify-center py-4">
+					<div class="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+				</div>
+			{:else}
+				<div>
+					<label for="patient" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+						Pacient *
+					</label>
+					<select
+						id="patient"
+						bind:value={formData.patientId}
+						required
+						class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 truncate"
+					>
+						<option value="">Selectează pacient</option>
+						{#each collaborations as collab}
+							{#if collab.patientId}
+								<option value={collab.patientId}>
+									{collab.patientName}
+								</option>
+							{/if}
+						{/each}
+					</select>
+				</div>
 
-					<div>
-						<label for="diagnostic" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Diagnostic *
-						</label>
-						<input
-							id="diagnostic"
-							type="text"
-							bind:value={formData.diagnostic}
-							required
-							placeholder="ex: Hipertensiune arterială"
-							class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
-						/>
-					</div>
+				<div>
+					<label for="diagnostic" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+						Diagnostic *
+					</label>
+					<input
+						id="diagnostic"
+						type="text"
+						bind:value={formData.diagnostic}
+						required
+						placeholder="ex: Hipertensiune arterială"
+						class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
+					/>
+				</div>
 
-					<div>
-						<label for="descriere" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Descriere
-						</label>
-						<textarea
-							id="descriere"
-							bind:value={formData.descriere}
-							rows="3"
-							placeholder="Descrierea completă a tratamentului..."
-							class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 resize-none"
-						></textarea>
-					</div>
-				{/if}
-			</div>
-		</Modal>
-	{/if}
+				<div>
+					<label for="descriere" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+						Descriere
+					</label>
+					<textarea
+						id="descriere"
+						bind:value={formData.descriere}
+						rows="3"
+						placeholder="Descrierea completă a tratamentului..."
+						class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 resize-none"
+					></textarea>
+				</div>
+			{/if}
+		</div>
+	</Modal>
 {/if}

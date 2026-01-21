@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { scale } from 'svelte/transition';
+	import { scale, fade } from 'svelte/transition';
 
 	export interface Props {
 		isOpen: boolean;
@@ -8,7 +8,7 @@
 		onClose: () => void;
 		closeOnBackdrop?: boolean;
 		closeOnEscape?: boolean;
-		size?: 'sm' | 'md' | 'lg';
+		size?: 'sm' | 'md' | 'lg' | 'xl';
 		type?: 'info' | 'warning' | 'error' | 'success';
 		showCancel?: boolean;
 		confirmText?: string;
@@ -41,7 +41,8 @@
 	const sizeClasses = {
 		sm: 'max-w-sm',
 		md: 'max-w-md',
-		lg: 'max-w-lg'
+		lg: 'max-w-2xl',
+		xl: 'max-w-3xl'
 	};
 
 	const typeClasses = {
@@ -64,8 +65,9 @@
 		}
 	}
 
-	function handleKeyDown(e: KeyboardEvent) {
-		if (closeOnEscape && e.key === 'Escape' && !isProcessing) {
+	function handleWindowKeyDown(e: KeyboardEvent) {
+		if (isOpen && closeOnEscape && e.key === 'Escape' && !isProcessing) {
+			e.preventDefault();
 			onClose();
 		}
 	}
@@ -90,16 +92,18 @@
 	}
 </script>
 
+<svelte:window onkeydown={handleWindowKeyDown} />
+
 {#if isOpen}
 	<div
+		transition:fade={{ duration: 150 }}
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-200"
 		onclick={handleBackdropClick}
-		onkeydown={handleKeyDown}
 		role="presentation"
 	>
 		<div
 			transition:scale={{ duration: 200, start: 0.95 }}
-			class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 {sizeClasses[size]} w-11/12 pointer-events-auto"
+			class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 {sizeClasses[size]} w-11/12 pointer-events-auto max-h-[90vh] flex flex-col overflow-hidden"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 			role="dialog"
@@ -111,7 +115,7 @@
 			{#if title || type !== 'info'}
 				<div class="flex justify-between items-start mb-4">
 					<div class="flex items-start gap-3 flex-1">
-						{#if type !== 'info'}
+						{#if type && type !== 'info'}
 							<span class="text-2xl flex-shrink-0 pt-1" aria-hidden="true">
 								{typeIcons[type]}
 							</span>
@@ -137,7 +141,7 @@
 			{/if}
 
 			<!-- Content -->
-			<div class="mb-6">
+			<div class="mb-6 overflow-y-auto flex-1 pr-2">
 				{#if content}
 					<p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">
 						{content}
@@ -164,12 +168,12 @@
 						</button>
 					{/if}
 					{#if onConfirm}
-						<button
+							<button
 							type="button"
 							onclick={handleConfirm}
 							disabled={isProcessing}
 							class="px-4 py-2 text-sm sm:text-base font-medium text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed
-								{type === 'error' || type === 'warning'
+								{(type === 'error' || type === 'warning')
 									? 'bg-red-600 hover:bg-red-700'
 									: type === 'success'
 										? 'bg-green-600 hover:bg-green-700'

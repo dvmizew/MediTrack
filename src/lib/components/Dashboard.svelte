@@ -109,7 +109,7 @@
 		{
 			label: 'Tratament Nou',
 			description: 'Crează un plan de tratament',
-			href: '/treatments/new',
+			href: '/treatments?createNew=true',
 			borderHover: 'border-blue-400 dark:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10',
 			iconBg: 'bg-blue-100 dark:bg-blue-900/30',
 			iconColor: 'text-blue-600 dark:text-blue-400',

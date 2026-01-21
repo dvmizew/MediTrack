@@ -1,11 +1,9 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { authStore, isMedic } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
-	import { fly } from 'svelte/transition';
-	import { quintOut } from 'svelte/easing';
 	import Modal from '$lib/components/Modal.svelte';
 
 	const planIdParam = $derived($page.params.planId ?? '0');
@@ -14,9 +12,18 @@
 	let medications = $state<any[]>([]);
 	let loading = $state(true);
 	let error = $state('');
-	let showAddMedication = $state(false);
 	let editingMedication = $state<any>(null);
-	let editingTreatment = $state(false);
+	
+	// Modale pentru editare și adăugare
+	let showEditTreatmentModal = $state(false);
+	let showEditMedicationModal = $state(false);
+	let showAddMedicationModal = $state(false);
+
+	function closeAllModals() {
+		showEditTreatmentModal = false;
+		showEditMedicationModal = false;
+		showAddMedicationModal = false;
+	}
 	
 	// Modal state
 	let modalState = $state({
@@ -101,8 +108,6 @@
 		await loadTreatmentDetails();
 	});
 
-	onDestroy(() => {});
-
 	async function loadTreatmentDetails() {
 		try {
 			loading = true;
@@ -185,13 +190,7 @@
 				detaliiMedicament: newMedication.detaliiMedicament || newMedication.medicationName
 			});
 
-			showModal({
-				title: 'Succes',
-				content: 'Medicament adăugat cu succes',
-				type: 'success'
-			});
-
-			showAddMedication = false;
+			showAddMedicationModal = false;
 			newMedication = {
 				medicationName: '',
 				cantitate: '',
@@ -202,6 +201,12 @@
 				instructiuni: '',
 				detaliiMedicament: ''
 			};
+			
+			showModal({
+				title: 'Succes',
+				content: 'Medicament adăugat cu succes',
+				type: 'success'
+			});
 
 			await loadTreatmentDetails();
 		} catch (err: any) {
@@ -223,23 +228,8 @@
 		newMedication.startDate = med.startDate?.split('T')[0] || '';
 		newMedication.endDate = med.endDate?.split('T')[0] || '';
 		newMedication.instructiuni = med.instructions || '';
-		// Preserve original details when present; fallback to medicationDetails from API
 		newMedication.detaliiMedicament = med.detaliiMedicament || med.medicationDetails || '';
-	}
-
-	function cancelEdit() {
-		editingMedication = null;
-		showAddMedication = false; // close the edit/add form
-		newMedication = {
-			medicationName: '',
-			cantitate: '',
-			ora: '',
-			frecventa: 'zilnic',
-			startDate: '',
-			endDate: '',
-			instructiuni: '',
-			detaliiMedicament: ''
-		};
+		showEditMedicationModal = true;
 	}
 
 	async function handleUpdateMedication() {
@@ -257,13 +247,23 @@
 				detaliiMedicament: newMedication.detaliiMedicament || newMedication.medicationName
 			});
 
+			showEditMedicationModal = false;
+			editingMedication = null;
+			newMedication = {
+				medicationName: '',
+				cantitate: '',
+				ora: '',
+				frecventa: 'zilnic',
+				startDate: '',
+				endDate: '',
+				instructiuni: '',
+				detaliiMedicament: ''
+			};
 			showModal({
 				title: 'Succes',
 				content: 'Medicament actualizat',
 				type: 'success'
 			});
-			
-			cancelEdit();
 			await loadTreatmentDetails();
 		} catch (err) {
 			showModal({
@@ -305,16 +305,11 @@
 	}
 
 	function startEditTreatment() {
-		editingTreatment = true;
 		treatmentForm.diagnostic = treatment.diagnosis;
 		treatmentForm.descriere = treatment.description || '';
+		showEditTreatmentModal = true;
 	}
 
-	function cancelTreatmentEdit() {
-		editingTreatment = false;
-		treatmentForm.diagnostic = '';
-		treatmentForm.descriere = '';
-	}
 
 	async function handleUpdateTreatment() {
 		try {
@@ -323,13 +318,14 @@
 				description: treatmentForm.descriere
 			});
 
+			showEditTreatmentModal = false;
+			treatmentForm.diagnostic = '';
+			treatmentForm.descriere = '';
 			showModal({
 				title: 'Succes',
 				content: 'Tratament actualizat',
 				type: 'success'
 			});
-
-			cancelTreatmentEdit();
 			await loadTreatmentDetails();
 		} catch (err) {
 			showModal({
@@ -366,96 +362,50 @@
 		{:else if treatment}
 			<!-- Treatment Header -->
 			<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6">
-				{#if !editingTreatment}
-					<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
-						<div class="flex-1 min-w-0">
-					<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 break-words">{treatment.diagnosis}</h1>
-					<p class="text-gray-600 dark:text-gray-400 break-words">{treatment.description || 'Fără descriere'}</p>
-				</div>
-				<div class="flex items-center gap-3 flex-shrink-0">
-					<span class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-full whitespace-nowrap {treatment.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'}">
-						{treatment.isActive ? 'Activ' : 'Inactiv'}
-							</span>
-							{#if $isMedic}
-								{#if deleteConfirmToken}
-									<div class="flex items-center gap-2">
-										<button
-											onclick={confirmTreatmentDelete}
-											class="px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition whitespace-nowrap"
-										>
-											Confirmă ștergerea
-										</button>
-										<button
-											onclick={resetDeleteState}
-											class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap"
-										>
-											Anulează
-										</button>
-									</div>
-								{:else}
+				<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
+					<div class="flex-1 min-w-0">
+						<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 break-words">{treatment.diagnosis}</h1>
+						<p class="text-gray-600 dark:text-gray-400 break-words">{treatment.description || 'Fără descriere'}</p>
+					</div>
+					<div class="flex items-center gap-3 flex-shrink-0">
+						<span class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-full whitespace-nowrap {treatment.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'}">
+							{treatment.isActive ? 'Activ' : 'Inactiv'}
+						</span>
+						{#if $isMedic}
+							{#if deleteConfirmToken}
+								<div class="flex items-center gap-2">
 									<button
-										onclick={startEditTreatment}
-										class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap"
-									>
-										✏️ Editează
-									</button>
-									<button
-										onclick={startTreatmentDelete}
+										onclick={confirmTreatmentDelete}
 										class="px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition whitespace-nowrap"
 									>
-										🗑 Șterge
+										Confirmă ștergerea
 									</button>
-								{/if}
+									<button
+										onclick={resetDeleteState}
+										class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap"
+									>
+										Anulează
+									</button>
+								</div>
+							{:else}
+								<button
+									onclick={startEditTreatment}
+									class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap"
+								>
+									✏️ Editează
+								</button>
+								<button
+									onclick={startTreatmentDelete}
+									class="px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition whitespace-nowrap"
+								>
+									🗑 Șterge
+								</button>
 							{/if}
-						</div>
+						{/if}
 					</div>
-				{:else}
-					<div class="space-y-4">
-						<h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Editează Tratament</h2>
-						<form onsubmit={(e) => { e.preventDefault(); handleUpdateTreatment(); }} class="space-y-4">
-							<div>
-								<label for="edit-diagnostic" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-									Diagnostic *
-								</label>
-								<input
-									id="edit-diagnostic"
-									type="text"
-									bind:value={treatmentForm.diagnostic}
-									required
-									class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
-								/>
-							</div>
-							<div>
-								<label for="edit-descriere" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-									Descriere
-								</label>
-								<textarea
-									id="edit-descriere"
-									bind:value={treatmentForm.descriere}
-									rows="4"
-									class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 resize-none"
-								></textarea>
-							</div>
-							<div class="flex flex-col sm:flex-row gap-3">
-								<button
-									type="submit"
-									class="w-full sm:w-auto px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition"
-								>
-									Salvează
-								</button>
-								<button
-									type="button"
-									onclick={cancelTreatmentEdit}
-									class="w-full sm:w-auto px-6 py-2 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100 font-semibold rounded-lg transition"
-								>
-									Anulează
-								</button>
-							</div>
-						</form>
-					</div>
-				{/if}
+				</div>
 
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm {editingTreatment ? 'mt-6 pt-6 border-t border-gray-200 dark:border-gray-700' : ''}">
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
 					<div>
 						<p class="text-gray-500 dark:text-gray-400">Pacient</p>
 						<p class="font-semibold text-gray-900 dark:text-gray-100 truncate">{treatment.patientName}</p>
@@ -477,110 +427,13 @@
 					<h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">💊 Medicamente</h2>
 					{#if $isMedic}
 						<button
-							onclick={() => showAddMedication = !showAddMedication}
+							onclick={() => showAddMedicationModal = true}
 							class="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition whitespace-nowrap"
 						>
 							+ Adaugă Medicament
 						</button>
 					{/if}
 				</div>
-
-				{#if showAddMedication && $isMedic}
-					<div transition:fly={{ y: -20, duration: 300, easing: quintOut }} class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-6 mb-6 border border-gray-200 dark:border-gray-700">
-						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-							{editingMedication ? 'Editează Medicament' : 'Adaugă Medicament Nou'}
-						</h3>
-						<form onsubmit={(e) => { e.preventDefault(); editingMedication ? handleUpdateMedication() : handleAddMedication(); }} class="grid grid-cols-1 md:grid-cols-2 gap-4">
-							<div>
-								<label for="med-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nume Medicament *</label>
-								<input
-									id="med-name"
-									type="text"
-									bind:value={newMedication.medicationName}
-									required
-									class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-								/>
-							</div>
-							<div>
-								<label for="med-dosage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cantitate/Dozaj *</label>
-								<input
-									id="med-dosage"
-									type="text"
-									bind:value={newMedication.cantitate}
-									placeholder="ex: 500mg"
-									required
-									class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-								/>
-							</div>
-							<div>
-								<label for="med-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Oră Administrare *</label>
-								<input
-									id="med-time"
-									type="time"
-									bind:value={newMedication.ora}
-									required
-									class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-								/>
-							</div>
-							<div>
-								<label for="med-frequency" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Frecvență *</label>
-								<select
-									id="med-frequency"
-									bind:value={newMedication.frecventa}
-									class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-								>
-									<option value="zilnic">Zilnic</option>
-									<option value="de 2 ori pe zi">De 2 ori pe zi</option>
-									<option value="de 3 ori pe zi">De 3 ori pe zi</option>
-									<option value="saptamanal">Săptămânal</option>
-								</select>
-							</div>
-							<div>
-								<label for="med-start" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Start *</label>
-								<input
-									id="med-start"
-									type="date"
-									bind:value={newMedication.startDate}
-									required
-									class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-								/>
-							</div>
-							<div>
-								<label for="med-end" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Sfârșit</label>
-								<input
-									id="med-end"
-									type="date"
-									bind:value={newMedication.endDate}
-									class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-								/>
-							</div>
-							<div class="md:col-span-2">
-								<label for="med-instructions" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Instrucțiuni</label>
-								<textarea
-									id="med-instructions"
-									bind:value={newMedication.instructiuni}
-									rows="3"
-									class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-								></textarea>
-							</div>
-							<div class="md:col-span-2 flex flex-col sm:flex-row gap-3">
-								<button
-									type="submit"
-									class="w-full sm:flex-1 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition"
-								>
-									{editingMedication ? 'Actualizează' : 'Salvează Medicament'}
-								</button>
-								<button
-									type="button"
-									onclick={() => editingMedication ? cancelEdit() : showAddMedication = false}
-									class="w-full sm:w-auto px-6 py-2 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100 font-semibold rounded-lg transition"
-								>
-									Anulează
-								</button>
-							</div>
-						</form>
-					</div>
-				{/if}
 
 				{#if medications.length === 0}
 					<div class="text-center py-12">
@@ -611,7 +464,7 @@
 										</span>
 										{#if $isMedic}
 											<button
-												onclick={() => { startEditMedication(med); showAddMedication = true; }}
+												onclick={() => startEditMedication(med)}
 												class="px-3 py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 text-xs font-medium rounded transition whitespace-nowrap"
 											>
 												✏️ Editează
@@ -652,3 +505,214 @@
 	onCancel={modalState.onCancel}
 	onClose={closeModal}
 />
+
+<!-- Modal Editare Tratament -->
+<Modal
+	isOpen={showEditTreatmentModal}
+	title="Editează Tratament"
+	size="md"
+	onClose={() => showEditTreatmentModal = false}
+	confirmText="Salvează"
+	showCancel={true}
+	onConfirm={handleUpdateTreatment}
+	onCancel={() => showEditTreatmentModal = false}
+>
+	<div class="space-y-4">
+		<div>
+			<label for="edit-diagnostic" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+				Diagnostic *
+			</label>
+			<input
+				id="edit-diagnostic"
+				type="text"
+				bind:value={treatmentForm.diagnostic}
+				required
+				class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
+			/>
+		</div>
+		<div>
+			<label for="edit-descriere" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+				Descriere
+			</label>
+			<textarea
+				id="edit-descriere"
+				bind:value={treatmentForm.descriere}
+				rows="4"
+				class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 resize-none"
+			></textarea>
+		</div>
+	</div>
+</Modal>
+
+<!-- Modal Editare Medicament -->
+<Modal
+	isOpen={showEditMedicationModal}
+	title="Editează Medicament"
+	size="xl"
+	onClose={() => showEditMedicationModal = false}
+	confirmText="Actualizează"
+	showCancel={true}
+	onConfirm={handleUpdateMedication}
+	onCancel={() => showEditMedicationModal = false}
+>
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+		<div>
+			<label for="med-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nume Medicament *</label>
+			<input
+				id="med-name"
+				type="text"
+				bind:value={newMedication.medicationName}
+				required
+				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+			/>
+		</div>
+		<div>
+			<label for="med-quantity" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cantitate *</label>
+			<input
+				id="med-quantity"
+				type="text"
+				bind:value={newMedication.cantitate}
+				required
+				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+			/>
+		</div>
+		<div>
+			<label for="med-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Oră Administrare *</label>
+			<input
+				id="med-time"
+				type="time"
+				bind:value={newMedication.ora}
+				required
+				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+			/>
+		</div>
+		<div>
+			<label for="med-frequency" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Frecvență *</label>
+			<select
+				id="med-frequency"
+				bind:value={newMedication.frecventa}
+				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+			>
+				<option value="zilnic">Zilnic</option>
+				<option value="de 2 ori pe zi">De 2 ori pe zi</option>
+				<option value="de 3 ori pe zi">De 3 ori pe zi</option>
+				<option value="saptamanal">Săptămânal</option>
+			</select>
+		</div>
+		<div>
+			<label for="med-start" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Start *</label>
+			<input
+				id="med-start"
+				type="date"
+				bind:value={newMedication.startDate}
+				required
+				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+			/>
+		</div>
+		<div>
+			<label for="med-end" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Sfârșit</label>
+			<input
+				id="med-end"
+				type="date"
+				bind:value={newMedication.endDate}
+				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+			/>
+		</div>
+		<div class="md:col-span-2">
+			<label for="med-instructions" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Instrucțiuni</label>
+			<textarea
+				id="med-instructions"
+				bind:value={newMedication.instructiuni}
+				rows="3"
+				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 resize-none focus:ring-2 focus:ring-blue-500"
+			></textarea>
+		</div>
+	</div>
+</Modal>
+
+<!-- Modal Adăugare Medicament -->
+<Modal
+	isOpen={showAddMedicationModal}
+	title="Adaugă Medicament"
+	size="xl"
+	onClose={() => showAddMedicationModal = false}
+	confirmText="Adaugă Medicament"
+	showCancel={true}
+	onConfirm={handleAddMedication}
+	onCancel={() => showAddMedicationModal = false}
+>
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+		<div>
+			<label for="add-med-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nume Medicament *</label>
+			<input
+				id="add-med-name"
+				type="text"
+				bind:value={newMedication.medicationName}
+				required
+				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+			/>
+		</div>
+		<div>
+			<label for="add-med-quantity" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cantitate *</label>
+			<input
+				id="add-med-quantity"
+				type="text"
+				bind:value={newMedication.cantitate}
+				placeholder="ex: 500mg"
+				required
+				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+			/>
+		</div>
+		<div>
+			<label for="add-med-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Oră Administrare *</label>
+			<input
+				id="add-med-time"
+				type="time"
+				bind:value={newMedication.ora}
+				required
+				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+			/>
+		</div>
+		<div>
+			<label for="add-med-frequency" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Frecvență *</label>
+			<select
+				id="add-med-frequency"
+				bind:value={newMedication.frecventa}
+				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+			>
+				<option value="zilnic">Zilnic</option>
+				<option value="de 2 ori pe zi">De 2 ori pe zi</option>
+				<option value="de 3 ori pe zi">De 3 ori pe zi</option>
+				<option value="saptamanal">Săptămânal</option>
+			</select>
+		</div>
+		<div>
+			<label for="add-med-start" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Start *</label>
+			<input
+				id="add-med-start"
+				type="date"
+				bind:value={newMedication.startDate}
+				required
+				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+			/>
+		</div>
+		<div>
+			<label for="add-med-end" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Sfârșit</label>
+			<input
+				id="add-med-end"
+				type="date"
+				bind:value={newMedication.endDate}
+				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+			/>
+		</div>
+		<div class="md:col-span-2">
+			<label for="add-med-instructions" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Instrucțiuni</label>
+			<textarea
+				id="add-med-instructions"
+				bind:value={newMedication.instructiuni}
+				rows="3"
+				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 resize-none focus:ring-2 focus:ring-blue-500"
+			></textarea>
+		</div>
+	</div>
+</Modal>

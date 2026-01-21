@@ -2,7 +2,7 @@ import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import { SOCKET_URL } from '../config.js';
 import { authStore } from '../stores/auth.js';
-import { notificationStore } from '../stores/notifications.js';
+import { systemNotificationStore } from '../stores/notifications.js';
 import { get } from 'svelte/store';
 
 class SocketClient {
@@ -67,7 +67,7 @@ class SocketClient {
 					referenceId: data.referenceId
 				};
 
-				notificationStore.add(notification);
+				systemNotificationStore.add(notification);
 
 				// Dispatch custom event for component listeners
 				if (typeof window !== 'undefined') {

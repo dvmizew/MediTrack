@@ -3,6 +3,8 @@
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
+	import { toast } from '$lib/utils/toast';
+	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 
 	let user = $derived($authStore.user);
 	let isAdmin = $derived(user?.role === 'admin');
@@ -12,6 +14,16 @@
 	let loading = $state(true);
 	let searchQuery = $state('');
 	let roleFilter = $state<'all' | 'admin' | 'medic' | 'pacient'>('all');
+	
+	// Modal state
+	let confirmDialog = $state({
+		isOpen: false,
+		title: '',
+		message: '',
+		isDangerous: false,
+		onConfirm: (() => {}) as () => void | Promise<void>,
+		onCancel: (() => {}) as () => void
+	});
 
 	onMount(async () => {
 		if (!isAdmin) {
@@ -22,9 +34,9 @@
 	});
 
 	$effect(() => {
-		// Trigger re-filter when search or role filter changes
-		const _unused = searchQuery;  // dependency
-		const _unused2 = roleFilter;  // dependency
+		// Re-filter when search or role filter changes
+		searchQuery;  // dependency tracking
+		roleFilter;   // dependency tracking
 		applyFilters();
 	});
 
@@ -36,7 +48,7 @@
 			applyFilters();
 		} catch (err) {
 			console.error('Nu s-au putut încărca utilizatorii', err);
-			alert('Nu s-au putut încărca utilizatorii');
+		toast.error('Nu s-au putut încărca utilizatorii');
 		} finally {
 			loading = false;
 		}
@@ -61,25 +73,62 @@
 	}
 
 	async function handleRoleChange(userId: number, newRole: string) {
-		try {
-			await api.updateUserRole(userId, newRole);
-			alert('Rol actualizat');
+		const targetUser = users.find(u => u.id === userId);
+		if (!targetUser) return;
+		
+		const oldRole = targetUser.role;
+		const userName = targetUser.fullName || targetUser.email || 'Utilizator';
+		
+		confirmDialog.isOpen = true;
+		confirmDialog.title = 'Confirmă schimbarea rolului';
+		confirmDialog.message = `Sigur vrei să schimbi rolul utilizatorului "${userName}" din ${oldRole} în ${newRole}?`;
+		confirmDialog.isDangerous = newRole === 'admin';
+		confirmDialog.onConfirm = async () => {
+			try {
+				await api.updateUserRole(userId, newRole);
+			toast.success('Rol actualizat');
 			await loadUsers();
 		} catch (err) {
 			console.error('Nu s-a putut actualiza rolul', err);
-			alert('Nu s-a putut actualiza rolul');
-		}
+			toast.error('Nu s-a putut actualiza rolul');
+			} finally {
+				confirmDialog.isOpen = false;
+			}
+		};
+		confirmDialog.onCancel = () => {
+			confirmDialog.isOpen = false;
+			// Reset the select to old value by reloading
+			loadUsers();
+		};
 	}
 
 	async function toggleUserStatus(userId: number, currentStatus: boolean) {
-		try {
-			await api.toggleUserStatus(userId);
-			alert(currentStatus ? 'Utilizator dezactivat' : 'Utilizator activat');
+		const targetUser = users.find(u => u.id === userId);
+		if (!targetUser) return;
+		
+		const userName = targetUser.fullName || targetUser.email || 'Utilizator';
+		const action = currentStatus ? 'dezactivezi' : 'activezi';
+		const actionPast = currentStatus ? 'dezactivat' : 'activat';
+		
+		confirmDialog.isOpen = true;
+		confirmDialog.title = `Confirmă ${currentStatus ? 'dezactivarea' : 'activarea'}`;
+		confirmDialog.message = `Sigur vrei să ${action} utilizatorul "${userName}"?`;
+		confirmDialog.isDangerous = currentStatus; // dangerous when deactivating
+		confirmDialog.onConfirm = async () => {
+			try {
+				await api.toggleUserStatus(userId);
+			toast.success(`Utilizator ${actionPast}`);
 			await loadUsers();
 		} catch (err) {
 			console.error('Nu s-a putut schimba statusul', err);
-			alert('Nu s-a putut schimba statusul');
-		}
+			toast.error('Nu s-a putut schimba statusul');
+			} finally {
+				confirmDialog.isOpen = false;
+			}
+		};
+		confirmDialog.onCancel = () => {
+			confirmDialog.isOpen = false;
+		};
 	}
 
 	function getRoleBadgeColor(role: string) {
@@ -323,3 +372,12 @@
 		{/if}
 	{/if}
 </main>
+
+<ConfirmDialog
+	isOpen={confirmDialog.isOpen}
+	title={confirmDialog.title}
+	message={confirmDialog.message}
+	isDangerous={confirmDialog.isDangerous}
+	onConfirm={confirmDialog.onConfirm}
+	onCancel={confirmDialog.onCancel}
+/>
