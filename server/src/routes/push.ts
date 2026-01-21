@@ -16,6 +16,46 @@ if (validateVapidConfig()) {
   );
 }
 
+/**
+ * Send push notification to a user
+ */
+export async function sendPushToUser(userId: number, payload: any): Promise<void> {
+  try {
+    const result = await query(
+      'SELECT id, endpoint, auth, p256dh FROM push_subscriptions WHERE user_id = $1',
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return;
+    }
+
+    const payloadString = typeof payload === 'string' ? payload : JSON.stringify(payload);
+
+    const sendPromises = result.rows.map(async (row) => {
+      try {
+        const subscription = {
+          endpoint: row.endpoint,
+          keys: {
+            auth: row.auth,
+            p256dh: row.p256dh
+          }
+        };
+        await webPush.sendNotification(subscription, payloadString);
+      } catch (error: any) {
+        logger.error('Send push notification error', { error, userId });
+        if (error.statusCode === 410 || error.statusCode === 404) {
+          await query('DELETE FROM push_subscriptions WHERE id = $1', [row.id]);
+        }
+      }
+    });
+
+    await Promise.all(sendPromises);
+  } catch (error) {
+    logger.error('Send push to user error', { error, userId });
+  }
+}
+
 // Get VAPID public key
 router.get('/vapid-public-key', (req: Request, res: Response) => {
   if (!vapidConfig.publicKey) {

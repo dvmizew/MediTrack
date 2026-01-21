@@ -160,17 +160,26 @@ self.addEventListener('push', (event) => {
 	if (!event.data) {
 		return;
 	}
-
+	let data = {};
 	try {
-		const data = event.data.json();
+		// Firefox uneori trimite string, nu json
+		try {
+			data = event.data.json();
+		} catch (e) {
+			try {
+				data = JSON.parse(event.data.text());
+			} catch (e2) {
+				data = { body: 'Ai o notificare nouă' };
+			}
+		}
 		const options = {
 			body: data.body || 'Ai o notificare nouă',
 			icon: data.icon || '/icon-192.png',
 			badge: data.badge || '/icon-192.png',
 			vibrate: [200, 100, 200],
 			data: {
-				url: data.data?.url || '/dashboard',
-				timestamp: data.data?.timestamp || Date.now()
+				url: data.data && data.data.url ? data.data.url : '/dashboard',
+				timestamp: data.data && data.data.timestamp ? data.data.timestamp : Date.now()
 			},
 			actions: [
 				{
@@ -183,11 +192,18 @@ self.addEventListener('push', (event) => {
 				}
 			]
 		};
-
 		event.waitUntil(
 			self.registration.showNotification(data.title || 'MediTrack', options)
 		);
 	} catch (error) {
+		// fallback: notificare simplă
+		event.waitUntil(
+			self.registration.showNotification('MediTrack', {
+				body: 'Ai o notificare nouă',
+				icon: '/icon-192.png',
+				badge: '/icon-192.png'
+			})
+		);
 		console.error('Push notification error:', error);
 	}
 });
