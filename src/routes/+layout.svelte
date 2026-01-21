@@ -1,16 +1,17 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { navigating, page } from '$app/stores';
 	import { browser } from '$app/environment';
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import { socketClient } from '$lib/api/socket';
 	import { themeStore } from '$lib/stores/theme';
 	import { startSessionManager, stopSessionManager } from '$lib/services/sessionManager';
+	import { initToast } from '$lib/utils/toast';
 	import Header from '$lib/components/Header.svelte';
 	import KeyboardNav from '$lib/components/KeyboardNav.svelte';
 	import { registerServiceWorker } from '$lib/pwa';
 	import CookieConsent from '$lib/components/CookieConsent.svelte';
+	import Notifications from 'svelte-notifications';
 	import './layout.css';
 
 	let { children } = $props();
@@ -37,10 +38,11 @@
 	onMount(async () => {
 		if (!browser) return;
 		
-		console.log('[Layout] Mounting, current path:', window.location.pathname);
-		
 		// Initialize theme
 		themeStore.init();
+		
+		// Initialize toast notifications
+		initToast();
 		
 		// Initialize PWA features
 		registerServiceWorker();
@@ -50,8 +52,6 @@
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 		
 		const { token } = $authStore;
-
-
 			if (token) {
 				try {
 					// Optimistic refresh first to extend session seamlessly
@@ -112,3 +112,6 @@
 
 <!-- GDPR Cookie Consent (global) -->
 <CookieConsent />
+
+<!-- Toast Notifications (global) -->
+<Notifications />

@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { authStore, isMedic, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
+	import { toast } from '$lib/utils/toast';
 
 	let collaborations = $state<any[]>([]);
 	let pendingInvites = $state<any[]>([]);
@@ -33,7 +34,7 @@
 	} catch (err: any) {
 		console.error('Failed to load data:', err);
 		error = err.message || 'Nu s-au putut încărca datele';
-		alert(error);
+		toast.error(error);
 		} finally {
 			loading = false;
 		}
@@ -41,20 +42,19 @@
 
 	async function sendInvite() {
 		if (!medicEmail.trim()) return;
-
 		try {
 			sending = true;
 			error = '';
 			await api.sendInvite(medicEmail);
 			
-			alert(`Am trimis invitația către ${medicEmail}`);
+			toast.success(`Am trimis invitația către ${medicEmail}`);
 			
 			medicEmail = '';
 			await loadData();
 		} catch (err: any) {
 			console.error('Failed to send invite:', err);
 			error = err.message || 'Nu s-a putut trimite invitația';
-			alert(error);
+			toast.error(error);
 		} finally {
 			sending = false;
 		}
@@ -67,16 +67,16 @@
 			await api.respondToInvite(inviteId, action);
 			
 			if (action === 'accept') {
-			alert('Colaborarea a fost adăugată cu succes');
+			toast.success('Colaborarea a fost adăugată cu succes');
 		} else {
-			alert('Invitația a fost respinsă');
+			toast.info('Invitația a fost respinsă');
 			}
 			
 			await loadData();
 		} catch (err: any) {
 			console.error('Failed to respond to invite:', err);
 			error = err.message || 'Nu s-a putut răspunde la invitație';
-			alert(error);
+		toast.error(error);
 		} finally {
 			respondingToInvite = null;
 		}
@@ -279,7 +279,7 @@
 									</button>
 									{#if $isMedic}
 										<button
-											onclick={() => goto(`/treatments/new?pacientId=${collab.patientId}`)}
+											onclick={() => goto(`/treatments?createNew=true&pacientId=${collab.patientId}`)}
 											class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 hover:shadow-lg hover:shadow-green-500/50 hover:scale-105 active:scale-95 text-sm font-medium shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
 										>
 											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

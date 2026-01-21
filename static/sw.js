@@ -13,11 +13,9 @@ const STATIC_ASSETS = [
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-	console.log('[SW] Installing service worker...');
 	event.waitUntil(
 		caches.open(STATIC_CACHE)
 			.then((cache) => {
-				console.log('[SW] Caching static assets');
 				return cache.addAll(STATIC_ASSETS);
 			})
 			.then(() => self.skipWaiting())
@@ -26,14 +24,12 @@ self.addEventListener('install', (event) => {
 
 // Activate event - cleanup old caches
 self.addEventListener('activate', (event) => {
-	console.log('[SW] Activating service worker...');
 	event.waitUntil(
 		caches.keys()
 			.then((cacheNames) => {
 				return Promise.all(
 					cacheNames.map((cacheName) => {
 						if (cacheName !== STATIC_CACHE && cacheName !== API_CACHE) {
-							console.log('[SW] Deleting old cache:', cacheName);
 							return caches.delete(cacheName);
 						}
 					})
@@ -153,6 +149,5 @@ self.addEventListener('sync', (event) => {
 
 async function syncConfirmations() {
 	// Retrieve pending confirmations from IndexedDB and sync with server
-	console.log('[SW] Syncing offline confirmations...');
 	// Implementation would use IndexedDB to store pending actions
 }

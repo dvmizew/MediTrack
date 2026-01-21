@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { authStore, isMedic } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import Modal from '$lib/components/Modal.svelte';
@@ -27,6 +28,14 @@
 			return;
 		}
 		await loadTreatments();
+		
+		// Check if we should open the new treatment modal
+		const createNew = $page.url.searchParams.get('createNew');
+		const pacientId = $page.url.searchParams.get('pacientId');
+		if (createNew === 'true' && pacientId) {
+			formData.patientId = pacientId;
+			showNewTreatmentModal = true;
+		}
 	});
 
 	async function loadTreatments() {
