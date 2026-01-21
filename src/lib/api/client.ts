@@ -228,7 +228,37 @@ export const api = {
 
 	// Leaderboard
 	getLeaderboard: (timeFilter?: 'all' | 'month' | 'week') =>
-		request(`/leaderboard${timeFilter ? `?filter=${timeFilter}` : ''}`)
+		request(`/leaderboard${timeFilter ? `?filter=${timeFilter}` : ''}`),
+
+	// Push Notifications
+	getPushVapidKey: () =>
+		request('/push/vapid-public-key', {
+			method: 'GET',
+			auth: false
+		}),
+
+	subscribeToPush: (subscription: PushSubscription) =>
+		request('/push/subscribe', {
+			method: 'POST',
+			body: JSON.stringify({ subscription: subscription.toJSON() })
+		}),
+
+	unsubscribeFromPush: (endpoint: string) =>
+		request('/push/unsubscribe', {
+			method: 'POST',
+			body: JSON.stringify({ endpoint })
+		}),
+
+	getPushStatus: () =>
+		request('/push/status', {
+			method: 'GET'
+		}),
+
+	sendTestPush: (targetUserId?: number) =>
+		request('/push/test', {
+			method: 'POST',
+			body: JSON.stringify({ targetUserId })
+		})
 };
 
 // Admin reports

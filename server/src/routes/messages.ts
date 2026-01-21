@@ -5,6 +5,7 @@ import { body, validationResult } from 'express-validator';
 import { query } from '../config/database.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { redis } from '../config/redis.js';
+import { sendPushToUser } from './push.js';
 
 const router: Router = express.Router();
 
@@ -41,12 +42,38 @@ router.post('/send', authenticate, sanitizeBody, [
         [senderId, receiverId, continut]
       );
 
+      // Get sender info for notification
+      const senderInfo = await query(
+        'SELECT full_name, avatar_url FROM users WHERE user_id = $1',
+        [senderId]
+      );
+      const senderName = senderInfo.rows[0]?.full_name || 'Un utilizator';
+      const senderAvatar = senderInfo.rows[0]?.avatar_url;
+
       // Create notification for receiver
       await query(
         `INSERT INTO notifications (user_id, tip, status_notif, title, message, reference_id) 
-         VALUES ($1, 'chat', 'sent', 'Mesaj nou', 'Ai un mesaj nou', $2)`,
-        [receiverId, senderId]
+         VALUES ($1, 'chat', 'sent', 'Mesaj nou', $2, $3)`,
+        [receiverId, `Mesaj nou de la ${senderName}`, senderId]
       );
+
+      // Check if receiver is online, if not send push notification
+      const isOnline = await redis.get(`user:${receiverId}:online`);
+      if (!isOnline) {
+        await sendPushToUser(receiverId, {
+          title: `💬 ${senderName}`,
+          body: continut.length > 100 ? continut.substring(0, 100) + '...' : continut,
+          icon: senderAvatar || '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: `chat-${senderId}`,
+          data: {
+            url: `/chat/${senderId}`,
+            type: 'chat',
+            senderId: senderId,
+            timestamp: Date.now()
+          }
+        });
+      }
 
       const msg = result.rows[0];
       res.status(201).json({

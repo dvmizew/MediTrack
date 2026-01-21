@@ -23,6 +23,7 @@ import doseRoutes from './routes/doses.js';
 import confirmationRoutes from './routes/confirmations.js';
 import messageRoutes from './routes/messages.js';
 import notificationRoutes from './routes/notifications.js';
+import pushRoutes from './routes/push.js';
 import reportsRoutes from './routes/reports.js';
 import leaderboardRoutes from './routes/leaderboard.js';
 import { setupSocketHandlers } from './socket/handlers.js';
@@ -111,9 +112,7 @@ app.use('/doses', doseRoutes);
 app.use('/confirmations', confirmationRoutes);
 app.use('/messages', messageRoutes);
 app.use('/notifications', notificationRoutes);
-
-// Centralized error formatting
-app.use(errorFormatter);
+app.use('/push', pushRoutes);
 app.use('/admin/reports', reportsRoutes);
 app.use('/leaderboard', leaderboardRoutes);
 
@@ -121,6 +120,9 @@ app.use('/leaderboard', leaderboardRoutes);
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Centralized error formatting - MUST BE LAST
+app.use(errorFormatter);
 
 // Socket.io setup
 setupSocketHandlers(io);

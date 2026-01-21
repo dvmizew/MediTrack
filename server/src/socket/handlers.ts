@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { verifyToken, JWTPayload } from '../middleware/auth.js';
 import { query } from '../config/database.js';
 import { redis } from '../config/redis.js';
+import { sendPushToUser } from '../routes/push.js';
 
 interface AuthSocket extends Socket {
   user?: JWTPayload;
@@ -131,6 +132,25 @@ export const setupSocketHandlers = (io: Server) => {
           message: 'Mesaj nou primit',
           referenceId: userId
         });
+
+        // Check if receiver is online, if not send push notification
+        const isOnline = await redis.get(`user:${receiverId}:online`);
+        if (!isOnline) {
+          const senderName = userInfo.rows[0]?.full_name || 'Un utilizator';
+          await sendPushToUser(receiverId, {
+            title: `💬 ${senderName}`,
+            body: continut.length > 100 ? continut.substring(0, 100) + '...' : continut,
+            icon: userInfo.rows[0]?.avatar_url || '/icon-192.png',
+            badge: '/icon-192.png',
+            tag: `chat-${userId}`,
+            data: {
+              url: `/chat/${userId}`,
+              type: 'chat',
+              senderId: userId,
+              timestamp: Date.now()
+            }
+          });
+        }
 
       } catch (error) {
         console.error('Send message error:', error);
