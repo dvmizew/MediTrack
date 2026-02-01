@@ -89,7 +89,7 @@
 </script>
 
 {#if $authStore.isAuthenticated}
-	<main class="min-h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
+	<main class="min-h-[calc(100vh-4rem)] bg-transparent flex flex-col overflow-hidden">
 		<div class="max-w-6xl mx-auto min-h-[calc(100vh-4rem)] flex flex-col overflow-hidden w-full">
 		<!-- Content -->
 		<div class="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 md:px-6 py-4 sm:py-6">

@@ -104,7 +104,7 @@
 	}
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 sm:p-6 page-transition">
+<div class="min-h-screen bg-transparent p-4 sm:p-6 page-transition">
 	<div class="max-w-6xl mx-auto">
 		<!-- Header -->
 		<div class="mb-8 text-center">

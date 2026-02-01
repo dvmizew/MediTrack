@@ -321,3 +321,34 @@ select:focus-visible,
 		scroll-behavior: auto !important;
 	}
 }
+
+/* Pastel Purple → Blue → Green → Cyan Gradient (medical + gamification friendly) */
+.bg-gradient-blue-purple {
+	background: linear-gradient(
+		135deg,
+		#e3d6ff 0%,
+		#d8d5ff 12%,
+		#cfe1ff 28%,
+		#cbefff 44%,
+		#cdf4e6 62%,
+		#c9f7dc 78%,
+		#c8f6f2 92%,
+		#c7f7ff 100%
+	);
+	background-attachment: fixed;
+}
+
+.bg-gradient-blue-purple-dark {
+	background: linear-gradient(
+		135deg,
+		#6e5aa6 0%,
+		#5f6fb0 14%,
+		#5a83b8 30%,
+		#5b96ba 46%,
+		#5aa8a4 64%,
+		#5cb6a0 80%,
+		#5bc0b6 92%,
+		#5cc8d0 100%
+	);
+	background-attachment: fixed;
+}
