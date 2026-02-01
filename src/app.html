@@ -29,6 +29,26 @@
 				}
 				// Set background immediately to prevent flash
 				document.documentElement.style.backgroundColor = theme === 'dark' ? '#111827' : '#ffffff';
+				
+				// Load accessibility settings
+				try {
+					const accessibilitySettings = JSON.parse(localStorage.getItem('accessibility-settings') || '{}');
+					
+					// Apply text size
+					const sizeMultipliers = { normal: 1, large: 1.25, xlarge: 1.5 };
+					const multiplier = sizeMultipliers[accessibilitySettings.textSize] || 1;
+					document.documentElement.style.fontSize = (16 * multiplier) + 'px';
+					
+					// Apply high contrast
+					if (accessibilitySettings.highContrast) {
+						document.documentElement.classList.add('high-contrast');
+					}
+					
+					// Apply reduce motion
+					if (accessibilitySettings.reduceMotion) {
+						document.documentElement.classList.add('reduce-motion');
+					}
+				} catch (e) {}
 			})();
 		</script>
 		

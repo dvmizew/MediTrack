@@ -2,9 +2,11 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth';
-	import { api } from '$lib/api/client';
+	import { api, adminReportsApi } from '$lib/api/client';
 	import { toast } from '$lib/utils/toast';
+	import { downloadBlobAsFile } from '$lib/utils/charts';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 
 	let user = $derived($authStore.user);
 	let isAdmin = $derived(user?.role === 'admin');
@@ -12,8 +14,25 @@
 	let users = $state<any[]>([]);
 	let filteredUsers = $state<any[]>([]);
 	let loading = $state(true);
+	let exporting = $state(false);
 	let searchQuery = $state('');
 	let roleFilter = $state<'all' | 'admin' | 'medic' | 'pacient'>('all');
+	
+	// Form modal state
+	let formModalOpen = $state(false);
+	let formMode = $state<'add' | 'edit'>('add');
+	let formLoading = $state(false);
+	let selectedUserForEdit = $state<any>(null);
+
+	// Form data
+	let formData = $state({
+		email: '',
+		fullName: '',
+		role: 'pacient' as 'admin' | 'medic' | 'pacient',
+		password: ''
+	});
+
+	let formErrors = $state<Record<string, string>>({});
 	
 	// Modal state
 	let confirmDialog = $state({
@@ -73,7 +92,7 @@
 	}
 
 	async function handleRoleChange(userId: number, newRole: string) {
-		const targetUser = users.find(u => u.id === userId);
+		const targetUser = users.find(u => u.userId === userId);
 		if (!targetUser) return;
 		
 		const oldRole = targetUser.role;
@@ -103,7 +122,7 @@
 	}
 
 	async function toggleUserStatus(userId: number, currentStatus: boolean) {
-		const targetUser = users.find(u => u.id === userId);
+		const targetUser = users.find(u => u.userId === userId);
 		if (!targetUser) return;
 		
 		const userName = targetUser.fullName || targetUser.email || 'Utilizator';
@@ -167,12 +186,164 @@
 			return 'Invalid date';
 		}
 	}
+
+	async function handleExportUsers() {
+		try {
+			exporting = true;
+			const blob = await adminReportsApi.exportUsers();
+			await downloadBlobAsFile(blob, `users_${new Date().toISOString().split('T')[0]}.csv`);
+			toast.success('Utilizatori exportați cu succes');
+		} catch (err: any) {
+			console.error('Export error:', err);
+			toast.error('Eroare la export utilizatori');
+		} finally {
+			exporting = false;
+		}
+	}
+
+	function openAddModal() {
+		formMode = 'add';
+		selectedUserForEdit = null;
+		formData = { email: '', fullName: '', role: 'pacient', password: '' };
+		formErrors = {};
+		formModalOpen = true;
+	}
+
+	function openEditModal(userData: any) {
+		formMode = 'edit';
+		selectedUserForEdit = userData;
+		formData = {
+			email: userData.email || '',
+			fullName: userData.fullName || '',
+			role: userData.role || 'pacient',
+			password: ''
+		};
+		formErrors = {};
+		formModalOpen = true;
+	}
+
+	function validateForm() {
+		formErrors = {};
+
+		if (!formData.email) {
+			formErrors.email = 'Email este obligatoriu';
+		} else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+			formErrors.email = 'Email invalid';
+		}
+
+		if (!formData.fullName) {
+			formErrors.fullName = 'Nume complet obligatoriu';
+		}
+
+		if (formMode === 'add' && !formData.password) {
+			formErrors.password = 'Parola obligatorie pentru nou utilizator';
+		} else if (formData.password) {
+			// Validate password strength: 8+ chars, uppercase, number, special char
+			const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+			if (!passwordRegex.test(formData.password)) {
+				formErrors.password = 'Parola: 8+ chars, UPPERCASE, cifră, simbol (@$!%*?&)';
+			}
+		}
+
+		return Object.keys(formErrors).length === 0;
+	}
+
+	async function handleFormSubmit() {
+		if (!validateForm() || formLoading) return;  // Prevent race condition
+
+		try {
+			formLoading = true;
+
+			if (formMode === 'add') {
+				await api.createUser({
+					email: formData.email,
+					fullName: formData.fullName,
+					role: formData.role as 'admin' | 'medic' | 'pacient',
+					password: formData.password
+				});
+				toast.success('Utilizator creat cu succes');
+			} else {
+				const updateData: any = {
+					email: formData.email,
+					fullName: formData.fullName,
+					role: formData.role
+				};
+				if (formData.password) {
+					updateData.password = formData.password;
+				}
+				await api.updateUser(selectedUserForEdit.userId, updateData);
+				toast.success('Utilizator actualizat cu succes');
+			}
+
+			formModalOpen = false;
+			await loadUsers();
+		} catch (err: any) {
+			console.error('Form error:', err);
+			toast.error(err.message || 'Eroare la salvare');
+		} finally {
+			formLoading = false;
+		}
+	}
+
+	async function handleDeleteUser(userId: number) {
+		const targetUser = users.find(u => u.userId === userId);
+		if (!targetUser) return;
+
+		const userName = targetUser.fullName || targetUser.email || 'Utilizator';
+
+		confirmDialog.isOpen = true;
+		confirmDialog.title = 'Confirmă ștergerea';
+		confirmDialog.message = `Sigur vrei să ștergi utilizatorul "${userName}"? Aceasta nu se poate inversa.`;
+		confirmDialog.isDangerous = true;
+		confirmDialog.onConfirm = async () => {
+			try {
+				await api.deleteUser(userId);
+				toast.success('Utilizator șters cu succes');
+				await loadUsers();
+			} catch (err: any) {
+				console.error('Delete error:', err);
+				toast.error('Eroare la ștergere');
+			} finally {
+				confirmDialog.isOpen = false;
+			}
+		};
+		confirmDialog.onCancel = () => {
+			confirmDialog.isOpen = false;
+		};
+	}
+
+	function canModifyUser(userId: number): boolean {
+		return userId !== user?.id;
+	}
+
+	function getStatusButtonClass(isActive: boolean): string {
+		return isActive 
+			? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800'
+			: 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 border border-green-200 dark:border-green-800';
+	}
 </script>
 
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-	<div class="mb-8">
-		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">👥 Gestionare Utilizatori</h1>
-		<p class="text-gray-600 dark:text-gray-400">Administrează rolurile și statusul utilizatorilor</p>
+	<div class="flex items-center justify-between mb-8">
+		<div>
+			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">👥 Gestionare Utilizatori</h1>
+			<p class="text-gray-600 dark:text-gray-400">Administrează rolurile și statusul utilizatorilor</p>
+		</div>
+		<div class="flex gap-3">
+			<button
+				onclick={openAddModal}
+				class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm flex items-center gap-2 whitespace-nowrap"
+			>
+				➕ Adaugă Utilizator
+			</button>
+			<button
+				onclick={handleExportUsers}
+				disabled={exporting || loading}
+				class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium text-sm flex items-center gap-2 whitespace-nowrap"
+			>
+				{exporting ? '⏳ Exporta...' : '💾 Export CSV'}
+			</button>
+		</div>
 	</div>
 
 	{#if loading}
@@ -291,12 +462,27 @@
 									<td class="px-6 py-4 text-right">
 										<div class="flex items-center justify-end gap-2">
 											<button
-												onclick={() => toggleUserStatus(u.id, u.isActive)}
-												disabled={u.id === user?.id}
-												class="px-4 py-2 {u.isActive ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40' : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hoverbg-green-900/40'} text-sm font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap border {u.isActive ? 'border-red-200 dark:border-red-800' : 'border-green-200 dark:border-green-800'}"
-												title={u.id === user?.id ? 'Nu puteți modifica propriul account' : ''}
+												onclick={() => openEditModal(u)}
+												class="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-sm font-medium rounded-lg transition border border-blue-200 dark:border-blue-800 whitespace-nowrap"
+												title="Editează utilizatorul"
 											>
-												{u.isActive ? '🚫 Dezactivează' : '✅ Activează'}
+												✏️ Editează
+											</button>
+											<button
+												onclick={() => toggleUserStatus((u as any).userId, (u as any).isActive)}
+												disabled={!canModifyUser((u as any).userId)}
+												class="px-3 py-2 text-sm font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap {getStatusButtonClass((u as any).isActive)}"
+												title={!canModifyUser((u as any).userId) ? 'Nu puteți modifica propriul account' : ''}
+											>
+												{(u as any).isActive ? '🚫 Dezactivează' : '✅ Activează'}
+											</button>
+											<button
+												onclick={() => handleDeleteUser((u as any).userId)}
+												disabled={!canModifyUser((u as any).userId)}
+												class="px-3 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 text-sm font-medium rounded-lg transition border border-red-200 dark:border-red-800 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+												title={!canModifyUser((u as any).userId) ? 'Nu puteți șterge propriul account' : 'Șterge utilizatorul'}
+											>
+												🗑️ Șterge
 											</button>
 										</div>
 									</td>
@@ -346,24 +532,28 @@
 							<!-- Actions -->
 							<div class="flex gap-2 pt-2">
 								<button
-									onclick={() => toggleUserStatus(u.id, u.isActive)}
-									disabled={u.id === user?.id}
-									class="flex-1 px-3 py-2.5 {u.isActive ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/40' : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/40'} text-sm font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-									title={u.id === user?.id ? 'Nu puteți modifica propriul account' : ''}
+									onclick={() => openEditModal(u)}
+									class="flex-1 px-3 py-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-sm font-medium rounded-lg transition"
+									title="Editează utilizatorul"
+								>
+									✏️ Editează
+								</button>
+								<button
+									onclick={() => toggleUserStatus(u.userId, u.isActive)}
+									disabled={!canModifyUser(u.userId)}
+									class="flex-1 px-3 py-2.5 text-sm font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed {getStatusButtonClass(u.isActive)}"
+									title={!canModifyUser(u.userId) ? 'Nu puteți modifica propriul account' : ''}
 								>
 									{u.isActive ? '🚫 Dezactivează' : '✅ Activează'}
 								</button>
-								<select
-									value={u.role}
-									onchange={(e) => handleRoleChange(u.id, e.currentTarget.value)}
-									disabled={u.id === user?.id}
-									class="px-3 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition"
-									title={u.id === user?.id ? 'Nu puteți modifica propriul rol' : ''}
+								<button
+									onclick={() => handleDeleteUser(u.userId)}
+									disabled={!canModifyUser(u.userId)}
+									class="flex-1 px-3 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/40 text-sm font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+									title={!canModifyUser(u.userId) ? 'Nu puteți șterge propriul account' : 'Șterge utilizatorul'}
 								>
-									<option value="admin">👑</option>
-									<option value="medic">👨‍⚕️</option>
-									<option value="pacient">🧑</option>
-								</select>
+									🗑️ Șterge
+								</button>
 							</div>
 						</div>
 					{/each}
@@ -372,6 +562,104 @@
 		{/if}
 	{/if}
 </main>
+
+<Modal
+	isOpen={formModalOpen}
+	title={formMode === 'add' ? '➕ Adaugă Utilizator Nou' : '✏️ Editează Utilizator'}
+	size="md"
+	showCancel={true}
+	confirmText={formLoading ? '⏳ Se salvează...' : 'Salvează'}
+	cancelText="Anulează"
+	onConfirm={handleFormSubmit}
+	onCancel={() => (formModalOpen = false)}
+	isLoading={formLoading}
+	onClose={() => (formModalOpen = false)}
+>
+	{#snippet children()}
+		<div class="space-y-4">
+			<!-- Email -->
+			<div>
+				<label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+					Email
+				</label>
+				<input
+					id="email"
+					type="email"
+					bind:value={formData.email}
+					oninput={(e) => {
+						formData.email = e.currentTarget.value.toLowerCase().trim();
+						if (formErrors.email) delete formErrors.email;
+					}}
+					placeholder="utilizator@email.com"
+					class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					disabled={formLoading}
+				/>
+				{#if formErrors.email}
+					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.email}</p>
+				{/if}
+			</div>
+
+			<!-- Full Name -->
+			<div>
+				<label for="fullName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+					Nume Complet
+				</label>
+				<input
+					id="fullName"
+					type="text"
+					bind:value={formData.fullName}
+					oninput={() => {
+						if (formErrors.fullName) delete formErrors.fullName;
+					}}
+					placeholder="Nume Prenume"
+					class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					disabled={formLoading}
+				/>
+				{#if formErrors.fullName}
+					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.fullName}</p>
+				{/if}
+			</div>
+
+			<!-- Role -->
+			<div>
+				<label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+					Rol
+				</label>
+				<select
+					id="role"
+					bind:value={formData.role}
+					class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					disabled={formLoading}
+				>
+					<option value="pacient">🧑 Pacient</option>
+					<option value="medic">👨‍⚕️ Medic</option>
+					<option value="admin">👑 Administrator</option>
+				</select>
+			</div>
+
+			<!-- Password -->
+			<div>
+				<label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+					Parola {formMode === 'edit' ? '(opțional)' : ''}
+				</label>
+				<input
+					id="password"
+					type="password"
+					bind:value={formData.password}
+					oninput={() => {
+						if (formErrors.password) delete formErrors.password;
+					}}
+					placeholder={formMode === 'edit' ? 'Lăsați gol pentru a păstra parola actuală' : 'Minim 8 chars: UPPERCASE, cifră, simbol (@$!%*?&)'}
+					class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					disabled={formLoading}
+				/>
+				{#if formErrors.password}
+					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.password}</p>
+				{/if}
+			</div>
+		</div>
+	{/snippet}
+</Modal>
 
 <ConfirmDialog
 	isOpen={confirmDialog.isOpen}

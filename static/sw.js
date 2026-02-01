@@ -3,6 +3,11 @@ const STATIC_CACHE = 'meditrack-static-v3';
 const MAX_CACHE_SIZE = 52428800; // 50MB limit for static cache
 const CACHE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
 
+// Cache toggle - Set to false during development to prevent 150MB cache bloat
+// Check .env.local for VITE_ENABLE_CACHE setting
+// If caching causes issues, run: ./cache-toggle.sh off
+const ENABLE_CACHE = true;
+
 const STATIC_ASSETS = [
 	'/',
 	'/dashboard',
@@ -14,6 +19,12 @@ const STATIC_ASSETS = [
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
+	if (!ENABLE_CACHE) {
+		// Skip caching if disabled
+		self.skipWaiting();
+		return;
+	}
+
 	event.waitUntil(
 		caches.open(STATIC_CACHE)
 			.then((cache) => {
@@ -109,6 +120,20 @@ self.addEventListener('fetch', (event) => {
 	}
 
 	// Static assets - Cache first, fallback to network
+	// If ENABLE_CACHE is false, always fetch fresh
+	if (!ENABLE_CACHE) {
+		event.respondWith(
+			fetch(request)
+				.catch(() => {
+					if (request.mode === 'navigate') {
+						return caches.match('/offline.html');
+					}
+					return new Response('Offline', { status: 503 });
+				})
+		);
+		return;
+	}
+
 	event.respondWith(
 		caches.match(request)
 			.then((response) => {

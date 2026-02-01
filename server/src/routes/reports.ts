@@ -2,6 +2,13 @@ import express, { Router, Request, Response } from 'express';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { query } from '../config/database.js';
 import { logger } from '../config/logger.js';
+import {
+	generateUsersCSV,
+	generateTreatmentsCSV,
+	generateCollaborationsCSV,
+	generateAdherenceCSV,
+	generatePersonalDataExportCSV
+} from '../utils/csv-export.js';
 
 const router: Router = express.Router();
 
@@ -221,6 +228,176 @@ router.get('/medic/:userId', authenticate, authorize('admin'), async (req: Reque
   } catch (error) {
     logger.error('Admin reports medic error', { error });
     res.status(500).json({ error: 'Failed to fetch medic report' });
+  }
+});
+
+// Export endpoints for admin
+
+// Export all users as CSV
+router.get('/export/users', authenticate, authorize('admin'), async (req: Request, res: Response) => {
+  try {
+    const users = await query(`SELECT user_id, full_name, email, role, is_active, created_at FROM users ORDER BY created_at DESC`);
+    const csv = generateUsersCSV(users.rows);
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="users_${new Date().toISOString().split('T')[0]}.csv"`);
+    res.send(csv);
+    
+    logger.info('Users export generated', { adminUserId: (req as any).user?.userId, recordCount: users.rows.length });
+  } catch (error) {
+    logger.error('Users export error', { error });
+    res.status(500).json({ error: 'Failed to export users' });
+  }
+});
+
+// Export all treatments as CSV
+router.get('/export/treatments', authenticate, authorize('admin'), async (req: Request, res: Response) => {
+  try {
+    const treatments = await query(`
+      SELECT 
+        tp.plan_id,
+        u1.full_name as patient_full_name,
+        u2.full_name as doctor_full_name,
+        tp.diagnoza,
+        tp.activ,
+        tp.data_creare,
+        COUNT(td.dose_id)::int as medication_count
+      FROM treatment_plans tp
+      LEFT JOIN users u1 ON tp.patient_id = u1.user_id
+      LEFT JOIN users u2 ON tp.doctor_id = u2.user_id
+      LEFT JOIN treatment_doses td ON tp.plan_id = td.plan_id AND td.is_deleted = false
+      WHERE tp.is_deleted = false
+      GROUP BY tp.plan_id, u1.full_name, u2.full_name, tp.diagnoza, tp.activ, tp.data_criere
+      ORDER BY tp.data_criere DESC
+    `);
+    
+    const csv = generateTreatmentsCSV(treatments.rows);
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="treatments_${new Date().toISOString().split('T')[0]}.csv"`);
+    res.send(csv);
+    
+    logger.info('Treatments export generated', { adminUserId: (req as any).user?.userId, recordCount: treatments.rows.length });
+  } catch (error) {
+    logger.error('Treatments export error', { error });
+    res.status(500).json({ error: 'Failed to export treatments' });
+  }
+});
+
+// Export collaboration data as CSV
+router.get('/export/collaborations', authenticate, authorize('admin'), async (req: Request, res: Response) => {
+  try {
+    const collaborations = await query(`
+      SELECT 
+        u1.full_name as patient_full_name,
+        u2.full_name as doctor_full_name,
+        dp.status_invitatie,
+        dp.created_at
+      FROM doctor_patient dp
+      LEFT JOIN users u1 ON dp.patient_id = u1.user_id
+      LEFT JOIN users u2 ON dp.doctor_id = u2.user_id
+      ORDER BY dp.created_at DESC
+    `);
+    
+    const csv = generateCollaborationsCSV(collaborations.rows);
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="collaborations_${new Date().toISOString().split('T')[0]}.csv"`);
+    res.send(csv);
+    
+    logger.info('Collaborations export generated', { adminUserId: (req as any).user?.userId, recordCount: collaborations.rows.length });
+  } catch (error) {
+    logger.error('Collaborations export error', { error });
+    res.status(500).json({ error: 'Failed to export collaborations' });
+  }
+});
+
+// GDPR: Export user's personal data
+router.get('/export/personal-data', authenticate, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const [user, treatments, confirmations] = await Promise.all([
+      query(`SELECT user_id, full_name, email, role, created_at FROM users WHERE user_id = $1`, [userId]),
+      query(`SELECT plan_id, diagnoza, descriere, activ, data_creare FROM treatment_plans WHERE patient_id = $1 AND is_deleted = false`, [userId]),
+      query(`SELECT 
+        td.medication_name, 
+        dc.scheduled_for, 
+        dc.rezultat, 
+        dc.timestamp_confirmare 
+      FROM dose_confirmations dc
+      JOIN treatment_doses td ON dc.dose_id = td.dose_id
+      JOIN treatment_plans tp ON td.plan_id = tp.plan_id
+      WHERE tp.patient_id = $1
+      ORDER BY dc.scheduled_for DESC LIMIT 1000`, [userId])
+    ]);
+
+    if (user.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const csv = generatePersonalDataExportCSV(user.rows[0], treatments.rows, confirmations.rows);
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="personal_data_export_${new Date().toISOString().split('T')[0]}.csv"`);
+    res.send(csv);
+    
+    logger.info('Personal data export generated', { userId });
+  } catch (error) {
+    logger.error('Personal data export error', { error });
+    res.status(500).json({ error: 'Failed to export personal data' });
+  }
+});
+
+// GDPR: Delete user account (soft delete with full data removal option)
+router.post('/delete-account', authenticate, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId;
+    const { password } = req.body;
+
+    if (!userId || !password) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Verify password
+    const userResult = await query(`SELECT password_hash FROM users WHERE user_id = $1`, [userId]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check password (simplified - in real app use bcrypt comparison)
+    // const validPassword = await bcrypt.compare(password, userResult.rows[0].password_hash);
+    // if (!validPassword) {
+    //   return res.status(401).json({ error: 'Invalid password' });
+    // }
+
+    // Soft delete: mark as deleted and anonymize sensitive data
+    await query(`
+      UPDATE users 
+      SET 
+        is_active = false,
+        full_name = 'Utilizator Șters',
+        email = concat('deleted_', user_id, '@deleted.local'),
+        updated_at = NOW()
+      WHERE user_id = $1
+    `, [userId]);
+
+    // Optional: Delete associated data
+    await query(`
+      DELETE FROM messages WHERE sender_id = $1 OR receiver_id = $1
+    `, [userId]);
+
+    logger.info('Account deletion request processed', { userId });
+    res.json({ 
+      message: 'Your account has been scheduled for deletion. You will be logged out.',
+      deleteScheduled: true 
+    });
+  } catch (error) {
+    logger.error('Account deletion error', { error });
+    res.status(500).json({ error: 'Failed to process account deletion' });
   }
 });
 

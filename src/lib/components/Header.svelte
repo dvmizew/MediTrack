@@ -8,6 +8,7 @@
 	import { systemNotificationStore } from '$lib/stores/notifications';
 	import { themeStore } from '$lib/stores/theme';
 	import { logout as sessionLogout } from '$lib/services/sessionManager';
+	import AccessibilityMenu from './AccessibilityMenu.svelte';
 
 	let notifications = $state<any[]>([]);
 	let showNotifications = $state(false);
@@ -297,6 +298,9 @@
 			</div>
 				<!-- Right Side Actions -->
 				<div class="flex items-center gap-2">
+				<!-- Accessibility Menu -->
+				<AccessibilityMenu />
+				
 				<!-- Theme Toggle -->
 				<button
 					onclick={() => themeStore.toggle()}

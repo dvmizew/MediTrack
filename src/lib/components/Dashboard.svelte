@@ -5,6 +5,14 @@
 	import { authStore, isPacient, isMedic } from '$lib/stores/auth';
 	import { themeStore } from '$lib/stores/theme';
 	import { goto } from '$app/navigation';
+	import {
+		getChartTheme,
+		createPercentageChart,
+		createComparisonBarChart,
+		createTimeSeriesChart,
+		createDistributionChart,
+		type ChartTheme
+	} from '$lib/utils/charts';
 	import Card from '$lib/components/Card.svelte';
 	import ActionButton from '$lib/components/ActionButton.svelte';
 	import PatientsList from '$lib/components/PatientsList.svelte';
@@ -169,12 +177,17 @@
 	let weeklyChart: Chart | null = null;
 	let medicationsChartCanvas = $state<HTMLCanvasElement | null>(null);
 	let medicationsChart: Chart | null = null;
-	const chartTheme = $derived({
-		text: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
-			|| document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#1f2937',
-		grid: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
-			|| document.documentElement.classList.contains('dark') ? '#4b5563' : '#d1d5db'
+
+	// Detect dark mode and get theme colors
+	const isDarkMode = $derived.by(() => {
+		if (typeof window !== 'undefined') {
+			return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+				|| document.documentElement.classList.contains('dark');
+		}
+		return false;
 	});
+
+	const chartTheme: ChartTheme = $derived(getChartTheme(isDarkMode));
 
 	const isAdmin = $derived($authStore.user?.role === 'admin');
 
@@ -182,108 +195,28 @@
 		if (!adminOverview || !adherence7Canvas || !adherence30Canvas) return;
 		const seven = adminOverview.adherence.last7Days;
 		const thirty = adminOverview.adherence.last30Days;
-		
-		// Detect dark mode more reliably
-		const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
-			|| document.documentElement.classList.contains('dark');
-		const textColor = isDark ? '#e5e7eb' : '#1f2937';
-		const gridColor = isDark ? '#4b5563' : '#d1d5db';
-		const tooltipBg = isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(249, 250, 251, 0.95)';
-		const tooltipText = isDark ? '#e5e7eb' : '#1f2937';
 
 		// Destroy existing charts if any
 		if (adherence7Chart) adherence7Chart.destroy();
 		if (adherence30Chart) adherence30Chart.destroy();
 
-		adherence7Chart = new Chart(adherence7Canvas, {
-			type: 'doughnut',
-			data: {
-				labels: ['Confirmate', 'Rămase'],
-				datasets: [{
-					data: [seven.confirmed, Math.max(seven.scheduled - seven.confirmed, 0)],
-					backgroundColor: ['#22c55e', '#f87171'],
-					borderWidth: 0
-				}]
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: true,
-				plugins: {
-					legend: {
-						position: 'bottom',
-						labels: { 
-							boxWidth: 12, 
-							padding: 8,
-							font: { size: 10, weight: 500 },
-							color: textColor 
-						}
-					},
-					tooltip: {
-						backgroundColor: tooltipBg,
-						titleColor: tooltipText,
-						bodyColor: tooltipText,
-						borderColor: isDark ? '#4b5563' : '#e5e7eb',
-						borderWidth: 1,
-						padding: 10,
-						displayColors: true,
-						titleFont: { size: 12, weight: 'bold' },
-						bodyFont: { size: 11 }
-					}
-				},
-				cutout: '70%'
-			}
-		});
+		// 7-day adherence as percentage (doughnut)
+		adherence7Chart = createPercentageChart(
+			adherence7Canvas.getContext('2d')!,
+			seven.confirmed,
+			seven.scheduled,
+			['Confirmate', 'Rămase'],
+			chartTheme
+		);
 
-		adherence30Chart = new Chart(adherence30Canvas, {
-			type: 'bar',
-			data: {
-				labels: ['Programate', 'Confirmate'],
-				datasets: [{
-					data: [thirty.scheduled, thirty.confirmed],
-					backgroundColor: ['#60a5fa', '#34d399'],
-					borderRadius: 4,
-					borderSkipped: false
-				}]
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: true,
-				plugins: { 
-					legend: { display: false },
-					tooltip: {
-						backgroundColor: tooltipBg,
-						titleColor: tooltipText,
-						bodyColor: tooltipText,
-						borderColor: isDark ? '#4b5563' : '#e5e7eb',
-						borderWidth: 1,
-						padding: 10,
-						titleFont: { size: 12, weight: 'bold' },
-						bodyFont: { size: 11 }
-					}
-				},
-				scales: {
-					y: { 
-						beginAtZero: true, 
-						ticks: { 
-							font: { size: 11, weight: 500 },
-							color: textColor,
-							stepSize: Math.ceil(Math.max(thirty.scheduled, thirty.confirmed) / 5)
-						}, 
-						grid: { 
-							color: gridColor,
-							drawTicks: true
-						} 
-					},
-					x: { 
-						ticks: { 
-							font: { size: 11, weight: 500 },
-							color: textColor 
-						}, 
-						grid: { display: false } 
-					}
-				}
-			}
-		});
+		// 30-day comparison bar chart
+		adherence30Chart = createComparisonBarChart(
+			adherence30Canvas.getContext('2d')!,
+			['Programate', 'Confirmate'],
+			[{ label: 'Programate', data: [thirty.scheduled] }, { label: 'Confirmate', data: [thirty.confirmed] }],
+			chartTheme,
+			Math.max(thirty.scheduled, thirty.confirmed)
+		);
 	}
 
 	async function loadAdminOverview() {
@@ -659,224 +592,56 @@
 	}
 
 	function initializeCharts() {
-		const { text: textColor, grid: gridColor } = chartTheme;
-		const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
-			|| document.documentElement.classList.contains('dark');
-		const tooltipBg = isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(249, 250, 251, 0.95)';
-
 		// Weekly Adherence Rate Chart (Doughnut) — using 7-day average percentage
 		if (adherenceChartCanvas) {
 			const weeklyRate = stats.weeklyAdherence;
-			// Show percentage directly: weeklyRate% completed, (100-weeklyRate)% remaining
 
-			adherenceChart = new Chart(adherenceChartCanvas, {
-				type: 'doughnut',
-				data: {
-					labels: ['Conformitate', 'Rămas'],
-					datasets: [{
-						data: [weeklyRate, 100 - weeklyRate],
-						backgroundColor: ['#10b981', '#e5e7eb'],
-						borderWidth: 0
-					}]
-				},
-				options: {
-					responsive: true,
-					maintainAspectRatio: false,
-					plugins: {
-						legend: {
-							position: 'bottom',
-							labels: { 
-								color: textColor,
-								font: { size: 11, weight: 500 }
-							}
-						},
-						title: {
-							display: true,
-							text: `Conformitate săptămânală: ${weeklyRate}%`,
-							color: textColor,
-							font: { size: 16, weight: 'bold' }
-						},
-						tooltip: {
-							backgroundColor: tooltipBg,
-							titleColor: textColor,
-							bodyColor: textColor,
-							borderColor: isDark ? '#4b5563' : '#e5e7eb',
-							borderWidth: 1,
-							padding: 10,
-							titleFont: { size: 12, weight: 'bold' },
-							bodyFont: { size: 11 }
-						}
-					}
-				}
-			});
+			if (adherenceChart) adherenceChart.destroy();
+			adherenceChart = createPercentageChart(
+				adherenceChartCanvas.getContext('2d')!,
+				weeklyRate,
+				100,
+				['Conformitate', 'Rămas'],
+				chartTheme
+			);
 		}
 
 		// 7-day timeline (Line)
 		if (weeklyChartCanvas) {
 			const timeline = buildTodayTimeline();
 
-			weeklyChart = new Chart(weeklyChartCanvas, {
-				type: 'line',
-				data: {
-					labels: timeline.labels,
-					datasets: [{
-						label: 'Conformitate zilnică (%)',
-						data: timeline.data,
-						borderColor: '#3b82f6',
-						backgroundColor: 'rgba(59, 130, 246, 0.1)',
-						tension: 0.35,
-						fill: true
-					}]
-				},
-				options: {
-					responsive: true,
-					maintainAspectRatio: false,
-					plugins: {
-						legend: {
-							labels: { 
-								color: textColor,
-								font: { size: 11, weight: 500 }
-							}
-						},
-						tooltip: {
-							backgroundColor: tooltipBg,
-							titleColor: textColor,
-							bodyColor: textColor,
-							borderColor: isDark ? '#4b5563' : '#e5e7eb',
-							borderWidth: 1,
-							padding: 10,
-							titleFont: { size: 12, weight: 'bold' },
-							bodyFont: { size: 11 }
-						}
-					},
-					scales: {
-						y: {
-							beginAtZero: true,
-							max: 100,
-							ticks: { 
-								color: textColor,
-								font: { size: 11, weight: 500 }
-							},
-							grid: { color: gridColor }
-						},
-						x: {
-							ticks: { 
-								color: textColor,
-								font: { size: 11, weight: 500 }
-							},
-							grid: { color: gridColor }
-						}
-					}
-				}
-			});
+			if (weeklyChart) weeklyChart.destroy();
+			weeklyChart = createTimeSeriesChart(
+				weeklyChartCanvas.getContext('2d')!,
+				timeline.labels,
+				timeline.data,
+				'#3b82f6',
+				'rgba(59, 130, 246, 0.1)',
+				chartTheme,
+				100
+			);
 		}
 
 		// 7-day Medications Distribution Chart (Bar)
 		if (medicationsChartCanvas) {
 			const distribution = getMedicationDistribution();
 
-			medicationsChart = new Chart(medicationsChartCanvas, {
-				type: 'bar',
-				data: {
-					labels: distribution.labels,
-					datasets: [{
-						label: 'Medicamente săptămânal',
-						data: distribution.data,
-						backgroundColor: '#8b5cf6',
-						borderRadius: 8
-					}]
-				},
-				options: {
-					responsive: true,
-					maintainAspectRatio: false,
-					plugins: {
-						legend: {
-							display: false
-						},
-						tooltip: {
-							backgroundColor: tooltipBg,
-							titleColor: textColor,
-							bodyColor: textColor,
-							borderColor: isDark ? '#4b5563' : '#e5e7eb',
-							borderWidth: 1,
-							padding: 10,
-							titleFont: { size: 12, weight: 'bold' },
-							bodyFont: { size: 11 }
-						}
-					},
-					scales: {
-						y: {
-							beginAtZero: true,
-							ticks: { 
-								stepSize: 1,
-								color: textColor,
-								font: { size: 11, weight: 500 }
-							},
-							grid: { color: gridColor }
-						},
-						x: {
-							ticks: { 
-								color: textColor,
-								font: { size: 11, weight: 500 }
-							},
-							grid: { display: false }
-						}
-					}
-				}
-			});
+			if (medicationsChart) medicationsChart.destroy();
+			medicationsChart = createDistributionChart(
+				medicationsChartCanvas.getContext('2d')!,
+				distribution.labels,
+				distribution.data,
+				'#8b5cf6',
+				chartTheme
+			);
 		}
 	}
 
 	function updateCharts() {
-		const { text: textColor, grid: gridColor } = chartTheme;
-		
-		if (adherenceChart) {
-			const weeklyRate = stats.weeklyAdherence;
-			// Update with correct percentage data
-			adherenceChart.data.datasets[0].data = [weeklyRate, 100 - weeklyRate];
-			if (adherenceChart.options.plugins?.title) {
-				adherenceChart.options.plugins.title.text = `Conformitate săptămânală: ${weeklyRate}%`;
-				adherenceChart.options.plugins.title.color = textColor;
-			}
-			if (adherenceChart.options.plugins?.legend?.labels) {
-				adherenceChart.options.plugins.legend.labels.color = textColor;
-			}
-			adherenceChart.update();
-		}
-		
-		if (weeklyChart) {
-			const timeline = buildTodayTimeline();
-			weeklyChart.data.labels = timeline.labels;
-			weeklyChart.data.datasets[0].data = timeline.data;
-			if (weeklyChart.options.plugins?.legend?.labels) {
-				weeklyChart.options.plugins.legend.labels.color = textColor;
-			}
-			if (weeklyChart.options.scales?.y) {
-				weeklyChart.options.scales.y.ticks = { color: textColor };
-				weeklyChart.options.scales.y.grid = { color: gridColor };
-			}
-			if (weeklyChart.options.scales?.x) {
-				weeklyChart.options.scales.x.ticks = { color: textColor };
-				weeklyChart.options.scales.x.grid = { color: gridColor };
-			}
-			weeklyChart.update();
-		}
-		
-		if (medicationsChart) {
-			const distribution = getMedicationDistribution();
-			medicationsChart.data.labels = distribution.labels;
-			medicationsChart.data.datasets[0].data = distribution.data;
-			if (medicationsChart.options.scales?.y) {
-				medicationsChart.options.scales.y.ticks = { stepSize: 1, color: textColor };
-				medicationsChart.options.scales.y.grid = { color: gridColor };
-			}
-			if (medicationsChart.options.scales?.x) {
-				medicationsChart.options.scales.x.ticks = { color: textColor };
-				medicationsChart.options.scales.x.grid = { display: false };
-			}
-			medicationsChart.update();
-		}
+		// On theme change, reinitialize all charts to apply new theme colors
+		initializeCharts();
 	}
+
 </script>
 
 {#if $isMedic}

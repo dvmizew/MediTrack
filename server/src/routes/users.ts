@@ -3,6 +3,7 @@ import { logger } from '../config/logger.js';
 import { body, validationResult } from 'express-validator';
 import { query } from '../config/database.js';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth.js';
+import bcrypt from 'bcrypt';
 
 const router: Router = express.Router();
 
@@ -100,7 +101,208 @@ router.patch(
   }
 );
 
-// Get current user profile
+// Create new user (admin only)
+router.post(
+  '/',
+  authenticate,
+  authorize('admin'),
+  [
+    body('email').isEmail().normalizeEmail(),
+    body('fullName').trim().notEmpty(),
+    body('role').isIn(['admin', 'medic', 'pacient']),
+    body('password').matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/).withMessage('Password must be 8+ chars with uppercase, digit, and special char (@$!%*?&)')
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { email, fullName, role, password } = req.body;
+
+      // Check if email already exists
+      const existing = await query('SELECT email FROM users WHERE email = $1', [email]);
+      if (existing.rows.length > 0) {
+        return res.status(409).json({ error: 'Email already exists' });
+      }
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // Create user
+      const result = await query(
+        `INSERT INTO users (email, password_hash, full_name, role, is_active) 
+         VALUES ($1, $2, $3, $4, true) 
+         RETURNING user_id, email, full_name, role, is_active, created_at`,
+        [email, passwordHash, fullName, role]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(500).json({ error: 'Failed to create user' });
+      }
+
+      // If role is 'pacient', create patient profile
+      if (role === 'pacient') {
+        const userId = result.rows[0].user_id;
+        await query(
+          'INSERT INTO patient_profiles (patient_id) VALUES ($1) ON CONFLICT (patient_id) DO NOTHING',
+          [userId]
+        );
+      }
+
+      const user = result.rows[0];
+      logger.info('New user created', { email, fullName, role });
+
+      res.status(201).json({
+        userId: user.user_id,
+        email: user.email,
+        fullName: user.full_name,
+        role: user.role,
+        isActive: user.is_active,
+        createdAt: user.created_at
+      });
+    } catch (error) {
+      logger.error('Create user error', { error });
+      res.status(500).json({ error: 'Failed to create user' });
+    }
+  }
+);
+
+// Update user (admin only) - email, name, role, password
+router.patch(
+  '/:userId',
+  authenticate,
+  authorize('admin'),
+  [
+    body('email').optional().isEmail().normalizeEmail(),
+    body('fullName').optional().trim().notEmpty(),
+    body('role').optional().isIn(['admin', 'medic', 'pacient']),
+    body('password').optional().matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/).withMessage('Password must be 8+ chars with uppercase, digit, and special char (@$!%*?&)')
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { userId } = req.params;
+      const { email, fullName, role, password } = req.body;
+
+      // Check if user exists
+      const userExists = await query('SELECT user_id FROM users WHERE user_id = $1', [userId]);
+      if (userExists.rows.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Check if email is taken (by another user)
+      if (email) {
+        const emailExists = await query(
+          'SELECT user_id FROM users WHERE email = $1 AND user_id != $2',
+          [email, userId]
+        );
+        if (emailExists.rows.length > 0) {
+          return res.status(409).json({ error: 'Email already exists' });
+        }
+      }
+
+      // Build update query dynamically
+      const updates: string[] = [];
+      const values: any[] = [];
+      let paramCount = 1;
+
+      if (email) {
+        updates.push(`email = $${paramCount++}`);
+        values.push(email);
+      }
+      if (fullName) {
+        updates.push(`full_name = $${paramCount++}`);
+        values.push(fullName);
+      }
+      if (role) {
+        updates.push(`role = $${paramCount++}`);
+        values.push(role);
+      }
+      if (password) {
+        const passwordHash = await bcrypt.hash(password, 10);
+        updates.push(`password_hash = $${paramCount++}`);
+        values.push(passwordHash);
+      }
+
+      updates.push(`updated_at = CURRENT_TIMESTAMP`);
+      values.push(userId);
+
+      const result = await query(
+        `UPDATE users SET ${updates.join(', ')} 
+         WHERE user_id = $${paramCount} 
+         RETURNING user_id, email, full_name, role, is_active, created_at`,
+        values
+      );
+
+      const user = result.rows[0];
+      logger.info('User updated', { userId, email, fullName, role, passwordChanged: !!password });
+
+      res.json({
+        userId: user.user_id,
+        email: user.email,
+        fullName: user.full_name,
+        role: user.role,
+        isActive: user.is_active,
+        createdAt: user.created_at
+      });
+    } catch (error) {
+      logger.error('Update user error', { error });
+      res.status(500).json({ error: 'Failed to update user' });
+    }
+  }
+);
+
+// Delete user (admin only) - soft delete
+router.delete(
+  '/:userId',
+  authenticate,
+  authorize('admin'),
+  async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+      const adminId = (req as AuthRequest).user!.userId;
+
+      // Prevent deleting yourself
+      if (parseInt(userId) === adminId) {
+        return res.status(403).json({ error: 'Cannot delete your own account' });
+      }
+
+      // Check if user exists
+      const userExists = await query('SELECT user_id FROM users WHERE user_id = $1', [userId]);
+      if (userExists.rows.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Soft delete: deactivate and anonymize
+      const result = await query(
+        `UPDATE users 
+         SET is_active = false, 
+             email = concat('deleted_', user_id, '_', EXTRACT(EPOCH FROM NOW())::text, '@deleted.local'),
+             full_name = 'Utilizator Șters',
+             updated_at = CURRENT_TIMESTAMP
+         WHERE user_id = $1 
+         RETURNING user_id, email`,
+        [userId]
+      );
+
+      logger.info('User deleted (soft delete)', { userId, deletedBy: adminId });
+
+      res.json({ 
+        message: 'User successfully deleted',
+        userId: result.rows[0].user_id
+      });
+    } catch (error) {
+      logger.error('Delete user error', { error });
+      res.status(500).json({ error: 'Failed to delete user' });
+    }
+  }
+);
 router.get('/me', authenticate, async (req: Request, res: Response) => {
   try {
     const userId = (req as AuthRequest).user!.userId;
