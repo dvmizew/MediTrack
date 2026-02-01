@@ -326,8 +326,8 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<div class="flex items-center justify-between mb-8">
 		<div>
-			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">👥 Gestionare Utilizatori</h1>
-			<p class="text-gray-600 dark:text-gray-400">Administrează rolurile și statusul utilizatorilor</p>
+			<h1 class="text-3xl font-bold text-gray-900 mb-2">👥 Gestionare Utilizatori</h1>
+			<p class="text-sm text-gray-800 font-medium">Administrează rolurile și statusul utilizatorilor</p>
 		</div>
 		<div class="flex gap-3">
 			<button
@@ -352,7 +352,7 @@
 		</div>
 	{:else}
 		<!-- Filters -->
-		<div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 mb-6">
+		<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-md p-6 mb-6">
 			<div class="flex items-center gap-2 mb-4">
 				<span class="text-xl">🔍</span>
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Filtrare și Căutare</h2>
@@ -397,7 +397,7 @@
 
 		<!-- Users List -->
 		{#if filteredUsers.length === 0}
-			<div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-16 text-center">
+			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-md p-16 text-center">
 				<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
 					<svg class="h-8 w-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
@@ -407,7 +407,7 @@
 				<p class="text-gray-500 dark:text-gray-400">Încearcă să schimbi criteriile de căutare</p>
 			</div>
 		{:else}
-			<div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-md overflow-hidden">
 				<div class="hidden md:block overflow-x-auto">
 					<table class="w-full">
 						<thead class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50 border-b border-gray-200 dark:border-gray-700">

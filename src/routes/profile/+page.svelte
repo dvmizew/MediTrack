@@ -124,8 +124,8 @@
 					{/if}
 				</div>
 				<div>
-					<h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100">{user.fullName}</h1>
-					<p class="text-lg text-gray-600 dark:text-gray-400 capitalize mt-1">{user.role}</p>
+					<h1 class="text-4xl font-bold text-gray-900">{user.fullName}</h1>
+				<p class="text-lg text-gray-800 capitalize mt-1 font-medium">{user.role}</p>
 					{#if $isPacient}
 						<div class="flex items-center gap-4 mt-2">
 							<span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-full">
@@ -142,7 +142,7 @@
 
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 			<!-- Account Information -->
-			<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
 						<svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,11 +153,11 @@
 				</div>
 				<div class="space-y-4">
 					<div>
-						<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Email</p>
+							<p class="text-sm text-gray-700 dark:text-gray-300 mb-1">Email</p>
 						<p class="text-gray-900 dark:text-gray-100 font-medium">{user.email}</p>
 					</div>
 					<div>
-						<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Rol</p>
+							<p class="text-sm text-gray-700 dark:text-gray-300 mb-1">Rol</p>
 						<p class="text-gray-900 dark:text-gray-100 font-medium capitalize">{user.role}</p>
 					</div>
 					<div>
@@ -171,7 +171,7 @@
 
 			{#if $isPacient}
 				<!-- Patient Stats Card -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+				<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
 							<svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
@@ -203,7 +203,7 @@
 				</div>
 
 				<!-- Badge Display -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+				<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-gradient-to-br {getBadgeColor(stats.currentBadge)} rounded-lg flex items-center justify-center">
 							<svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -224,7 +224,7 @@
 				</div>
 			{:else}
 				<!-- For Medics/Admins - Activity Summary -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 md:col-span-2">
+				<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6 md:col-span-2">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
 							<svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,7 +251,7 @@
 		<div class="mt-8">
 			<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Acțiuni rapide</h2>
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<a href="/settings" class="block p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-in-out group">
+				<a href="/settings" class="block p-4 bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-in-out group">
 					<div class="flex items-center gap-3">
 						<div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 ease-in-out">
 							<svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,7 +266,7 @@
 					</div>
 				</a>
 
-				<a href="/dashboard" class="block p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-in-out group">
+				<a href="/dashboard" class="block p-4 bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-in-out group">
 					<div class="flex items-center gap-3">
 						<div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 ease-in-out">
 							<svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -280,7 +280,7 @@
 					</div>
 				</a>
 
-				<a href="/treatments" class="block p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-500 hover:shadow-xl hover:shadow-green-500/10 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-in-out group">
+				<a href="/treatments" class="block p-4 bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm hover:border-green-400 dark:hover:border-green-500 hover:shadow-xl hover:shadow-green-500/10 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-in-out group">
 					<div class="flex items-center gap-3">
 						<div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 ease-in-out">
 							<svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -35,7 +35,7 @@
 <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 	<div class="space-y-1">
 		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">🩺 Raport medic</h1>
-		<p class="text-gray-600 dark:text-gray-400">ID: {userId}</p>
+		<p class="text-gray-700 dark:text-gray-300">ID: {userId}</p>
 	</div>
 
 	{#if loading}
@@ -48,13 +48,13 @@
 		</div>
 	{:else if report}
 		<div class="grid gap-4 md:grid-cols-2">
-			<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-2">
+			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-5 space-y-2">
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Profil</h2>
 				<p class="text-sm text-gray-700 dark:text-gray-200">Nume: {report.medic.full_name || 'N/A'}</p>
 				<p class="text-sm text-gray-700 dark:text-gray-200">Email: {report.medic.email}</p>
 				<p class="text-sm text-gray-700 dark:text-gray-200">Rol: {report.medic.role}</p>
 			</div>
-			<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-2">
+			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-5 space-y-2">
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Indicatori</h2>
 				<p class="text-sm text-gray-700 dark:text-gray-200">Pacienți: {report.patients}</p>
 				<p class="text-sm text-gray-700 dark:text-gray-200">Planuri: {report.plans}</p>
@@ -63,7 +63,7 @@
 			</div>
 		</div>
 
-		<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-3">
+		<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-5 space-y-3">
 			<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Invitații</h2>
 			<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-gray-800 dark:text-gray-200">
 				<div class="px-3 py-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">Acceptate: {report.invites.accepted}</div>

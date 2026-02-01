@@ -106,7 +106,7 @@
 					<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
 				</div>
 			{:else if collaborations.length === 0}
-				<div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 sm:p-12 md:p-16 text-center animate-scale-in">
+				<div class="bg-white/90 dark:bg-gray-900/70 rounded-xl sm:rounded-2xl shadow-sm border border-slate-200/70 dark:border-gray-800/70 p-8 sm:p-12 md:p-16 text-center animate-scale-in">
 					<div class="max-w-sm mx-auto">
 						<svg
 							class="mx-auto h-16 w-16 sm:h-20 sm:w-20 text-gray-300 dark:text-gray-600 mb-3 sm:mb-4"
@@ -138,7 +138,7 @@
 					{#each collaborations as collab}
 						<button
 							onclick={() => openChat(collab.user_id)}
-							class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-2 border-gray-200 dark:border-gray-700 p-4 sm:p-5 md:p-6 hover:shadow-xl hover:shadow-blue-500/10 active:border-blue-300 dark:active:border-blue-600 sm:hover:border-blue-300 sm:dark:hover:border-blue-600 sm:hover:-translate-y-1 transition-all duration-300 text-left group animate-scale-in touch-manipulation {selectedUserId === collab.user_id ? 'scale-95 opacity-50' : ''}"
+							class="bg-white/90 dark:bg-gray-900/70 rounded-xl shadow-sm border-2 border-slate-200/70 dark:border-gray-800/70 p-4 sm:p-5 md:p-6 hover:shadow-xl hover:shadow-blue-500/10 active:border-blue-300 dark:active:border-blue-600 sm:hover:border-blue-300 sm:dark:hover:border-blue-600 sm:hover:-translate-y-1 transition-all duration-300 text-left group animate-scale-in touch-manipulation {selectedUserId === collab.user_id ? 'scale-95 opacity-50' : ''}"
 						>
 							<div class="flex items-center justify-between gap-2 sm:gap-4">
 								<div class="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">

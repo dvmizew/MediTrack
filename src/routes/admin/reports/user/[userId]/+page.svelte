@@ -54,7 +54,7 @@
 		</div>
 	{:else if report}
 		<div class="grid gap-4 md:grid-cols-3">
-			<div class="md:col-span-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-3">
+			<div class="md:col-span-2 bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-5 space-y-3">
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Profil</h2>
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-800 dark:text-gray-200">
 					<p><span class="font-semibold">Nume: </span>{report.user.full_name || 'N/A'}</p>
@@ -64,7 +64,7 @@
 					<p><span class="font-semibold">Creat: </span>{fmtDate(report.user.created_at)}</p>
 				</div>
 			</div>
-			<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-2">
+			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-5 space-y-2">
 				<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Aderență</h3>
 				<p class="text-sm text-gray-700 dark:text-gray-200">XP: {report.stats?.nivel_xp ?? 0}</p>
 				<p class="text-sm text-gray-700 dark:text-gray-200">Streak curent: {report.stats?.current_streak ?? 0}</p>
@@ -73,10 +73,10 @@
 			</div>
 		</div>
 
-		<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-3">
+		<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-5 space-y-3">
 			<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Planuri de tratament</h2>
 			{#if report.treatments.length === 0}
-				<p class="text-sm text-gray-600 dark:text-gray-400">Nu există planuri active.</p>
+				<p class="text-sm text-gray-700 dark:text-gray-300">Nu există planuri active.</p>
 			{:else}
 				<div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
 					<table class="min-w-full text-sm">
@@ -101,10 +101,10 @@
 			{/if}
 		</div>
 
-		<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-3">
+		<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-5 space-y-3">
 			<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Confirmări doze (ultimele 100)</h2>
 			{#if report.confirmations.length === 0}
-				<p class="text-sm text-gray-600 dark:text-gray-400">Nu există confirmări.</p>
+				<p class="text-sm text-gray-700 dark:text-gray-300">Nu există confirmări.</p>
 			{:else}
 				<div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
 					<table class="min-w-full text-sm">

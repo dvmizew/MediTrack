@@ -140,18 +140,18 @@
 					<div class="mt-3 space-y-2 text-xs md:text-sm">
 						<div class="flex items-center gap-2 text-slate-700 dark:text-slate-200">
 							<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/80 text-slate-600 dark:bg-slate-800/70 dark:text-slate-100">🧪</span>
-							<span class="text-slate-500 dark:text-slate-400">Doza</span>
+							<span class="text-slate-600 dark:text-slate-300">Doza</span>
 							<span class="font-semibold text-slate-900 dark:text-slate-100">{medication.quantity}</span>
 						</div>
 						<div class="flex items-center gap-2 text-slate-700 dark:text-slate-200">
 							<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/80 text-slate-600 dark:bg-slate-800/70 dark:text-slate-100">🔁</span>
-							<span class="text-slate-500 dark:text-slate-400">Frecvență</span>
+							<span class="text-slate-600 dark:text-slate-300">Frecvență</span>
 							<span class="font-semibold text-slate-900 dark:text-slate-100">{medication.frequency}</span>
 						</div>
 						{#if medication.instructions}
 							<div class="flex items-start gap-2 text-slate-700 dark:text-slate-200">
 								<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/80 text-slate-600 dark:bg-slate-800/70 dark:text-slate-100">📝</span>
-								<p class="text-slate-500 dark:text-slate-400 italic line-clamp-2">{medication.instructions}</p>
+								<p class="text-slate-600 dark:text-slate-300 italic line-clamp-2">{medication.instructions}</p>
 							</div>
 						{/if}
 					</div>

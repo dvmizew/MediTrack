@@ -114,6 +114,7 @@
 			<h1 class="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
 				Leaderboard
 			</h1>
+			<p class="text-sm sm:text-base text-gray-800 dark:text-gray-300 font-medium">Urmărește clasamentul și concurează cu alți utilizatori</p>
 		</div>
 
 		<!-- Filter Buttons -->
@@ -195,18 +196,18 @@
 		<!-- Leaderboard Cards -->
 		<div class="space-y-4 mb-8">
 			{#if loading && !refreshing}
-				<div class="p-12 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
+			<div class="p-12 text-center bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl shadow-lg">
 					<div class="inline-block animate-spin">
 						<svg class="w-16 h-16 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
 						</svg>
 					</div>
-					<p class="mt-4 text-gray-600 dark:text-gray-400 font-medium">Se încarcă leaderboard-ul...</p>
+					<p class="mt-4 text-gray-800 dark:text-gray-300 font-medium">Se încarcă leaderboard-ul...</p>
 				</div>
 			{:else if leaderboard.length === 0}
-				<div class="p-12 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
+			<div class="p-12 text-center bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl shadow-lg">
 					<span class="text-6xl mb-4 block">🏆</span>
-					<p class="text-xl text-gray-600 dark:text-gray-400 font-medium">
+					<p class="text-xl text-gray-800 dark:text-gray-300 font-medium">
 						Nu au fost găsiți pacienți pe leaderboard
 					</p>
 				</div>
@@ -227,7 +228,7 @@
 										: 'bg-gradient-to-r from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-900/20 dark:via-amber-900/20 dark:to-yellow-900/20 ring-4 ring-orange-300 dark:ring-orange-700'
 								: isCurrentUser
 									? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 ring-2 ring-blue-400 dark:ring-blue-600'
-									: 'bg-white dark:bg-gray-800 hover:shadow-xl'
+									: 'bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 hover:shadow-xl'
 		} rounded-2xl shadow-lg p-6`}
 					>
 						<div class="flex items-center justify-between gap-4">
@@ -279,7 +280,7 @@
 										<span class="text-xl">🔥</span>
 										<span class="text-xl">{user.streak || 0}</span>
 									</div>
-									<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">Streak</p>
+									<p class="text-xs text-gray-800 dark:text-gray-300 mt-1 font-medium">Streak</p>
 								</div>
 
 								<!-- XP -->
@@ -290,7 +291,7 @@
 										</svg>
 										<span class="text-xl">{user.xp || 0}</span>
 									</div>
-									<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">XP</p>
+									<p class="text-xs text-gray-800 dark:text-gray-300 mt-1 font-medium">XP</p>
 								</div>
 
 								<!-- Expand Icon -->
@@ -334,22 +335,22 @@
 								<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
 									<div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 text-center">
 										<p class="text-2xl mb-1">🎯</p>
-										<p class="text-xs text-gray-600 dark:text-gray-400 font-medium">Poziție</p>
+										<p class="text-xs text-gray-800 dark:text-gray-300 font-medium">Poziție</p>
 										<p class="text-xl font-black text-gray-900 dark:text-white">#{index + 1}</p>
 									</div>
 									<div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 text-center">
 										<p class="text-2xl mb-1">{getBadgeIcon(user.badge)}</p>
-										<p class="text-xs text-gray-600 dark:text-gray-400 font-medium">Badge</p>
+										<p class="text-xs text-gray-800 dark:text-gray-300 font-medium">Badge</p>
 										<p class="text-sm font-black text-gray-900 dark:text-white capitalize">{user.badge}</p>
 									</div>
 									<div class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl p-4 text-center">
 										<p class="text-2xl mb-1">🔥</p>
-										<p class="text-xs text-gray-600 dark:text-gray-400 font-medium">Streak</p>
+										<p class="text-xs text-gray-800 dark:text-gray-300 font-medium">Streak</p>
 										<p class="text-xl font-black text-gray-900 dark:text-white">{user.streak}</p>
 									</div>
 									<div class="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-xl p-4 text-center">
 										<p class="text-2xl mb-1">⭐</p>
-										<p class="text-xs text-gray-600 dark:text-gray-400 font-medium">Total XP</p>
+										<p class="text-xs text-gray-800 dark:text-gray-300 font-medium">Total XP</p>
 										<p class="text-xl font-black text-gray-900 dark:text-white">{user.xp}</p>
 									</div>
 								</div>
@@ -362,38 +363,38 @@
 
 		<!-- Info Section -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-			<div class="group bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-blue-400">
+		<div class="group bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:border-blue-400">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform">
 						⭐
 					</div>
 					<h3 class="font-black text-xl text-gray-900 dark:text-white">Cum se câștigă XP?</h3>
 				</div>
-				<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+				<p class="text-sm text-gray-800 dark:text-gray-300 leading-relaxed">
 					Primești XP prin confirmarea dozelor de medicament la timp și prin respectarea planului de tratament. Cu cât ești mai constant, cu atât câștigi mai mult XP!
 				</p>
 			</div>
 
-			<div class="group bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-orange-400">
+		<div class="group bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:border-orange-400">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform">
 						🔥
 					</div>
 					<h3 class="font-black text-xl text-gray-900 dark:text-white">Ce este Streak-ul?</h3>
 				</div>
-				<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+				<p class="text-sm text-gray-800 dark:text-gray-300 leading-relaxed">
 					Streak-ul măsoară numărul de zile consecutive în care ai confirmat toate dozele. Dacă sari o zi, streak-ul se resetează la 0. Continuitate = Succes!
 				</p>
 			</div>
 
-			<div class="group bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-purple-400">
+		<div class="group bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:border-purple-400">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform">
 						🏆
 					</div>
 					<h3 class="font-black text-xl text-gray-900 dark:text-white">Badge-uri</h3>
 				</div>
-				<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+				<p class="text-sm text-gray-800 dark:text-gray-300 leading-relaxed">
 					Deblochează badge-uri pe măsură ce avansezi: 🥉 Bronze (0 XP), 🥈 Silver (500 XP), 🥇 Gold (1500 XP), 💎 Platinum (3000 XP), ⭐ Diamond (5000 XP).
 				</p>
 			</div>

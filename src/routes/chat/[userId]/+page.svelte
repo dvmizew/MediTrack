@@ -491,14 +491,14 @@
 								{#if showOptionsMenu}
 									<div 
 										transition:fly={{ y: -10, duration: 200, easing: quintOut }}
-										class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+										class="absolute right-0 mt-2 w-56 bg-white/95 dark:bg-gray-900/80 rounded-xl shadow-2xl border border-slate-200/70 dark:border-gray-800/70 overflow-hidden z-50"
 									>
 										<div class="py-2">
 											{#if $isMedic}
 												<!-- Medic Options -->
 												<button
 													onclick={createTreatment}
-													class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
 												>
 													<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -507,7 +507,7 @@
 												</button>
 												<button
 													onclick={viewTreatments}
-													class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
 												>
 													<svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -516,7 +516,7 @@
 												</button>
 												<button
 													onclick={sendReminder}
-													class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
 												>
 													<svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
@@ -525,7 +525,7 @@
 												</button>
 												<button
 													onclick={viewReports}
-													class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
 												>
 													<svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -536,7 +536,7 @@
 												<!-- Pacient Options -->
 												<button
 													onclick={viewTreatments}
-													class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
 												>
 													<svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -545,7 +545,7 @@
 												</button>
 												<button
 													onclick={viewReports}
-													class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
 												>
 													<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
@@ -606,7 +606,7 @@
 											? message._pending 
 												? 'bg-blue-500 text-white rounded-br-none opacity-70' 
 												: 'bg-blue-600 text-white rounded-br-none'
-											: 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-bl-none'
+											: 'bg-white/90 dark:bg-gray-900/70 text-gray-900 dark:text-gray-100 border border-slate-200/70 dark:border-gray-800/70 rounded-bl-none'
 									}`}>
 										<p class="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.continut}</p>
 										{#if message._pending}
@@ -632,7 +632,7 @@
 			</div>
 
 			<!-- Message Input -->
-			<div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 safe-area-bottom overflow-hidden">
+			<div class="bg-white/90 dark:bg-gray-900/70 border-t border-slate-200/70 dark:border-gray-800/70 flex-shrink-0 safe-area-bottom overflow-hidden">
 				<div class="w-full px-2 xs:px-3 sm:px-4 py-2 sm:py-3">
 					<form onsubmit={(e) => { e.preventDefault(); sendMessage(); }} class="flex gap-1.5 sm:gap-2 items-end w-full min-w-0">
 						<textarea
@@ -642,7 +642,7 @@
 							onkeypress={handleKeyPress}
 							placeholder="Mesaj..."
 							rows="1"
-							class="flex-1 min-w-0 resize-none rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-2 py-2 sm:px-3 sm:py-2 text-xs sm:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-0 focus:outline-none transition"
+							class="flex-1 min-w-0 resize-none rounded-xl border-2 border-slate-200/70 dark:border-gray-700 bg-slate-50/80 dark:bg-gray-800 px-2 py-2 sm:px-3 sm:py-2 text-xs sm:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-0 focus:outline-none transition"
 							style="max-height: 100px; min-height: 36px;"
 						></textarea>
 						<button

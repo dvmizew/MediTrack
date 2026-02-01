@@ -45,10 +45,24 @@
 			<circle cx="60" cy="60" r="40" fill="none" stroke="rgba(148, 163, 184, 0.35)" stroke-width="1" />
 
 			<!-- Streak + countdown -->
-			<text x="60" y="58" text-anchor="middle" font-size="30" fill={muted ? '#475569' : '#0f172a'} font-weight="700">
+			<text
+				x="60"
+				y="58"
+				text-anchor="middle"
+				font-size="30"
+				font-weight="700"
+				class={muted ? 'fill-slate-600 dark:fill-slate-300' : 'fill-slate-900 dark:fill-slate-100'}
+			>
 				{streak}
 			</text>
-			<text x="60" y="82" text-anchor="middle" font-size="16" fill={muted ? '#64748b' : '#334155'} font-weight="700">
+			<text
+				x="60"
+				y="82"
+				text-anchor="middle"
+				font-size="16"
+				font-weight="700"
+				class={muted ? 'fill-slate-500 dark:fill-slate-400' : 'fill-slate-700 dark:fill-slate-200'}
+			>
 				{countdownText}
 			</text>
 		</svg>

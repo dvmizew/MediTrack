@@ -342,7 +342,7 @@
 		<div class="mb-6">
 			<button
 				onclick={() => goto('/treatments')}
-				class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
+				class="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
 			>
 				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -365,7 +365,7 @@
 				<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
 					<div class="flex-1 min-w-0">
 						<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 break-words">{treatment.diagnosis}</h1>
-						<p class="text-gray-600 dark:text-gray-400 break-words">{treatment.description || 'Fără descriere'}</p>
+						<p class="text-gray-700 dark:text-gray-300 break-words">{treatment.description || 'Fără descriere'}</p>
 					</div>
 					<div class="flex items-center gap-3 flex-shrink-0">
 						<span class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-full whitespace-nowrap {treatment.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'}">
@@ -407,15 +407,15 @@
 
 				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
 					<div>
-						<p class="text-gray-500 dark:text-gray-400">Pacient</p>
+						<p class="text-gray-700 dark:text-gray-300">Pacient</p>
 						<p class="font-semibold text-gray-900 dark:text-gray-100 truncate">{treatment.patientName}</p>
 					</div>
 					<div>
-						<p class="text-gray-500 dark:text-gray-400">Medic</p>
+						<p class="text-gray-700 dark:text-gray-300">Medic</p>
 						<p class="font-semibold text-gray-900 dark:text-gray-100 truncate">{treatment.doctorName}</p>
 					</div>
 					<div>
-						<p class="text-gray-500 dark:text-gray-400">Data creării</p>
+						<p class="text-gray-700 dark:text-gray-300">Data creării</p>
 						<p class="font-semibold text-gray-900 dark:text-gray-100">{formatDate(treatment.createdAt)}</p>
 					</div>
 				</div>
@@ -440,7 +440,7 @@
 						<svg class="mx-auto h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
 						</svg>
-						<p class="text-gray-500 dark:text-gray-400">Niciun medicament adăugat încă</p>
+						<p class="text-gray-700 dark:text-gray-300">Niciun medicament adăugat încă</p>
 					</div>
 				{:else}
 					<div class="space-y-4">
@@ -449,12 +449,12 @@
 								<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
 									<div class="flex-1 min-w-0">
 										<h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 break-words">{med.medicationName}</h3>
-										<p class="text-gray-600 dark:text-gray-400 text-sm mt-1">{med.quantity} • {med.frequency}</p>
+										<p class="text-gray-700 dark:text-gray-300 text-sm mt-1">{med.quantity} • {med.frequency}</p>
 										{#if med.instructions}
-											<p class="text-gray-500 dark:text-gray-400 text-sm mt-2 break-words">{med.instructions}</p>
+											<p class="text-gray-700 dark:text-gray-300 text-sm mt-2 break-words">{med.instructions}</p>
 										{/if}
 										{#if med.medicationDetails}
-											<p class="text-gray-500 dark:text-gray-400 text-xs mt-1 break-words">{med.medicationDetails}</p>
+											<p class="text-gray-700 dark:text-gray-300 text-xs mt-1 break-words">{med.medicationDetails}</p>
 										{/if}
 									</div>
 									<div class="flex sm:flex-col items-center sm:items-end gap-2 flex-shrink-0">
@@ -478,7 +478,7 @@
 										{/if}
 									</div>
 								</div>
-								<div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+								<div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-700 dark:text-gray-300">
 									<span class="whitespace-nowrap">📅 Start: {formatDate(med.startDate)}</span>
 									{#if med.endDate}
 										<span class="whitespace-nowrap">📅 Sfârșit: {formatDate(med.endDate)}</span>

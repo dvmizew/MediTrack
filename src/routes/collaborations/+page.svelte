@@ -96,8 +96,8 @@
 {#if $authStore.isAuthenticated}
 	<main class="page-transition max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 		<div class="mb-6 sm:mb-8">
-			<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">🤝 Colaborări</h1>
-			<p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+			<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">🤝 Colaborări</h1>
+			<p class="text-sm sm:text-base text-gray-800 font-medium">
 				{#if isAdmin}
 					Overview global al tuturor colaborărilor din sistem
 				{:else if $isMedic}
@@ -163,10 +163,10 @@
 				<!-- Detailed Breakdown -->
 				<div class="grid gap-4 sm:gap-6 md:grid-cols-2">
 					<!-- Status Breakdown -->
-					<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+					<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm overflow-hidden">
 						<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
 							<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">📊 Detalii Status</h2>
-							<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Distribuție pe statusuri</p>
+							<p class="text-xs text-gray-700 dark:text-gray-300 mt-1">Distribuție pe statusuri</p>
 						</div>
 						<div class="p-4 sm:p-6 space-y-4">
 							{#each adminOverview.collaborations as c}
@@ -193,7 +193,7 @@
 											style="width: {adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0 ? (c.count / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100 : 0}%"
 										></div>
 									</div>
-									<div class="text-xs text-gray-500 dark:text-gray-400">
+												<div class="text-xs text-gray-700 dark:text-gray-300">
 										{Math.round((c.count / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}% din total
 									</div>
 								</div>
@@ -202,13 +202,13 @@
 							<!-- Summary -->
 							<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
 								<div class="flex justify-between text-sm">
-									<span class="text-gray-600 dark:text-gray-400">Total colaborări:</span>
+									<span class="text-gray-700 dark:text-gray-300">Total colaborări:</span>
 									<span class="font-bold text-gray-900 dark:text-gray-100">
 										{adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)}
 									</span>
 								</div>
 								<div class="flex justify-between text-sm">
-									<span class="text-gray-600 dark:text-gray-400">Rata acceptare:</span>
+									<span class="text-gray-700 dark:text-gray-300">Rata acceptare:</span>
 									<span class="font-bold {(adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0.8 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">
 										{Math.round(((adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}%
 									</span>
@@ -218,10 +218,10 @@
 					</div>
 
 					<!-- Quick Actions -->
-					<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+					<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm overflow-hidden">
 						<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
 							<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">⚡ Acțiuni Rapide</h2>
-							<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Administrare sistem</p>
+							<p class="text-xs text-gray-700 dark:text-gray-300 mt-1">Administrare sistem</p>
 						</div>
 						<div class="p-4 sm:p-6 space-y-3">
 							<a
@@ -339,8 +339,8 @@
 									</div>
 								<div>
 									<p class="font-semibold text-gray-900 dark:text-gray-100">{$isMedic ? invite.pacientName : invite.medicName}</p>
-									<p class="text-sm text-gray-500 dark:text-gray-400">{$isMedic ? invite.pacientEmail : invite.medicEmail}</p>
-									<p class="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
+											<p class="text-sm text-gray-700 dark:text-gray-300">{$isMedic ? invite.pacientEmail : invite.medicEmail}</p>
+											<p class="text-xs text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-1">
 											<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
 											</svg>
@@ -417,7 +417,7 @@
 						<svg class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
 						</svg>
-						<p class="text-gray-500 dark:text-gray-400">Nicio colaborare activă încă</p>
+						<p class="text-gray-700 dark:text-gray-300">Nicio colaborare activă încă</p>
 					</div>
 				{:else}
 					<div class="grid gap-5 md:grid-cols-2 p-6">
@@ -429,8 +429,8 @@
 									</div>
 									<div class="flex-1">
 										<h3 class="font-semibold text-gray-900 dark:text-gray-100 text-lg">{$isMedic ? collab.pacientName : collab.medicName}</h3>
-										<p class="text-sm text-gray-500 dark:text-gray-400">{$isMedic ? collab.pacientEmail : collab.medicEmail}</p>
-										<p class="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
+											<p class="text-sm text-gray-700 dark:text-gray-300">{$isMedic ? collab.pacientEmail : collab.medicEmail}</p>
+											<p class="text-xs text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-1">
 											<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
 											</svg>

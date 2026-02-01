@@ -128,8 +128,8 @@
 	<main class="page-transition max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 		<div class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
 			<div>
-				<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">📋 Planuri de Tratament</h1>
-				<p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+				<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">📋 Planuri de Tratament</h1>
+				<p class="text-sm sm:text-base text-gray-800 font-medium">
 					{#if isAdmin}
 						Overview global al tuturor tratamentelor din sistem
 					{:else if $isMedic}
@@ -207,10 +207,10 @@
 				<!-- Detailed Breakdown -->
 				<div class="grid gap-4 sm:gap-6 md:grid-cols-2">
 					<!-- Status Breakdown -->
-					<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+					<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm overflow-hidden">
 						<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
 							<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">📊 Detalii Status</h2>
-							<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Distribuție pe statusuri</p>
+							<p class="text-xs text-gray-700 dark:text-gray-300 mt-1">Distribuție pe statusuri</p>
 						</div>
 						<div class="p-4 sm:p-6 space-y-4">
 							<div class="space-y-2">
@@ -228,7 +228,7 @@
 										style="width: {adminOverview.treatments.total > 0 ? (adminOverview.treatments.active / adminOverview.treatments.total) * 100 : 0}%"
 									></div>
 								</div>
-								<div class="text-xs text-gray-500 dark:text-gray-400">
+								<div class="text-xs text-gray-700 dark:text-gray-300">
 									{adminOverview.treatments.total > 0 ? Math.round((adminOverview.treatments.active / adminOverview.treatments.total) * 100) : 0}% din total
 								</div>
 							</div>
@@ -248,7 +248,7 @@
 										style="width: {adminOverview.treatments.total > 0 ? (adminOverview.treatments.inactive / adminOverview.treatments.total) * 100 : 0}%"
 									></div>
 								</div>
-								<div class="text-xs text-gray-500 dark:text-gray-400">
+								<div class="text-xs text-gray-700 dark:text-gray-300">
 									{adminOverview.treatments.total > 0 ? Math.round((adminOverview.treatments.inactive / adminOverview.treatments.total) * 100) : 0}% din total
 								</div>
 							</div>
@@ -256,13 +256,13 @@
 							<!-- Summary -->
 							<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
 								<div class="flex justify-between text-sm">
-									<span class="text-gray-600 dark:text-gray-400">Total tratamente:</span>
+									<span class="text-gray-700 dark:text-gray-300">Total tratamente:</span>
 									<span class="font-bold text-gray-900 dark:text-gray-100">
 										{adminOverview.treatments.total}
 									</span>
 								</div>
 								<div class="flex justify-between text-sm">
-									<span class="text-gray-600 dark:text-gray-400">Rata activare:</span>
+									<span class="text-gray-700 dark:text-gray-300">Rata activare:</span>
 									<span class="font-bold {adminOverview.treatments.total > 0 && (adminOverview.treatments.active / adminOverview.treatments.total) > 0.7 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">
 										{adminOverview.treatments.total > 0 ? Math.round((adminOverview.treatments.active / adminOverview.treatments.total) * 100) : 0}%
 									</span>
@@ -272,10 +272,10 @@
 					</div>
 
 					<!-- Quick Actions -->
-					<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+					<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm overflow-hidden">
 						<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
 							<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">⚡ Acțiuni Rapide</h2>
-							<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Administrare sistem</p>
+							<p class="text-xs text-gray-700 dark:text-gray-300 mt-1">Administrare sistem</p>
 						</div>
 						<div class="p-4 sm:p-6 space-y-3">
 							<a
@@ -343,7 +343,7 @@
 					<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
 				</div>
 			{:else if treatments.length === 0}
-			<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-16 text-center animate-scale-in">
+			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl shadow-sm p-16 text-center animate-scale-in">
 				<div class="max-w-sm mx-auto">
 					<svg
 						class="mx-auto h-20 w-20 text-gray-300 dark:text-gray-600 mb-4"
@@ -359,7 +359,7 @@
 						/>
 					</svg>
 					<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Niciun tratament încă</h3>
-					<p class="text-gray-500 dark:text-gray-400">
+					<p class="text-gray-700 dark:text-gray-300">
 						{#if $isMedic}
 							Începe prin a crea un plan de tratament pentru unul dintre pacienții tăi
 						{:else}
@@ -373,7 +373,7 @@
 				{#each treatments as treatment}
 				<button
 					type="button"
-					class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-2 border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition cursor-pointer group text-left w-full"
+					class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6 hover:shadow-lg hover:border-blue-400 dark:hover:border-blue-600 transition cursor-pointer group text-left w-full"
 					onclick={() => viewDetails(treatment.planId)}
 					aria-label="Vezi detalii pentru {treatment.diagnosis}"
 				>
@@ -393,12 +393,12 @@
 					</div>
 
 					{#if treatment.description}
-						<p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">{treatment.description}</p>
+						<p class="text-gray-700 dark:text-gray-300 text-sm mb-4 line-clamp-2">{treatment.description}</p>
 					{/if}
 
 					<div class="space-y-2 text-sm mb-4">
 						{#if $isMedic}
-							<div class="flex items-center text-gray-600 dark:text-gray-400">
+								<div class="flex items-center text-gray-700 dark:text-gray-300">
 								<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path
 										stroke-linecap="round"
@@ -410,7 +410,7 @@
 								<span>{treatment.patientName}</span>
 							</div>
 						{:else}
-							<div class="flex items-center text-gray-600 dark:text-gray-400">
+							<div class="flex items-center text-gray-700 dark:text-gray-300">
 								<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path
 										stroke-linecap="round"
@@ -423,7 +423,7 @@
 							</div>
 						{/if}
 
-						<div class="flex items-center text-gray-500 dark:text-gray-400">
+						<div class="flex items-center text-gray-700 dark:text-gray-300">
 							<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path
 									stroke-linecap="round"

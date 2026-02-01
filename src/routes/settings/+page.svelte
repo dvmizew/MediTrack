@@ -364,8 +364,8 @@
 					{/if}
 				</div>
 				<div>
-					<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{fullName}</h1>
-					<p class="text-gray-600 dark:text-gray-400 capitalize">{$authStore.user?.role}</p>
+					<h1 class="text-3xl font-bold text-gray-900">{fullName}</h1>
+					<p class="text-gray-800 capitalize font-medium">{$authStore.user?.role}</p>
 					{#if $isPacient}
 						<p class="text-sm text-blue-600 dark:text-blue-400 mt-1">{stats.totalXp} XP · {getBadgeName(stats.currentBadge)}</p>
 					{/if}
@@ -375,7 +375,7 @@
 
 		<div class="flex flex-col md:flex-row gap-6">
 			<div class="md:w-64 flex-shrink-0">
-				<nav class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-2 space-y-1">
+				<nav class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-2 space-y-1">
 					{#each tabs as tab}
 						{#if tab.show !== false}
 							<button
@@ -394,7 +394,7 @@
 
 			<div class="flex-1 min-w-0">
 				{#if activeTab === 'general'}
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+					<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Informații generale</h2>
 						<form onsubmit={(e) => { e.preventDefault(); handleSaveProfile(); }} class="space-y-6">
 							<div>
@@ -439,7 +439,7 @@
 								{#if avatarUrl}
 									<div class="mt-3 flex items-center gap-3">
 										<img src={avatarUrl} alt="Preview" class="w-12 h-12 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600" />
-										<span class="text-sm text-gray-600 dark:text-gray-400">Previzualizare avatar</span>
+										<span class="text-sm text-gray-700 dark:text-gray-300">Previzualizare avatar</span>
 									</div>
 								{/if}
 							</div>
@@ -469,7 +469,7 @@
 				{/if}
 
 				{#if activeTab === 'security'}
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+					<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Securitate</h2>
 						<form onsubmit={(e) => { e.preventDefault(); handleChangePassword(); }} class="space-y-6">
 							<div>
@@ -549,7 +549,7 @@
 						</form>
 					</div>
 
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+					<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6 mt-6">
 						<div class="flex items-center gap-3 mb-6">
 							<div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
 								<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -558,7 +558,7 @@
 							</div>
 							<div>
 								<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Autentificare în doi pași (2FA)</h3>
-								<p class="text-sm text-gray-500 dark:text-gray-400">Protecție suplimentară pentru contul tău</p>
+								<p class="text-sm text-gray-700 dark:text-gray-300">Protecție suplimentară pentru contul tău</p>
 							</div>
 						</div>
 
@@ -588,8 +588,8 @@
 
 						{#if mfaStep === 'verify'}
 							<div class="space-y-5">
-								<div class="flex flex-col items-center p-6 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
-									<p class="text-sm text-gray-600 dark:text-gray-400 mb-4 text-center">Scanează acest cod QR în aplicația ta de autentificare</p>
+								<div class="flex flex-col items-center p-6 bg-white/70 dark:bg-gray-900/60 rounded-lg border border-slate-200/60 dark:border-gray-800/60">
+									<p class="text-sm text-gray-700 dark:text-gray-300 mb-4 text-center">Scanează acest cod QR în aplicația ta de autentificare</p>
 									<div class="bg-white p-4 rounded-lg shadow-md">
 										<img src={mfaQr} alt="QR Code 2FA" class="w-48 h-48" />
 									</div>
@@ -618,7 +618,7 @@
 											</div>
 										{/if}
 									</div>
-									<div class="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+									<div class="mt-2 flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
 										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
 										</svg>
@@ -748,7 +748,7 @@
 				{/if}
 
 				{#if activeTab === 'notifications'}
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+					<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Setări notificări</h2>
 
 						<!-- Push Notifications Section -->
@@ -797,7 +797,7 @@
 							</div>
 
 							<!-- Subscription Toggle -->
-							<div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+							<div class="flex items-center justify-between p-4 bg-white/70 dark:bg-gray-900/60 rounded-lg border border-slate-200/60 dark:border-gray-800/60">
 								<div class="flex-1">
 									<h4 class="font-medium text-gray-900 dark:text-gray-100">Notificări Push Active</h4>
 									<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -852,12 +852,12 @@
 							{/if}
 
 							<!-- Info Card -->
-							<div class="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+							<div class="p-4 bg-white/70 dark:bg-gray-900/60 rounded-lg border border-slate-200/60 dark:border-gray-800/60">
 								<div class="flex items-start gap-3">
-									<svg class="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg class="w-5 h-5 text-gray-700 dark:text-gray-300 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
 									</svg>
-									<div class="text-sm text-gray-600 dark:text-gray-400">
+									<div class="text-sm text-gray-700 dark:text-gray-300">
 										<p class="font-medium mb-1">Despre notificările push</p>
 										<ul class="list-disc list-inside space-y-1">
 											<li>Primești alerte instant pentru medicamente</li>
@@ -874,7 +874,7 @@
 
 				{#if activeTab === 'stats' && $isPacient}
 					<div class="space-y-6">
-						<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+						<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6">
 							<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Statistici și realizări</h2>
 							
 							<div class="flex flex-col items-center mb-8">
@@ -884,30 +884,30 @@
 									</svg>
 								</div>
 								<h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{getBadgeName(stats.currentBadge)}</h3>
-								<p class="text-lg text-gray-600 dark:text-gray-400">{stats.totalXp} XP</p>
+								<p class="text-lg text-gray-700 dark:text-gray-300">{stats.totalXp} XP</p>
 							</div>
 
 							<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 								<div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
 									<p class="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.currentStreak}</p>
-									<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Zile consecutive</p>
+									<p class="text-sm text-gray-700 dark:text-gray-300 mt-1">Zile consecutive</p>
 								</div>
 								<div class="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
 									<p class="text-3xl font-bold text-purple-600 dark:text-purple-400">{stats.longestStreak}</p>
-									<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Record</p>
+									<p class="text-sm text-gray-700 dark:text-gray-300 mt-1">Record</p>
 								</div>
 								<div class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
 									<p class="text-3xl font-bold text-green-600 dark:text-green-400">{stats.completedTreatments}</p>
-									<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Tratamente finalizate</p>
+									<p class="text-sm text-gray-700 dark:text-gray-300 mt-1">Tratamente finalizate</p>
 								</div>
 								<div class="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
 									<p class="text-3xl font-bold text-orange-600 dark:text-orange-400">{stats.activeTreatments}</p>
-									<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Tratamente active</p>
+									<p class="text-sm text-gray-700 dark:text-gray-300 mt-1">Tratamente active</p>
 								</div>
 							</div>
 						</div>
 
-						<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+						<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6">
 							<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Progresie badge-uri</h3>
 							<div class="space-y-4">
 								{#each BADGES as badge}
@@ -919,7 +919,7 @@
 										</div>
 										<div class="flex-1">
 											<p class="font-medium text-gray-900 dark:text-gray-100">{badge.name}</p>
-											<p class="text-sm text-gray-600 dark:text-gray-400">{badge.xp} XP necesar</p>
+											<p class="text-sm text-gray-700 dark:text-gray-300">{badge.xp} XP necesar</p>
 										</div>
 										{#if stats.currentBadge === badge.id}
 											<span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-full">Curent</span>

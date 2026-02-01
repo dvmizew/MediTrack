@@ -137,7 +137,7 @@
 	</div>
 
 	<!-- Create New Job Section -->
-	<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+	<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-6">
 		<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Creează Raport Nou</h2>
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 			<button
@@ -198,10 +198,10 @@
 			<p class="text-gray-600 dark:text-gray-400">Creează primul tău raport asincrondeasupra</p>
 		</div>
 	{:else}
-		<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+		<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl overflow-hidden">
 			<div class="overflow-x-auto">
 				<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-					<thead class="bg-gray-50 dark:bg-gray-900/50">
+					<thead class="bg-slate-50/80 dark:bg-gray-900/50">
 						<tr>
 							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
 							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tip Raport</th>

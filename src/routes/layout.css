@@ -338,17 +338,18 @@ select:focus-visible,
 	background-attachment: fixed;
 }
 
+/* Dark theme with similar soft aesthetic - darker base with subtle color variations */
 .bg-gradient-blue-purple-dark {
 	background: linear-gradient(
 		135deg,
-		#6e5aa6 0%,
-		#5f6fb0 14%,
-		#5a83b8 30%,
-		#5b96ba 46%,
-		#5aa8a4 64%,
-		#5cb6a0 80%,
-		#5bc0b6 92%,
-		#5cc8d0 100%
+		#1a1625 0%,
+		#1a1828 12%,
+		#181d2e 28%,
+		#182230 44%,
+		#182826 62%,
+		#182d27 78%,
+		#18312f 92%,
+		#183338 100%
 	);
 	background-attachment: fixed;
 }

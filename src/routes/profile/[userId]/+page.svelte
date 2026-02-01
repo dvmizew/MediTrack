@@ -100,7 +100,7 @@
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
 				</svg>
 				<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Profil indisponibil</h2>
-				<p class="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+				<p class="text-gray-700 dark:text-gray-300 mb-4">{error}</p>
 				<button 
 					onclick={() => goto('/chat')}
 					class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -113,7 +113,7 @@
 		<!-- Back Button -->
 		<button 
 			onclick={() => window.history.back()}
-			class="mb-6 flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+			class="mb-6 flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
 		>
 			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -134,7 +134,7 @@
 					</div>
 					<div>
 						<h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100">{user.fullName}</h1>
-						<p class="text-lg text-gray-600 dark:text-gray-400 capitalize mt-1">{user.role}</p>
+							<p class="text-lg text-gray-700 dark:text-gray-300 capitalize mt-1">{user.role}</p>
 						{#if user.role === 'pacient'}
 							<div class="flex items-center gap-4 mt-2">
 								<span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-full">
@@ -174,7 +174,7 @@
 				</div>
 				<div class="space-y-4">
 					<div>
-						<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Email</p>
+							<p class="text-sm text-gray-700 dark:text-gray-300 mb-1">Email</p>
 						<p class="text-gray-900 dark:text-gray-100 font-medium">{user.email}</p>
 					</div>
 					<div>
@@ -183,7 +183,7 @@
 					</div>
 					{#if user.specialization}
 						<div>
-							<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Specializare</p>
+								<p class="text-sm text-gray-700 dark:text-gray-300 mb-1">Specializare</p>
 							<p class="text-gray-900 dark:text-gray-100 font-medium">{user.specialization}</p>
 						</div>
 					{/if}
@@ -204,7 +204,7 @@
 					<div class="space-y-4">
 						<div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
 							<div>
-								<p class="text-sm text-gray-600 dark:text-gray-400">Zile consecutive</p>
+								<p class="text-sm text-gray-700 dark:text-gray-300">Zile consecutive</p>
 								<p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.currentStreak}</p>
 							</div>
 							<svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -213,7 +213,7 @@
 						</div>
 						<div class="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
 							<div>
-								<p class="text-sm text-gray-600 dark:text-gray-400">Record streak</p>
+								<p class="text-sm text-gray-700 dark:text-gray-300">Record streak</p>
 								<p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.longestStreak}</p>
 							</div>
 							<svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -240,7 +240,7 @@
 							</svg>
 						</div>
 						<p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{getBadgeName(stats.currentBadge)}</p>
-						<p class="text-gray-600 dark:text-gray-400 mt-1">{stats.totalXp} XP</p>
+							<p class="text-gray-700 dark:text-gray-300 mt-1">{stats.totalXp} XP</p>
 					</div>
 				</div>
 			{:else}
@@ -260,7 +260,7 @@
 							<p class="text-lg font-semibold text-gray-900 dark:text-gray-100">{user.specialization || 'Generalist'}</p>
 						</div>
 						<div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-							<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Rol</p>
+							<p class="text-sm text-gray-700 dark:text-gray-300 mb-1">Rol</p>
 							<p class="text-lg font-semibold text-gray-900 dark:text-gray-100 capitalize">{user.role}</p>
 						</div>
 					</div>

@@ -104,7 +104,7 @@
 				</span>
 				<div>
 					<h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">Challenges</h3>
-					<p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">Medicamentele de astăzi</p>
+					<p class="text-xs md:text-sm text-gray-800 dark:text-gray-300 font-medium">Medicamentele de astăzi</p>
 				</div>
 			</div>
 		</div>
@@ -157,7 +157,7 @@
 						<span
 							class="confetti-piece"
 							style={`--confetti-x: ${piece.x}px; --confetti-y: ${piece.y}px; --confetti-rot: ${piece.rot}deg; --confetti-size: ${piece.size}px; --confetti-delay: ${piece.delay}s; --confetti-duration: ${piece.duration}s; --confetti-color: ${piece.color};`}
-						/>
+						></span>
 					{/each}
 				{/key}
 			</div>
@@ -171,7 +171,7 @@
 		/>
 		<p
 			class={`text-sm mt-4 text-center font-medium ${
-				muted ? 'text-slate-500 dark:text-slate-400' : 'text-gray-600 dark:text-gray-400'
+				muted ? 'text-slate-600 dark:text-slate-300' : 'text-gray-700 dark:text-gray-300'
 			}`}
 		>
 			Zile consecutive
