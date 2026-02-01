@@ -403,7 +403,7 @@
 </script>
 
 {#if $authStore.isAuthenticated}
-	<main class="h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden page-transition">
+	<main class="h-[calc(100vh-4rem)] bg-transparent flex flex-col overflow-hidden page-transition">
 		<div class="h-full flex flex-col overflow-hidden w-full">
 		<!-- Header - Chat Style -->
 		<div class="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 shadow-lg flex-shrink-0 z-10">

@@ -93,7 +93,7 @@
 <KeyboardNav />
 
 {#if $authStore.isAuthenticated}
-	<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+	<div class="min-h-screen bg-gradient-blue-purple dark:bg-gradient-blue-purple-dark">
 		<!-- Fixed Header visible everywhere -->
 		<div class="fixed top-0 left-0 right-0 z-50">
 			<Header />
@@ -105,9 +105,11 @@
 		</main>
 	</div>
 {:else}
-	<main id="main-content">
-		{@render children()}
-	</main>
+	<div class="min-h-screen bg-gradient-blue-purple dark:bg-gradient-blue-purple-dark">
+		<main id="main-content">
+			{@render children()}
+		</main>
+	</div>
 {/if}
 
 <!-- GDPR Cookie Consent (global) -->

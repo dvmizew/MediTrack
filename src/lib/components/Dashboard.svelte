@@ -73,12 +73,6 @@
 			value: stats.upcomingLabel,
 			sub: `Actualizat la ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
 			accent: 'text-gray-900 dark:text-gray-100'
-		},
-		{
-			title: 'Streak',
-			value: $authStore.user?.currentStreak || 0,
-			sub: 'zile consecutive',
-			accent: 'text-green-600 dark:text-green-400'
 		}
 	]);
 
@@ -419,6 +413,7 @@
 		}).length;
 		
 		const snoozed = todayMedications.filter((m) => isMedicationSnoozed(m, now)).length;
+		streakBroken = overdue > 0;
 
 		// Find next upcoming medication considering snoozedUntil; if none, fallback to most recent overdue
 		const enriched = todayMedications
@@ -437,8 +432,21 @@
 			latestOverdueEntry = past[0] || null;
 		}
 
+		allDoneToday = total > 0 && taken === total;
+
 		// store next dose for countdown updates
-		nextDose = (upcomingEntry?.med || latestOverdueEntry?.med) || null;
+		nextDose = allDoneToday ? null : (upcomingEntry?.med || latestOverdueEntry?.med) || null;
+		const scheduledTime = nextDose ? getMedicationScheduledTime(nextDose, now) : null;
+		if (scheduledTime) {
+			const targetMs = scheduledTime.getTime();
+			if (countdownTargetMs !== targetMs) {
+				countdownTargetMs = targetMs;
+				countdownTotalSeconds = Math.max(1, Math.floor((targetMs - now.getTime()) / 1000));
+			}
+		} else {
+			countdownTargetMs = null;
+			countdownTotalSeconds = 0;
+		}
 		updateCountdown();
 
 		stats = {
@@ -454,23 +462,48 @@
 	// Countdown state and helpers
 	let nextDose = $state<any | null>(null);
 	let countdownLabel = $state('Nicio doză programată');
+	let countdownText = $state('--:--:--');
+	let countdownTotalSeconds = $state(0);
+	let countdownProgress = $state(0);
+	let countdownTargetMs = $state<number | null>(null);
+	let countdownStatus = $state<'none' | 'normal' | 'warning' | 'critical' | 'done'>('none');
+	let allDoneToday = $state(false);
+	let streakBroken = $state(false);
+	const displayStreak = $derived(streakBroken ? 0 : ($authStore.user?.currentStreak || 0));
 	let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
 	function updateCountdown() {
 		if (!nextDose) {
+			if (allDoneToday) {
+				countdownLabel = 'Ai terminat pentru astăzi';
+				countdownText = 'Bravo!';
+				countdownProgress = 1;
+				countdownStatus = 'done';
+				return;
+			}
 			countdownLabel = 'Nicio doză programată';
+			countdownText = '--:--:--';
+			countdownProgress = 0;
+			countdownStatus = 'none';
 			return;
 		}
 		const now = new Date();
 		const scheduledTime = getMedicationScheduledTime(nextDose, now);
 		if (!scheduledTime) {
 			countdownLabel = 'Nicio doză programată';
+			countdownText = '--:--:--';
+			countdownProgress = 0;
+			countdownStatus = 'none';
 			return;
 		}
 		const diffMs = scheduledTime.getTime() - now.getTime();
 		if (diffMs <= 0) {
 			const displayTime = nextDose.time || scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 			countdownLabel = `${displayTime} - ${nextDose.medicationName || 'Doză următoare'}`;
+			countdownText = '00:00:00';
+			countdownProgress = 1;
+			countdownStatus = 'critical';
+			streakBroken = true;
 			return;
 		}
 		const totalSeconds = Math.floor(diffMs / 1000);
@@ -483,6 +516,26 @@
 		const label = `${hh}:${mm}:${ss}`;
 		const displayTime = nextDose.time || scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 		countdownLabel = `${label} până la ${nextDose.medicationName || 'doza următoare'} (${displayTime})`;
+		countdownText = label;
+		if (totalSeconds <= 10 * 60) {
+			countdownStatus = 'critical';
+		} else if (totalSeconds <= 30 * 60) {
+			countdownStatus = 'warning';
+		} else {
+			countdownStatus = 'normal';
+		}
+		const maxWindowSeconds = 24 * 60 * 60;
+		const warningWindowSeconds = 30 * 60;
+		const clampedRemaining = Math.min(totalSeconds, maxWindowSeconds);
+		if (clampedRemaining <= warningWindowSeconds) {
+			const nearRatio = clampedRemaining / warningWindowSeconds;
+			countdownProgress = Math.max(0, Math.min(1, 0.7 + (1 - nearRatio) * 0.3));
+		} else {
+			const farRemaining = clampedRemaining - warningWindowSeconds;
+			const farWindow = maxWindowSeconds - warningWindowSeconds;
+			const farRatio = farRemaining / farWindow;
+			countdownProgress = Math.max(0, Math.min(1, 0.7 * (1 - farRatio)));
+		}
 	}
 
 	async function confirmMedication(medication: any) {
@@ -959,19 +1012,72 @@
 	</div>
 {:else if $isPacient}
 	<!-- Patient Dashboard -->
-<div class="space-y-4 md:space-y-6">
+<div
+	class={`space-y-4 md:space-y-6 ${
+		streakBroken ? 'rounded-3xl bg-slate-100/70 dark:bg-gray-900/60 p-4 md:p-6' : ''
+	}`}
+>
 	<!-- Welcome Card (patient, same design) -->
-	<WelcomeCard name={$authStore.user?.fullName || ''} subtitle={`${$authStore.user?.totalXp || 0} XP • Streak: ${$authStore.user?.currentStreak || 0} zile`} />
+	<WelcomeCard
+		name={$authStore.user?.fullName || ''}
+		title={
+			allDoneToday
+				? `Bun venit, ${$authStore.user?.fullName || ''}!`
+				: streakBroken
+					? `${$authStore.user?.fullName || ''}, streak pierdut`
+					: countdownStatus === 'critical'
+					? `${$authStore.user?.fullName || ''}, Streak în pericol!`
+					: countdownStatus === 'warning'
+						? `Bun venit, ${$authStore.user?.fullName || ''}!`
+						: null
+		}
+		subtitle={
+			allDoneToday
+				? 'Ai îndeplinit toate misiunile!'
+				: streakBroken
+					? 'Timpul a trecut. Streak resetat la 0. Nu lăsa asta să devină un obicei...'
+					: countdownStatus === 'critical'
+						? `Nu strica progresul de ${displayStreak} zile!`
+						: countdownStatus === 'warning'
+							? 'Se apropie următoarea doză! Nu rata streakul!'
+							: `${$authStore.user?.totalXp || 0} XP • Streak: ${displayStreak} zile`
+		}
+		tone={
+			allDoneToday
+				? 'celebrate'
+				: streakBroken
+					? 'sad'
+					: countdownStatus === 'critical'
+						? 'critical'
+						: countdownStatus === 'warning'
+							? 'warning'
+							: 'default'
+		}
+	/>
+
+	<!-- Medications List -->
+	<MedicationsList
+		loading={loading}
+		medications={todayMedications}
+		isTakenFn={isMedicationTaken}
+		isSnoozedFn={(m: any) => isMedicationSnoozed(m)}
+		onConfirm={confirmMedication}
+		onSnooze={snoozeMedication}
+		celebrate={allDoneToday}
+		streak={displayStreak}
+		countdownText={countdownText}
+		countdownProgress={countdownProgress}
+		countdownStatus={countdownStatus}
+		nextDoseId={nextDose?.doseId ?? nextDose?.id ?? nextDose?.medicationId ?? null}
+		muted={streakBroken}
+	/>
 
 	<!-- Quick Stats -->
-	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
+	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
 		{#each patientCards as card}
 			<Card title={card.title} value={card.value} sub={card.sub} accent={card.accent} />
 		{/each}
 	</div>
-
-	<!-- Today's Medications -->
-	<MedicationsList loading={loading} medications={todayMedications} isTakenFn={isMedicationTaken} isSnoozedFn={(m: any) => isMedicationSnoozed(m)} onConfirm={confirmMedication} onSnooze={snoozeMedication} />
 
 	<!-- Charts Grid -->
 	<ChartsGroup bind:adherenceCanvas={adherenceChartCanvas} bind:weeklyCanvas={weeklyChartCanvas} bind:medicationsCanvas={medicationsChartCanvas} />

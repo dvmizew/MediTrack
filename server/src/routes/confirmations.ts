@@ -259,12 +259,9 @@ router.post(
         return res.status(404).json({ error: 'Dose not found' });
       }
 
-      // Calculate snooze time (30 minutes from now)
-      const snoozedUntil = new Date(Date.now() + 30 * 60 * 1000);
-
       // Check if confirmation exists
       const existing = await query(
-        'SELECT confirm_id, rezultat FROM dose_confirmations WHERE dose_id = $1 AND DATE(scheduled_for) = DATE($2::timestamp)',
+        'SELECT confirm_id, rezultat, snoozed_until, scheduled_for FROM dose_confirmations WHERE dose_id = $1 AND DATE(scheduled_for) = DATE($2::timestamp)',
         [doseId, scheduledFor]
       );
 
@@ -273,7 +270,32 @@ router.post(
         return res.status(400).json({ error: 'Cannot snooze an already confirmed dose' });
       }
 
-      let result;
+      const now = new Date();
+      const existingRow = existing.rows[0];
+      const existingSnooze = existingRow?.snoozed_until ? new Date(existingRow.snoozed_until) : null;
+      const existingScheduled = existingRow?.scheduled_for ? new Date(existingRow.scheduled_for) : null;
+
+      let baseTime = now;
+      if (existingSnooze && existingSnooze > now) {
+        baseTime = existingSnooze;
+      } else if (existingScheduled && existingScheduled > now) {
+        baseTime = existingScheduled;
+      } else if (!existingRow) {
+        const doseTimeResult = await query('SELECT ora FROM treatment_doses WHERE dose_id = $1', [doseId]);
+        const doseTime = doseTimeResult.rows[0]?.ora;
+        if (doseTime) {
+          const [hours, minutes] = String(doseTime).split(':').map(Number);
+          const scheduled = new Date();
+          scheduled.setHours(hours || 0, minutes || 0, 0, 0);
+          if (scheduled > now) {
+            baseTime = scheduled;
+          }
+        }
+      }
+
+      const snoozedUntil = new Date(baseTime.getTime() + 30 * 60 * 1000);
+
+  let result;
 
       if (existing.rows.length > 0) {
         // Ensure snoozed records are not marked as taken
