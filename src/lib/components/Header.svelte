@@ -8,6 +8,7 @@
 	import { systemNotificationStore } from '$lib/stores/notifications';
 	import { themeStore } from '$lib/stores/theme';
 	import { logout as sessionLogout } from '$lib/services/sessionManager';
+	import { BarChart3, Pill, MessageCircle, Users, Trophy, Check, Bell, Menu, X, User, Sun, Moon, Trash2, ChevronDown, ChevronRight, AlertCircle, ClipboardList, Clock, Settings, LogOut } from '@lucide/svelte';
 	import AccessibilityMenu from './AccessibilityMenu.svelte';
 
 	let notifications = $state<any[]>([]);
@@ -235,9 +236,7 @@
 			<!-- Logo -->
 			<a href="/dashboard" class="flex items-center gap-2 group" aria-label="MediTrack - mergi la Dashboard">
 				<div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center" aria-hidden="true">
-					<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-					</svg>
+					<ClipboardList class="w-5 h-5 text-white" />
 				</div>
 				<span class="text-xl font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">MediTrack</span>
 			</a>
@@ -293,7 +292,8 @@
 						: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:scale-105'
 				}`}
 				>
-					🏆 Leaderboard
+					<Trophy class="w-5 h-5 mr-1 inline" />
+					Leaderboard
 				</a>
 			</div>
 				<!-- Right Side Actions -->
@@ -311,14 +311,10 @@
 				>
 					{#if $themeStore === 'dark'}
 						<!-- Sun icon for light mode -->
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-						</svg>
+					<Sun class="w-5 h-5" />
 					{:else}
 						<!-- Moon icon for dark mode -->
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-						</svg>
+					<Moon class="w-5 h-5" />
 					{/if}
 				</button>
 				
@@ -332,9 +328,7 @@
 							aria-haspopup="true"
 							type="button"
 						>
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-							</svg>
+						<Bell class="w-5 h-5" aria-hidden="true" />
 							{#if unreadCount > 0}
 								<span class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
 									{unreadCount > 99 ? '99' : unreadCount}
@@ -368,21 +362,17 @@
 											class="md:hidden p-1 sm:p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-all duration-200 active:scale-90"
 											aria-label="Inchide notificari"
 										>
-											<svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-											</svg>
-										</button>
-										
-										{#if notifications.length > 0}
-											<button 
-												onclick={clearAllNotifications}
-												class="text-xs px-2 py-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 font-medium active:scale-90"
-												title="Șterge toate"
-												aria-label="Sterge toate notificările"
-											>
-												<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-												</svg>
+										<X class="w-4 h-4 sm:w-5 sm:h-5" />
+									</button>
+									
+									{#if notifications.length > 0}
+										<button 
+											onclick={clearAllNotifications}
+											class="text-xs px-2 py-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 font-medium active:scale-90"
+											title="Șterge toate"
+											aria-label="Sterge toate notificările"
+										>
+											<Trash2 class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
 											</button>
 										{/if}
 										{#if unreadCount > 0}
@@ -392,7 +382,10 @@
 												aria-label="Marcheaza toate notificările ca citite"
 											>
 												<span class="hidden sm:inline">Marchează tot</span>
-												<span class="sm:hidden">✓ Tot</span>
+												<span class="sm:hidden flex items-center gap-1">
+													<Check class="w-3 h-3" />
+													Tot
+												</span>
 											</button>
 										{/if}
 									</div>
@@ -435,9 +428,7 @@
 								{#if filteredNotifications.length === 0}
 									<div class="p-8 sm:p-12 text-center">
 										<div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-											<svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-											</svg>
+										<Bell class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 dark:text-gray-500" />
 										</div>
 										<p class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium">
 											{notificationFilter === 'unread' ? 'Nu ai notificări necitite' : 'Nu ai notificări'}
@@ -479,9 +470,7 @@
 													</p>
 													<div class="flex items-center justify-between mt-1.5 sm:mt-2">
 														<p class="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 truncate">
-															<svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-																<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-															</svg>
+													<Clock class="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />
 															<span class="truncate">{new Date(notification.createdAt).toLocaleString('ro-RO', { 
 																day: 'numeric', 
 																month: 'short', 
@@ -499,9 +488,7 @@
 											class="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 p-1 sm:p-1.5 opacity-0 group-hover:opacity-100 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
 											title="Șterge notificarea"
 										>
-											<svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-											</svg>
+										<Trash2 class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-600 dark:text-red-400" />
 										</button>
 										</div>
 									{/each}
@@ -549,19 +536,14 @@
 								href="/profile"
 								class="w-full px-4 py-2.5 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-3"
 							>
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-								</svg>
+								<User class="w-5 h-5" />
 								Profil
 							</a>
 							<a
 								href="/settings"
 								class="w-full px-4 py-2.5 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-3"
 							>
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-								</svg>
+							<Settings class="w-5 h-5" />
 								Setări
 							</a>
 						</div>
@@ -570,9 +552,7 @@
 								onclick={handleLogout}
 								class="w-full px-4 py-2.5 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-b-xl transition flex items-center gap-3"
 							>
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-								</svg>
+								<LogOut class="w-5 h-5" />
 								Deconectare
 							</button>
 						</div>
@@ -587,13 +567,9 @@
 						aria-label="Toggle menu"
 					>
 						{#if showMobileMenu}
-							<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-							</svg>
+							<X class="w-6 h-6" />
 						{:else}
-							<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-							</svg>
+							<Menu class="w-6 h-6" />
 						{/if}
 					</button>
 				</div>
@@ -616,14 +592,16 @@
 								: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
 						}`}
 					>
-						📊 Dashboard
+						<BarChart3 class="w-5 h-5 mr-1" />
+						Dashboard
 					</a>
 				<a 
 					href="/treatments" 
 					onclick={() => showMobileMenu = false}
 					class={`px-3 py-3 rounded-lg text-sm font-medium transition ${isActive('/treatments') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
 				>
-						💊 Tratamente
+						<Pill class="w-5 h-5 mr-1" />
+						Tratamente
 					</a>
 					<a 
 						href="/chat" 
@@ -634,21 +612,24 @@
 								: 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
 						}`}
 					>
-						💬 Mesaje
+						<MessageCircle class="w-5 h-5 mr-1" />
+						Mesaje
 					</a>
 				<a 
 					href="/collaborations" 
 					onclick={() => showMobileMenu = false}
 					class={`px-3 py-3 rounded-lg text-sm font-medium transition ${isActive('/collaborations') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
 				>
-						🤝 Colaborări
+						<Users class="w-5 h-5 mr-1" />
+						Colaborări
 				</a>
 				<a 
 				href="/leaderboard"
 					onclick={() => showMobileMenu = false}
 					class={`px-3 py-3 rounded-lg text-sm font-medium transition ${isActive('/leaderboard') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
 				>
-					🏆 Leaderboard
+					<Trophy class="w-5 h-5 mr-1" />
+					Leaderboard
 				</a>
 			</div>
 
@@ -671,9 +652,7 @@
 							onclick={handleLogout}
 							class="w-full p-3 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-b-xl transition flex items-center gap-2"
 						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-							</svg>
+							<LogOut class="w-5 h-5" />
 							Deconectare
 						</button>
 					</div>

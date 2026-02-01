@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { Cookie } from '@lucide/svelte';
 	
 	let showBanner = $state(false);
 	
@@ -39,7 +40,7 @@
 				<!-- Content -->
 				<div class="flex-1 min-w-0">
 					<div class="flex items-start gap-3 mb-2">
-						<span class="text-3xl flex-shrink-0" aria-hidden="true">🍪</span>
+						<Cookie class="w-8 h-8 flex-shrink-0" />
 						<div>
 							<h2 
 								id="cookie-consent-title"

@@ -8,7 +8,8 @@
 	import { socketClient } from '$lib/api/socket';
 	import { themeStore } from '$lib/stores/theme';
 	import { goto } from '$app/navigation';
-	import { authLoginSchema, authRegisterSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
+	import { Sun, Moon, FileText } from '@lucide/svelte';
+	import { authRegisterSchema, authLoginSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
 
 	let email = $state('');
 	let password = $state('');
@@ -119,13 +120,9 @@
 		type="button"
 	>
 		{#if $themeStore === 'dark'}
-			<svg class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-			</svg>
+			<Sun class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
 		{:else}
-			<svg class="w-5 h-5 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-			</svg>
+			<Moon class="w-5 h-5 transition-transform duration-500" />
 		{/if}
 	</button>
 
@@ -133,9 +130,7 @@
 		<!-- Logo & Title -->
 		<div class="text-center mb-6 md:mb-8" role="banner">
 			<div class="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-lg mb-3 md:mb-4 hover:scale-110 hover:shadow-xl hover:shadow-blue-600/50 transition-all duration-300 animate-bounce-gentle" aria-hidden="true">
-				<svg class="w-8 h-8 md:w-9 md:h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-				</svg>
+			<FileText class="w-8 h-8 md:w-9 md:h-9 text-white" />
 			</div>
 			<h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">MediTrack</h1>
 			{#key isRegister}

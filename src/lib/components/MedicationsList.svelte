@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { authStore } from '$lib/stores/auth';
+	import { Trophy, CheckCircle2 } from '@lucide/svelte';
 	import MedicationItem from '$lib/components/MedicationItem.svelte';
 	import StreakCircle from '$lib/components/StreakCircle.svelte';
 
@@ -100,7 +101,7 @@
 						muted ? 'bg-slate-500' : 'bg-indigo-600'
 					}`}
 				>
-					🏆
+					<Trophy class="w-6 h-6" />
 				</span>
 				<div>
 					<h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">Challenges</h3>
@@ -115,9 +116,7 @@
 			</div>
 		{:else if medications.length === 0}
 			<div class="p-8 md:p-12 text-center">
-				<svg class="w-12 h-12 md:w-16 md:h-16 mx-auto text-gray-300 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-				</svg>
+				<CheckCircle2 class="w-12 h-12 md:w-16 md:h-16 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
 				<p class="text-sm md:text-base text-gray-500 dark:text-gray-400">Nu ai medicamente programate astăzi</p>
 			</div>
 		{:else}

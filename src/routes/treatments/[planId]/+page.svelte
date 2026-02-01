@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { authStore, isMedic } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
+	import { ArrowLeft, CalendarDays, Pencil, Pill, Plus, Trash2 } from '@lucide/svelte';
 	import Modal from '$lib/components/Modal.svelte';
 
 	const planIdParam = $derived($page.params.planId ?? '0');
@@ -344,9 +345,7 @@
 				onclick={() => goto('/treatments')}
 				class="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
 			>
-				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-				</svg>
+				<ArrowLeft class="w-5 h-5" />
 				Înapoi la tratamente
 			</button>
 		</div>
@@ -368,7 +367,7 @@
 						<p class="text-gray-700 dark:text-gray-300 break-words">{treatment.description || 'Fără descriere'}</p>
 					</div>
 					<div class="flex items-center gap-3 flex-shrink-0">
-						<span class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-full whitespace-nowrap {treatment.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'}">
+								<span class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-full whitespace-nowrap {treatment.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-slate-800 text-black dark:text-white'}">
 							{treatment.isActive ? 'Activ' : 'Inactiv'}
 						</span>
 						{#if $isMedic}
@@ -382,7 +381,7 @@
 									</button>
 									<button
 										onclick={resetDeleteState}
-										class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap"
+										class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-black dark:text-white text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap"
 									>
 										Anulează
 									</button>
@@ -390,15 +389,17 @@
 							{:else}
 								<button
 									onclick={startEditTreatment}
-									class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap"
+									class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-black dark:text-white text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap inline-flex items-center gap-2"
 								>
-									✏️ Editează
+									<Pencil class="w-4 h-4" />
+									Editează
 								</button>
 								<button
 									onclick={startTreatmentDelete}
-									class="px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition whitespace-nowrap"
+									class="px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition whitespace-nowrap inline-flex items-center gap-2"
 								>
-									🗑 Șterge
+									<Trash2 class="w-4 h-4" />
+									Șterge
 								</button>
 							{/if}
 						{/if}
@@ -424,22 +425,24 @@
 			<!-- Medications Section -->
 			<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
 				<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-					<h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">💊 Medicamente</h2>
+					<h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+						<Pill class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
+						Medicamente
+					</h2>
 					{#if $isMedic}
 						<button
 							onclick={() => showAddMedicationModal = true}
-							class="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition whitespace-nowrap"
+							class="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition whitespace-nowrap inline-flex items-center gap-2"
 						>
-							+ Adaugă Medicament
+							<Plus class="w-4 h-4" />
+							Adaugă Medicament
 						</button>
 					{/if}
 				</div>
 
 				{#if medications.length === 0}
 					<div class="text-center py-12">
-						<svg class="mx-auto h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-						</svg>
+						<Pill class="mx-auto h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" />
 						<p class="text-gray-700 dark:text-gray-300">Niciun medicament adăugat încă</p>
 					</div>
 				{:else}
@@ -459,29 +462,37 @@
 									</div>
 									<div class="flex sm:flex-col items-center sm:items-end gap-2 flex-shrink-0">
 									<p class="text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{formatTime(med.time)}</p>
-										<span class="inline-block px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap {med.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'}">
+										<span class="inline-block px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap {med.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-slate-800 text-black dark:text-white'}">
 										{med.isActive ? 'Activ' : 'Inactiv'}
 										</span>
 										{#if $isMedic}
 											<button
 												onclick={() => startEditMedication(med)}
-												class="px-3 py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 text-xs font-medium rounded transition whitespace-nowrap"
+												class="px-3 py-1 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-black dark:text-white text-xs font-medium rounded transition whitespace-nowrap inline-flex items-center gap-2"
 											>
-												✏️ Editează
+												<Pencil class="w-3.5 h-3.5" />
+												Editează
 											</button>
 											<button
 												onclick={() => handleDeleteMedication(med.doseId)}
-												class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition whitespace-nowrap"
+												class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition whitespace-nowrap inline-flex items-center gap-2"
 											>
-												🗑 Șterge
+												<Trash2 class="w-3.5 h-3.5" />
+												Șterge
 											</button>
 										{/if}
 									</div>
 								</div>
 								<div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-700 dark:text-gray-300">
-									<span class="whitespace-nowrap">📅 Start: {formatDate(med.startDate)}</span>
+									<span class="whitespace-nowrap inline-flex items-center gap-1">
+										<CalendarDays class="w-3.5 h-3.5" />
+										Start: {formatDate(med.startDate)}
+									</span>
 									{#if med.endDate}
-										<span class="whitespace-nowrap">📅 Sfârșit: {formatDate(med.endDate)}</span>
+										<span class="whitespace-nowrap inline-flex items-center gap-1">
+											<CalendarDays class="w-3.5 h-3.5" />
+											Sfârșit: {formatDate(med.endDate)}
+										</span>
 									{/if}
 								</div>
 							</div>

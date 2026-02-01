@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api/client';
 	import { authStore } from '$lib/stores/auth';
+	import { AlertCircle, ArrowLeft, MessageCircle, Info, Star, TrendingUp, Award, CheckCircle2 } from '@lucide/svelte';
 
 	let userId = $derived($page.params.userId);
 	let loading = $state(true);
@@ -96,9 +97,9 @@
 	{:else if error}
 		<div class="max-w-md mx-auto">
 			<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
-				<svg class="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-				</svg>
+				<div class="w-16 h-16 mx-auto mb-4 text-red-500">
+					<AlertCircle class="w-full h-full" />
+				</div>
 				<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Profil indisponibil</h2>
 				<p class="text-gray-700 dark:text-gray-300 mb-4">{error}</p>
 				<button 
@@ -115,9 +116,7 @@
 			onclick={() => window.history.back()}
 			class="mb-6 flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
 		>
-			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-			</svg>
+			<ArrowLeft class="w-5 h-5" />
 			Înapoi
 		</button>
 
@@ -153,9 +152,7 @@
 					onclick={startChat}
 					class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
 				>
-					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-					</svg>
+					<MessageCircle class="w-5 h-5" />
 					Trimite mesaj
 				</button>
 			</div>
@@ -166,9 +163,7 @@
 			<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-						<svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-						</svg>
+						<Info class="w-6 h-6 text-blue-600 dark:text-blue-400" />
 					</div>
 					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Informații</h2>
 				</div>
@@ -195,9 +190,7 @@
 				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-							<svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-								<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-							</svg>
+							<Star class="w-6 h-6 text-purple-600 dark:text-purple-400" />
 						</div>
 						<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Realizări</h2>
 					</div>
@@ -207,18 +200,14 @@
 								<p class="text-sm text-gray-700 dark:text-gray-300">Zile consecutive</p>
 								<p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.currentStreak}</p>
 							</div>
-							<svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-							</svg>
+							<TrendingUp class="w-8 h-8 text-blue-600 dark:text-blue-400" />
 						</div>
 						<div class="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
 							<div>
 								<p class="text-sm text-gray-700 dark:text-gray-300">Record streak</p>
 								<p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.longestStreak}</p>
 							</div>
-							<svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-							</svg>
+							<Award class="w-8 h-8 text-purple-600 dark:text-purple-400" />
 						</div>
 					</div>
 				</div>
@@ -227,17 +216,13 @@
 				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-gradient-to-br {getBadgeColor(stats.currentBadge)} rounded-lg flex items-center justify-center">
-							<svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-								<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-							</svg>
+							<Star class="w-6 h-6 text-white" />
 						</div>
 						<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Badge curent</h2>
 					</div>
 					<div class="text-center py-4">
 						<div class="w-24 h-24 mx-auto bg-gradient-to-br {getBadgeColor(stats.currentBadge)} rounded-full flex items-center justify-center mb-3 shadow-lg">
-							<svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
-								<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-							</svg>
+							<Star class="w-12 h-12 text-white" fill="currentColor" />
 						</div>
 						<p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{getBadgeName(stats.currentBadge)}</p>
 							<p class="text-gray-700 dark:text-gray-300 mt-1">{stats.totalXp} XP</p>
@@ -248,9 +233,7 @@
 				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 md:col-span-2">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-							<svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-							</svg>
+							<CheckCircle2 class="w-6 h-6 text-green-600 dark:text-green-400" />
 						</div>
 						<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Informații profesionale</h2>
 					</div>

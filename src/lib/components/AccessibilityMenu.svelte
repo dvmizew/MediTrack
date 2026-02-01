@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { accessibility } from '$lib/stores/accessibility';
+	import { Accessibility, RotateCcw, Zap } from '@lucide/svelte';
 
 	let isOpen = $state(false);
 
@@ -18,17 +19,16 @@
 		title="Setări de accesibilitate"
 		aria-label="Deschide meniu de accesibilitate"
 	>
-		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-		</svg>
+		<Zap class="w-5 h-5" />
 	</button>
 
 	<!-- Dropdown Menu -->
 	{#if isOpen}
 		<div class="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
 			<!-- Header -->
-			<div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-				<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">♿ Setări Accesibilitate</h3>
+			<div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+				<Accessibility class="w-4 h-4" />
+				<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Setări Accesibilitate</h3>
 			</div>
 
 			<!-- Content -->
@@ -85,16 +85,17 @@
 					<p class="text-xs text-gray-500 dark:text-gray-400 px-2 mt-1">Dezactivează animații și tranzițiile</p>
 				</div>
 
-				<!-- Reset Button -->
-				<button
-					onclick={() => {
-						accessibility.reset();
-						isOpen = false;
-					}}
-					class="w-full px-3 py-2 mt-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition border border-gray-300 dark:border-gray-600"
-				>
-					🔄 Resetează la Setări Implicite
-				</button>
+			<!-- Reset Button -->
+			<button
+				onclick={() => {
+					accessibility.reset();
+					isOpen = false;
+				}}
+				class="w-full px-3 py-2 mt-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition border border-gray-300 dark:border-gray-600 flex items-center justify-center gap-2"
+			>
+				<RotateCcw class="w-4 h-4" />
+				Resetează la Setări Implicite
+			</button>
 			</div>
 
 			<!-- Footer Info -->

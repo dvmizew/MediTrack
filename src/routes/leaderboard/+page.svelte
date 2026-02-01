@@ -2,6 +2,20 @@
 	import { onMount } from 'svelte';
 	import { authStore, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
+	import {
+		Calendar,
+		CalendarDays,
+		ChevronDown,
+		Flame,
+		Gem,
+		LoaderCircle,
+		Medal,
+		RefreshCw,
+		Sparkles,
+		Star,
+		Target,
+		Trophy
+	} from '@lucide/svelte';
 
 	let loading = $state(true);
 	let leaderboard = $state<any[]>([]);
@@ -58,15 +72,15 @@
 		expandedUserId = expandedUserId === userId ? null : userId;
 	}
 
-	function getBadgeIcon(badge: string | null) {
-		const badges: Record<string, string> = {
-			bronze: '🥉',
-			silver: '🥈',
-			gold: '🥇',
-			platinum: '💎',
-			diamond: '⭐'
+	function getBadgeIconComponent(badge: string | null) {
+		const badges: Record<string, any> = {
+			bronze: Medal,
+			silver: Medal,
+			gold: Medal,
+			platinum: Gem,
+			diamond: Star
 		};
-		return badges[badge || 'bronze'] || '🎖️';
+		return badges[badge || 'bronze'] || Medal;
 	}
 
 	function getBadgeColor(badge: string | null) {
@@ -80,11 +94,11 @@
 		return colors[badge || 'bronze'] || 'bg-gray-100 text-gray-900 border-gray-300';
 	}
 
-	function getRankMedal(position: number) {
-		if (position === 0) return '🥇';
-		if (position === 1) return '🥈';
-		if (position === 2) return '🥉';
-		return `#${position + 1}`;
+	function getRankMedalIcon(position: number) {
+		if (position === 0) return Trophy;
+		if (position === 1) return Medal;
+		if (position === 2) return Medal;
+		return null;
 	}
 
 	function getProgressToNextBadge(xp: number, badge: string | null) {
@@ -109,12 +123,12 @@
 		<!-- Header -->
 		<div class="mb-8 text-center">
 			<div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full shadow-lg mb-4">
-				<span class="text-4xl">🏆</span>
+				<Trophy class="w-10 h-10 text-white" />
 			</div>
 			<h1 class="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
 				Leaderboard
 			</h1>
-			<p class="text-sm sm:text-base text-gray-800 dark:text-gray-300 font-medium">Urmărește clasamentul și concurează cu alți utilizatori</p>
+			<p class="text-sm sm:text-base text-gray-800 dark:text-white font-medium">Clasament pacienți, progres individual și realizări colective</p>
 		</div>
 
 		<!-- Filter Buttons -->
@@ -127,7 +141,10 @@
 						: 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-2 border-gray-200 dark:border-gray-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
 				}`}
 			>
-				🌟 All time
+				<span class="inline-flex items-center gap-2">
+					<Sparkles class="w-4 h-4" />
+					All time
+				</span>
 			</button>
 			<button
 				onclick={() => changeFilter('week')}
@@ -137,7 +154,10 @@
 						: 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-2 border-gray-200 dark:border-gray-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
 				}`}
 			>
-				📅 Săptămâna
+				<span class="inline-flex items-center gap-2">
+					<CalendarDays class="w-4 h-4" />
+					Săptămâna
+				</span>
 			</button>
 			<button
 				onclick={() => changeFilter('month')}
@@ -147,7 +167,10 @@
 						: 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-2 border-gray-200 dark:border-gray-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
 				}`}
 			>
-				📆 Lună
+				<span class="inline-flex items-center gap-2">
+					<Calendar class="w-4 h-4" />
+					Lună
+				</span>
 			</button>
 		</div>
 
@@ -156,12 +179,15 @@
 			<button
 				onclick={() => loadLeaderboard()}
 				disabled={refreshing}
-				class="px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-2 border-gray-200 dark:border-gray-700 hover:shadow-lg hover:scale-105 hover:border-green-300 disabled:opacity-50"
+				class="px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 border-2 border-gray-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 hover:border-green-300 disabled:opacity-50"
 			>
 				{#if refreshing}
-					<span class="inline-block animate-spin">🔄</span>
+					<RefreshCw class="w-4 h-4 animate-spin" />
 				{:else}
-					🔄 Refresh
+					<span class="inline-flex items-center gap-2">
+						<RefreshCw class="w-4 h-4" />
+						Refresh
+					</span>
 				{/if}
 			</button>
 		</div>
@@ -173,22 +199,27 @@
 				<div class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
 				<div class="relative flex items-center justify-between">
 					<div>
-						<p class="text-sm font-medium opacity-90 mb-1">🎯 Poziția ta în clasament</p>
+						<p class="text-sm font-medium opacity-90 mb-1 inline-flex items-center gap-2">
+							<Target class="w-4 h-4" />
+							Poziția ta în clasament
+						</p>
 						<p class="text-5xl sm:text-6xl font-black mt-2 drop-shadow-lg">#{currentUserPosition + 1}</p>
 						{#if leaderboard[currentUserPosition]}
 							<div class="mt-4 flex items-center gap-4">
 								<div class="flex items-center gap-2 bg-white/20 backdrop-blur px-4 py-2 rounded-full">
-									<span>⭐</span>
+									<Star class="w-4 h-4" />
 									<span class="font-bold">{leaderboard[currentUserPosition].xp} XP</span>
 								</div>
 								<div class="flex items-center gap-2 bg-white/20 backdrop-blur px-4 py-2 rounded-full">
-									<span>🔥</span>
+									<Flame class="w-4 h-4" />
 									<span class="font-bold">{leaderboard[currentUserPosition].streak} streak</span>
 								</div>
 							</div>
 						{/if}
 					</div>
-					<div class="text-7xl sm:text-8xl drop-shadow-2xl animate-pulse">{getRankMedal(currentUserPosition)}</div>
+					<div class="text-7xl sm:text-8xl drop-shadow-2xl animate-pulse">
+						<svelte:component this={getRankMedalIcon(currentUserPosition)} class="w-16 h-16 sm:w-20 sm:h-20 text-white" />
+					</div>
 				</div>
 			</div>
 		{/if}
@@ -197,17 +228,15 @@
 		<div class="space-y-4 mb-8">
 			{#if loading && !refreshing}
 			<div class="p-12 text-center bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl shadow-lg">
-					<div class="inline-block animate-spin">
-						<svg class="w-16 h-16 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-						</svg>
-					</div>
-					<p class="mt-4 text-gray-800 dark:text-gray-300 font-medium">Se încarcă leaderboard-ul...</p>
+				<div class="inline-block animate-spin">
+					<LoaderCircle class="w-16 h-16 text-blue-600" />
+				</div>
+					<p class="mt-4 text-black dark:text-white font-medium">Se încarcă leaderboard-ul...</p>
 				</div>
 			{:else if leaderboard.length === 0}
 			<div class="p-12 text-center bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl shadow-lg">
-					<span class="text-6xl mb-4 block">🏆</span>
-					<p class="text-xl text-gray-800 dark:text-gray-300 font-medium">
+				<Trophy class="w-14 h-14 mx-auto mb-4 text-yellow-500" />
+					<p class="text-xl text-black dark:text-white font-medium">
 						Nu au fost găsiți pacienți pe leaderboard
 					</p>
 				</div>
@@ -222,13 +251,13 @@
 						class={`w-full text-left transition-all duration-300 transform hover:scale-102 ${
 							isTop3
 								? index === 0
-									? 'bg-gradient-to-r from-yellow-50 via-amber-50 to-orange-50 dark:from-yellow-900/20 dark:via-amber-900/20 dark:to-orange-900/20 ring-4 ring-yellow-300 dark:ring-yellow-700'
+									? 'bg-gradient-to-r from-yellow-50 via-amber-50 to-orange-50 dark:from-yellow-950 dark:via-amber-950 dark:to-orange-950 ring-4 ring-yellow-300 dark:ring-yellow-700/50'
 									: index === 1
-										? 'bg-gradient-to-r from-slate-50 via-gray-50 to-zinc-50 dark:from-slate-900/20 dark:via-gray-900/20 dark:to-zinc-900/20 ring-4 ring-slate-300 dark:ring-slate-700'
-										: 'bg-gradient-to-r from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-900/20 dark:via-amber-900/20 dark:to-yellow-900/20 ring-4 ring-orange-300 dark:ring-orange-700'
+										? 'bg-gradient-to-r from-slate-50 via-gray-50 to-zinc-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 ring-4 ring-slate-300 dark:ring-slate-700/50'
+										: 'bg-gradient-to-r from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-950 dark:via-amber-950 dark:to-yellow-950 ring-4 ring-orange-300 dark:ring-orange-700/50'
 								: isCurrentUser
-									? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 ring-2 ring-blue-400 dark:ring-blue-600'
-									: 'bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 hover:shadow-xl'
+									? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 ring-2 ring-blue-400 dark:ring-blue-600/50'
+									: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 dark:shadow-lg hover:shadow-xl'
 		} rounded-2xl shadow-lg p-6`}
 					>
 						<div class="flex items-center justify-between gap-4">
@@ -236,9 +265,13 @@
 							<div class="flex items-center gap-4 min-w-0 flex-1">
 								<!-- Rank Badge -->
 								<div class={`flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center font-black text-2xl ${
-									isTop3 ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-lg animate-pulse' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+									isTop3 ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-lg animate-pulse' : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200'
 								}`}>
-									{index < 3 ? getRankMedal(index) : `#${index + 1}`}
+									{#if index < 3}
+										<svelte:component this={getRankMedalIcon(index)} class="w-7 h-7 text-white" />
+									{:else}
+										#{index + 1}
+									{/if}
 								</div>
 
 								<!-- Avatar -->
@@ -250,7 +283,7 @@
 									</div>
 									{#if isTop3}
 										<div class="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center text-xs animate-bounce">
-											⭐
+											<Star class="w-3.5 h-3.5 text-white" />
 										</div>
 									{/if}
 								</div>
@@ -266,7 +299,7 @@
 										{/if}
 									</div>
 									<span class={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold border-2 ${getBadgeColor(user.badge)}`}>
-										<span class="text-base">{getBadgeIcon(user.badge)}</span>
+										<svelte:component this={getBadgeIconComponent(user.badge)} class="w-4 h-4" />
 										<span class="capitalize">{user.badge || 'bronze'}</span>
 									</span>
 								</div>
@@ -277,45 +310,42 @@
 								<!-- Streak -->
 								<div class="text-center">
 									<div class="inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-400 to-red-500 text-white px-4 py-2 rounded-xl font-bold shadow-lg">
-										<span class="text-xl">🔥</span>
+										<Flame class="w-5 h-5" />
 										<span class="text-xl">{user.streak || 0}</span>
 									</div>
-									<p class="text-xs text-gray-800 dark:text-gray-300 mt-1 font-medium">Streak</p>
+											<p class="text-xs text-gray-700 dark:text-slate-300 mt-1 font-medium">Streak</p>
 								</div>
 
 								<!-- XP -->
 								<div class="text-center">
 									<div class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-xl font-bold shadow-lg">
-										<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-											<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-										</svg>
+										<Star class="w-5 h-5" />
 										<span class="text-xl">{user.xp || 0}</span>
 									</div>
-									<p class="text-xs text-gray-800 dark:text-gray-300 mt-1 font-medium">XP</p>
+											<p class="text-xs text-gray-700 dark:text-slate-300 mt-1 font-medium">XP</p>
 								</div>
 
 								<!-- Expand Icon -->
-								<svg class={`w-6 h-6 text-gray-400 transition-transform duration-300 ${expandedUserId === user.userId ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-								</svg>
+								<ChevronDown class={`w-6 h-6 text-gray-400 transition-transform duration-300 ${expandedUserId === user.userId ? 'rotate-180' : ''}`} />
 							</div>
 						</div>
 
 						<!-- Expanded Details -->
 						{#if expandedUserId === user.userId}
-							<div class="mt-6 pt-6 border-t-2 border-gray-200 dark:border-gray-700 space-y-4 animate-scale-in">
+							<div class="mt-6 pt-6 border-t-2 border-gray-200 dark:border-slate-700 space-y-4 animate-scale-in">
 								<!-- Progress to next badge -->
 								{#if progress}
 									<div>
 										<div class="flex items-center justify-between mb-2">
-											<span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-												Progres către {getBadgeIcon(progress.next)} {progress.next}
-											</span>
+												<span class="text-sm font-semibold text-gray-700 dark:text-slate-300 inline-flex items-center gap-2">
+													<svelte:component this={getBadgeIconComponent(progress.next)} class="w-4 h-4" />
+													Progres către {progress.next}
+												</span>
 											<span class="text-sm font-bold text-blue-600 dark:text-blue-400">
 												{user.xp} / {progress.target} XP
 											</span>
 										</div>
-										<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+												<div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
 											<div 
 												class="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-500"
 												style={`width: ${progress.progress}%`}
@@ -324,7 +354,7 @@
 									</div>
 								{:else}
 									<div class="text-center py-2">
-										<span class="text-2xl">🏆</span>
+										<Trophy class="w-8 h-8 mx-auto text-yellow-500" />
 										<p class="text-sm font-bold text-purple-600 dark:text-purple-400 mt-1">
 											Ai atins nivelul maxim!
 										</p>
@@ -333,26 +363,26 @@
 
 								<!-- Achievement Stats Grid -->
 								<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-									<div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 text-center">
-										<p class="text-2xl mb-1">🎯</p>
-										<p class="text-xs text-gray-800 dark:text-gray-300 font-medium">Poziție</p>
-										<p class="text-xl font-black text-gray-900 dark:text-white">#{index + 1}</p>
-									</div>
-									<div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 text-center">
-										<p class="text-2xl mb-1">{getBadgeIcon(user.badge)}</p>
-										<p class="text-xs text-gray-800 dark:text-gray-300 font-medium">Badge</p>
-										<p class="text-sm font-black text-gray-900 dark:text-white capitalize">{user.badge}</p>
-									</div>
-									<div class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl p-4 text-center">
-										<p class="text-2xl mb-1">🔥</p>
-										<p class="text-xs text-gray-800 dark:text-gray-300 font-medium">Streak</p>
-										<p class="text-xl font-black text-gray-900 dark:text-white">{user.streak}</p>
-									</div>
-									<div class="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-xl p-4 text-center">
-										<p class="text-2xl mb-1">⭐</p>
-										<p class="text-xs text-gray-800 dark:text-gray-300 font-medium">Total XP</p>
-										<p class="text-xl font-black text-gray-900 dark:text-white">{user.xp}</p>
-									</div>
+											<div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 rounded-xl p-4 text-center">
+												<Target class="w-6 h-6 mx-auto mb-1 text-blue-700 dark:text-blue-200" />
+												<p class="text-xs text-blue-700 dark:text-blue-300 font-medium">Poziție</p>
+												<p class="text-xl font-black text-blue-900 dark:text-blue-100">#{index + 1}</p>
+										</div>
+											<div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 rounded-xl p-4 text-center">
+												<svelte:component this={getBadgeIconComponent(user.badge)} class="w-6 h-6 mx-auto mb-1 text-purple-700 dark:text-purple-200" />
+												<p class="text-xs text-purple-700 dark:text-purple-300 font-medium">Badge</p>
+												<p class="text-sm font-black text-purple-900 dark:text-purple-100 capitalize">{user.badge}</p>
+										</div>
+											<div class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950 dark:to-red-950 rounded-xl p-4 text-center">
+												<Flame class="w-6 h-6 mx-auto mb-1 text-orange-700 dark:text-orange-200" />
+												<p class="text-xs text-orange-700 dark:text-orange-300 font-medium">Streak</p>
+												<p class="text-xl font-black text-orange-900 dark:text-orange-100">{user.streak}</p>
+										</div>
+											<div class="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950 dark:to-amber-950 rounded-xl p-4 text-center">
+												<Star class="w-6 h-6 mx-auto mb-1 text-yellow-700 dark:text-yellow-200" />
+												<p class="text-xs text-yellow-700 dark:text-yellow-300 font-medium">Total XP</p>
+												<p class="text-xl font-black text-yellow-900 dark:text-yellow-100">{user.xp}</p>
+										</div>
 								</div>
 							</div>
 						{/if}
@@ -366,11 +396,11 @@
 		<div class="group bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:border-blue-400">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform">
-						⭐
+						<Star class="w-7 h-7 text-white" />
 					</div>
 					<h3 class="font-black text-xl text-gray-900 dark:text-white">Cum se câștigă XP?</h3>
 				</div>
-				<p class="text-sm text-gray-800 dark:text-gray-300 leading-relaxed">
+							<p class="text-sm text-black dark:text-white leading-relaxed">
 					Primești XP prin confirmarea dozelor de medicament la timp și prin respectarea planului de tratament. Cu cât ești mai constant, cu atât câștigi mai mult XP!
 				</p>
 			</div>
@@ -378,11 +408,11 @@
 		<div class="group bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:border-orange-400">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform">
-						🔥
+						<Flame class="w-7 h-7 text-white" />
 					</div>
 					<h3 class="font-black text-xl text-gray-900 dark:text-white">Ce este Streak-ul?</h3>
 				</div>
-				<p class="text-sm text-gray-800 dark:text-gray-300 leading-relaxed">
+				<p class="text-sm text-gray-800 dark:text-slate-300 leading-relaxed">
 					Streak-ul măsoară numărul de zile consecutive în care ai confirmat toate dozele. Dacă sari o zi, streak-ul se resetează la 0. Continuitate = Succes!
 				</p>
 			</div>
@@ -390,13 +420,13 @@
 		<div class="group bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:border-purple-400">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform">
-						🏆
+						<Trophy class="w-7 h-7 text-white" />
 					</div>
 					<h3 class="font-black text-xl text-gray-900 dark:text-white">Badge-uri</h3>
 				</div>
-				<p class="text-sm text-gray-800 dark:text-gray-300 leading-relaxed">
-					Deblochează badge-uri pe măsură ce avansezi: 🥉 Bronze (0 XP), 🥈 Silver (500 XP), 🥇 Gold (1500 XP), 💎 Platinum (3000 XP), ⭐ Diamond (5000 XP).
-				</p>
+			<p class="text-sm text-gray-800 dark:text-slate-300 leading-relaxed">
+				Deblochează badge-uri pe măsură ce avansezi: Bronze (0 XP), Silver (500 XP), Gold (1500 XP), Platinum (3000 XP), Diamond (5000 XP).
+			</p>
 			</div>
 		</div>
 	</div>

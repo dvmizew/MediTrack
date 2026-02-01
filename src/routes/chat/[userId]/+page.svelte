@@ -7,6 +7,7 @@
 	import { socketClient } from '$lib/api/socket';
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+	import { ArrowLeft, MoreVertical, Plus, FileText, Bell, BarChart3, MessageCircle, AlertCircle, Loader, Send, Calendar, Phone, Stethoscope, User } from '@lucide/svelte';
 
 	let otherUserId = $state(0);
 	let otherUser = $state<any>(null);
@@ -417,9 +418,7 @@
 								class="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 active:scale-95 transition-all duration-200 flex-shrink-0"
 								aria-label="Înapoi"
 							>
-								<svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
-								</svg>
+								<ArrowLeft class="w-5 h-5 sm:w-6 sm:h-6 text-white" strokeWidth={2.5} />
 							</button>
 							
 							<!-- User profile button -->
@@ -442,9 +441,13 @@
 								<div class="min-w-0 flex-1 text-left">
 									<div class="flex items-center gap-1.5 sm:gap-2">
 										<h2 class="font-bold text-sm sm:text-base md:text-lg text-white truncate drop-shadow-sm">{otherUser.name}</h2>
-										<span class="px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold rounded-full flex-shrink-0 bg-white/20 backdrop-blur-sm text-white border border-white/30">
-											{otherUser.role === 'medic' ? '⚕️' : '🧑'}
-											<span class="hidden xs:inline ml-0.5">{otherUser.role === 'medic' ? 'Doctor' : 'Pacient'}</span>
+									<span class="px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold rounded-full flex-shrink-0 bg-white/20 backdrop-blur-sm text-white border border-white/30 flex items-center gap-0.5">
+										{#if otherUser.role === 'medic'}
+											<Stethoscope class="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+										{:else}
+											<User class="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+										{/if}
+										<span class="hidden xs:inline">{otherUser.role === 'medic' ? 'Doctor' : 'Pacient'}</span>
 										</span>
 									</div>
 									<div class="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-white/90 mt-0.5">
@@ -467,9 +470,7 @@
 								class="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 active:scale-95 transition-all duration-200 flex-shrink-0"
 								aria-label="Înapoi"
 							>
-								<svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
-								</svg>
+								<ArrowLeft class="w-5 h-5 sm:w-6 sm:h-6 text-white" strokeWidth={2.5} />
 							</button>
 						{/if}
 					</div>
@@ -483,9 +484,7 @@
 								class="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 dark:hover:bg-black/20 active:scale-95 transition-all duration-200 touch-manipulation"
 								aria-label="Opțiuni"
 							>
-									<svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
-									</svg>
+									<MoreVertical class="w-5 h-5 sm:w-6 sm:h-6 text-white" strokeWidth={2.5} />
 								</button>
 								
 								{#if showOptionsMenu}
@@ -500,36 +499,28 @@
 													onclick={createTreatment}
 													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
 												>
-													<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-													</svg>
+													<Plus class="w-5 h-5 text-green-600 dark:text-green-400" />
 													<span>Adaugă Tratament</span>
 												</button>
 												<button
 													onclick={viewTreatments}
 													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
 												>
-													<svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-													</svg>
+													<FileText class="w-5 h-5 text-blue-600 dark:text-blue-400" />
 													<span>Tratamente Active</span>
 												</button>
 												<button
 													onclick={sendReminder}
 													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
 												>
-													<svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-													</svg>
+													<Bell class="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
 													<span>Trimite Reminder</span>
 												</button>
 												<button
 													onclick={viewReports}
 													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
 												>
-													<svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-													</svg>
+													<BarChart3 class="w-5 h-5 text-purple-600 dark:text-purple-400" />
 													<span>Rapoarte Pacient</span>
 												</button>
 											{:else}
@@ -538,18 +529,14 @@
 													onclick={viewTreatments}
 													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
 												>
-													<svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-													</svg>
+														<FileText class="w-5 h-5 text-blue-600 dark:text-blue-400" />
 													<span>Tratamentele Mele</span>
 												</button>
 												<button
 													onclick={viewReports}
 													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
 												>
-													<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-												</svg>
+														<BarChart3 class="w-5 h-5 text-green-600 dark:text-green-400" />
 												<span>Progresul Meu</span>
 											</button>
 										{/if}
@@ -571,9 +558,7 @@
 		{:else if error}
 			<div class="flex-1 flex items-center justify-center p-3 sm:p-4">
 				<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 max-w-md text-center mx-3">
-					<svg class="w-10 h-10 sm:w-12 sm:h-12 text-red-600 dark:text-red-400 mx-auto mb-2 sm:mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-					</svg>
+					<AlertCircle class="w-10 h-10 sm:w-12 sm:h-12 text-red-600 dark:text-red-400 mx-auto mb-2 sm:mb-3" />
 					<p class="text-sm sm:text-base text-red-800 dark:text-red-400 font-medium mb-3 sm:mb-4">{error}</p>
 					<button
 						onclick={() => goto('/chat')}
@@ -592,9 +577,7 @@
 			>
 				{#if messages.length === 0}
 					<div class="text-center py-8 sm:py-12 px-4">
-						<svg class="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 dark:text-gray-600 mx-auto mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-						</svg>
+						<MessageCircle class="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 dark:text-gray-600 mx-auto mb-3 sm:mb-4" />
 						<p class="text-sm sm:text-base text-gray-500 dark:text-gray-400">Niciun mesaj încă</p>
 					</div>
 				{:else}
@@ -611,10 +594,7 @@
 										<p class="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.continut}</p>
 										{#if message._pending}
 											<span class="absolute -bottom-1 -right-1 w-4 h-4 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center">
-												<svg class="animate-spin h-3 w-3 text-blue-600" fill="none" viewBox="0 0 24 24">
-													<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-													<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-												</svg>
+													<Loader class="animate-spin h-3 w-3 text-blue-600" />
 											</span>
 										{/if}
 									</div>
@@ -651,14 +631,9 @@
 							class="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed hover:shadow-xl hover:shadow-blue-500/50 active:scale-95 transition-all duration-200 flex items-center justify-center font-medium shadow-md touch-manipulation"
 						>
 							{#if sending}
-								<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-									<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-									<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-								</svg>
+								<Loader class="animate-spin h-4 w-4" />
 							{:else}
-								<svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-								</svg>
+								<Send class="w-4 h-4 sm:w-5 sm:h-5" />
 							{/if}
 						</button>
 					</form>

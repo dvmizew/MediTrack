@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { scale, fade } from 'svelte/transition';
+	import { Info, AlertCircle, XCircle, CheckCircle2, Loader, X } from '@lucide/svelte';
 
 	export interface Props {
 		isOpen: boolean;
@@ -53,10 +54,10 @@
 	};
 
 	const typeIcons = {
-		info: '🔵',
-		warning: '⚠️',
-		error: '❌',
-		success: '✓'
+		info: Info,
+		warning: AlertCircle,
+		error: XCircle,
+		success: CheckCircle2
 	};
 
 	function handleBackdropClick() {
@@ -133,9 +134,7 @@
 						aria-label="Închide"
 						type="button"
 					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-						</svg>
+						<X class="w-5 h-5" />
 					</button>
 				</div>
 			{/if}
@@ -180,7 +179,7 @@
 										: 'bg-blue-600 hover:bg-blue-700'}"
 						>
 							{#if isProcessing}
-								<span class="inline-block animate-spin mr-2">⏳</span>
+								<Loader class="w-4 h-4 animate-spin mr-2" />
 							{/if}
 							{confirmText}
 						</button>

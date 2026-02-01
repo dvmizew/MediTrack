@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { adminReportsApi } from '$lib/api/client';
+	import { Stethoscope } from '@lucide/svelte';
 	import { authStore } from '$lib/stores/auth';
 
 	let report = $state<any | null>(null);
@@ -34,7 +35,7 @@
 
 <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 	<div class="space-y-1">
-		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">🩺 Raport medic</h1>
+		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100"><Stethoscope class="w-8 h-8 inline mr-2" /> Raport medic</h1>
 		<p class="text-gray-700 dark:text-gray-300">ID: {userId}</p>
 	</div>
 
@@ -65,7 +66,7 @@
 
 		<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-5 space-y-3">
 			<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Invitații</h2>
-			<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-gray-800 dark:text-gray-200">
+			<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-black dark:text-white">
 				<div class="px-3 py-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">Acceptate: {report.invites.accepted}</div>
 				<div class="px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">Respins: {report.invites.rejected}</div>
 				<div class="px-3 py-2 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">În așteptare: {report.invites.pending}</div>

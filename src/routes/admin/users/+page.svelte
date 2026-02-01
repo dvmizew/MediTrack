@@ -7,6 +7,24 @@
 	import { downloadBlobAsFile } from '$lib/utils/charts';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import {
+		Ban,
+		CalendarDays,
+		CheckCircle2,
+		Crown,
+		Download,
+		LoaderCircle,
+		Pencil,
+		Plus,
+		Search,
+		Settings,
+		Stethoscope,
+		Target,
+		Trash2,
+		User,
+		Users,
+		Zap
+	} from '@lucide/svelte';
 
 	let user = $derived($authStore.user);
 	let isAdmin = $derived(user?.role === 'admin');
@@ -155,16 +173,16 @@
 			case 'admin': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
 			case 'medic': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400';
 			case 'pacient': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
-			default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400';
+				default: return 'bg-gray-100 dark:bg-slate-800 text-black dark:text-white';
 		}
 	}
 
-	function getRoleIcon(role: string) {
+	function getRoleIconComponent(role: string) {
 		switch (role) {
-			case 'admin': return '👑';
-			case 'medic': return '👨‍⚕️';
-			case 'pacient': return '🧑';
-			default: return '👤';
+			case 'admin': return Crown;
+			case 'medic': return Stethoscope;
+			case 'pacient': return User;
+			default: return User;
 		}
 	}
 
@@ -326,7 +344,10 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<div class="flex items-center justify-between mb-8">
 		<div>
-			<h1 class="text-3xl font-bold text-gray-900 mb-2">👥 Gestionare Utilizatori</h1>
+			<h1 class="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+				<Users class="w-7 h-7 text-gray-900 dark:text-white" />
+				Gestionare Utilizatori
+			</h1>
 			<p class="text-sm text-gray-800 font-medium">Administrează rolurile și statusul utilizatorilor</p>
 		</div>
 		<div class="flex gap-3">
@@ -334,14 +355,21 @@
 				onclick={openAddModal}
 				class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm flex items-center gap-2 whitespace-nowrap"
 			>
-				➕ Adaugă Utilizator
+				<Plus class="w-4 h-4" />
+				Adaugă Utilizator
 			</button>
 			<button
 				onclick={handleExportUsers}
 				disabled={exporting || loading}
 				class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium text-sm flex items-center gap-2 whitespace-nowrap"
 			>
-				{exporting ? '⏳ Exporta...' : '💾 Export CSV'}
+				{#if exporting}
+					<LoaderCircle class="w-4 h-4 animate-spin" />
+					Exportă...
+				{:else}
+					<Download class="w-4 h-4" />
+					Export CSV
+				{/if}
 			</button>
 		</div>
 	</div>
@@ -354,7 +382,7 @@
 		<!-- Filters -->
 		<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-md p-6 mb-6">
 			<div class="flex items-center gap-2 mb-4">
-				<span class="text-xl">🔍</span>
+				<Search class="w-5 h-5 text-gray-700 dark:text-gray-300" />
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Filtrare și Căutare</h2>
 			</div>
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -399,9 +427,7 @@
 		{#if filteredUsers.length === 0}
 			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-md p-16 text-center">
 				<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
-					<svg class="h-8 w-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-					</svg>
+					<Users class="h-8 w-8 text-gray-400 dark:text-gray-500" />
 				</div>
 				<p class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Niciun utilizator găsit</p>
 				<p class="text-gray-500 dark:text-gray-400">Încearcă să schimbi criteriile de căutare</p>
@@ -413,19 +439,34 @@
 						<thead class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50 border-b border-gray-200 dark:border-gray-700">
 							<tr>
 								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-									👤 Utilizator
+									<span class="inline-flex items-center gap-2">
+										<User class="w-4 h-4" />
+										Utilizator
+									</span>
 								</th>
 								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-									🎯 Rol
+									<span class="inline-flex items-center gap-2">
+										<Target class="w-4 h-4" />
+										Rol
+									</span>
 								</th>
 								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-									⚡ Status
+									<span class="inline-flex items-center gap-2">
+										<Zap class="w-4 h-4" />
+										Status
+									</span>
 								</th>
 								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-									📅 Data Creării
+									<span class="inline-flex items-center gap-2">
+										<CalendarDays class="w-4 h-4" />
+										Data Creării
+									</span>
 								</th>
 								<th class="px-6 py-4 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-									⚙️ Acțiuni
+									<span class="inline-flex items-center gap-2">
+										<Settings class="w-4 h-4" />
+										Acțiuni
+									</span>
 								</th>
 							</tr>
 						</thead>
@@ -444,8 +485,9 @@
 										</div>
 									</td>
 									<td class="px-6 py-4">
-										<span class="px-3 py-1 rounded-full text-xs font-semibold {getRoleBadgeColor(u.role)}">
-											{getRoleIcon(u.role)} {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
+										<span class="px-3 py-1 rounded-full text-xs font-semibold {getRoleBadgeColor(u.role)} inline-flex items-center gap-2">
+											<svelte:component this={getRoleIconComponent(u.role)} class="w-4 h-4" />
+											{u.role.charAt(0).toUpperCase() + u.role.slice(1)}
 										</span>
 									</td>
 									<td class="px-6 py-4">
@@ -463,10 +505,11 @@
 										<div class="flex items-center justify-end gap-2">
 											<button
 												onclick={() => openEditModal(u)}
-												class="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-sm font-medium rounded-lg transition border border-blue-200 dark:border-blue-800 whitespace-nowrap"
+												class="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-sm font-medium rounded-lg transition border border-blue-200 dark:border-blue-800 whitespace-nowrap inline-flex items-center gap-2"
 												title="Editează utilizatorul"
 											>
-												✏️ Editează
+												<Pencil class="w-4 h-4" />
+												Editează
 											</button>
 											<button
 												onclick={() => toggleUserStatus((u as any).userId, (u as any).isActive)}
@@ -474,15 +517,26 @@
 												class="px-3 py-2 text-sm font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap {getStatusButtonClass((u as any).isActive)}"
 												title={!canModifyUser((u as any).userId) ? 'Nu puteți modifica propriul account' : ''}
 											>
-												{(u as any).isActive ? '🚫 Dezactivează' : '✅ Activează'}
+												{#if (u as any).isActive}
+													<span class="inline-flex items-center gap-2">
+														<Ban class="w-4 h-4" />
+														Dezactivează
+													</span>
+												{:else}
+													<span class="inline-flex items-center gap-2">
+														<CheckCircle2 class="w-4 h-4" />
+														Activează
+													</span>
+												{/if}
 											</button>
 											<button
 												onclick={() => handleDeleteUser((u as any).userId)}
 												disabled={!canModifyUser((u as any).userId)}
-												class="px-3 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 text-sm font-medium rounded-lg transition border border-red-200 dark:border-red-800 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+												class="px-3 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 text-sm font-medium rounded-lg transition border border-red-200 dark:border-red-800 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap inline-flex items-center gap-2"
 												title={!canModifyUser((u as any).userId) ? 'Nu puteți șterge propriul account' : 'Șterge utilizatorul'}
 											>
-												🗑️ Șterge
+												<Trash2 class="w-4 h-4" />
+												Șterge
 											</button>
 										</div>
 									</td>
@@ -517,8 +571,9 @@
 							<div class="grid grid-cols-2 gap-3">
 								<div>
 									<p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Rol</p>
-									<span class="px-2.5 py-1 rounded-full text-xs font-semibold {getRoleBadgeColor(u.role)} inline-block">
-										{getRoleIcon(u.role)} {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
+									<span class="px-2.5 py-1 rounded-full text-xs font-semibold {getRoleBadgeColor(u.role)} inline-flex items-center gap-2">
+										<svelte:component this={getRoleIconComponent(u.role)} class="w-3.5 h-3.5" />
+										{u.role.charAt(0).toUpperCase() + u.role.slice(1)}
 									</span>
 								</div>
 								<div>
@@ -533,10 +588,11 @@
 							<div class="flex gap-2 pt-2">
 								<button
 									onclick={() => openEditModal(u)}
-									class="flex-1 px-3 py-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-sm font-medium rounded-lg transition"
+									class="flex-1 px-3 py-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-sm font-medium rounded-lg transition inline-flex items-center justify-center gap-2"
 									title="Editează utilizatorul"
 								>
-									✏️ Editează
+									<Pencil class="w-4 h-4" />
+									Editează
 								</button>
 								<button
 									onclick={() => toggleUserStatus(u.userId, u.isActive)}
@@ -544,15 +600,26 @@
 									class="flex-1 px-3 py-2.5 text-sm font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed {getStatusButtonClass(u.isActive)}"
 									title={!canModifyUser(u.userId) ? 'Nu puteți modifica propriul account' : ''}
 								>
-									{u.isActive ? '🚫 Dezactivează' : '✅ Activează'}
+									{#if u.isActive}
+										<span class="inline-flex items-center gap-2">
+											<Ban class="w-4 h-4" />
+											Dezactivează
+										</span>
+									{:else}
+										<span class="inline-flex items-center gap-2">
+											<CheckCircle2 class="w-4 h-4" />
+											Activează
+										</span>
+									{/if}
 								</button>
 								<button
 									onclick={() => handleDeleteUser(u.userId)}
 									disabled={!canModifyUser(u.userId)}
-									class="flex-1 px-3 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/40 text-sm font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+									class="flex-1 px-3 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/40 text-sm font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
 									title={!canModifyUser(u.userId) ? 'Nu puteți șterge propriul account' : 'Șterge utilizatorul'}
 								>
-									🗑️ Șterge
+									<Trash2 class="w-4 h-4" />
+									Șterge
 								</button>
 							</div>
 						</div>
@@ -565,10 +632,10 @@
 
 <Modal
 	isOpen={formModalOpen}
-	title={formMode === 'add' ? '➕ Adaugă Utilizator Nou' : '✏️ Editează Utilizator'}
+	title={formMode === 'add' ? 'Adaugă Utilizator Nou' : 'Editează Utilizator'}
 	size="md"
 	showCancel={true}
-	confirmText={formLoading ? '⏳ Se salvează...' : 'Salvează'}
+	confirmText={formLoading ? 'Se salvează...' : 'Salvează'}
 	cancelText="Anulează"
 	onConfirm={handleFormSubmit}
 	onCancel={() => (formModalOpen = false)}
@@ -631,9 +698,9 @@
 					class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					disabled={formLoading}
 				>
-					<option value="pacient">🧑 Pacient</option>
-					<option value="medic">👨‍⚕️ Medic</option>
-					<option value="admin">👑 Administrator</option>
+				<option value="pacient">Pacient</option>
+				<option value="medic">Medic</option>
+				<option value="admin">Administrator</option>
 				</select>
 			</div>
 

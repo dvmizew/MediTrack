@@ -4,6 +4,7 @@
 	import { adminReportsApi } from '$lib/api/client';
 	import { authStore } from '$lib/stores/auth';
 	import { toast } from '$lib/utils/toast';
+	import { BarChart3, FileText, Users, Pill, CheckCircle2, Zap, Check } from '@lucide/svelte';
 	import { createPieChart, createBarChart, createLineChart } from '$lib/utils/charts';
 
 	let overview = $state<any | null>(null);
@@ -105,8 +106,8 @@
 	<!-- Header Section -->
 	<div class="space-y-3 sm:space-y-4">
 		<div class="space-y-1">
-			<h1 class="text-2xl sm:text-3xl font-bold text-gray-900">📊 Rapoarte Admin</h1>
-			<p class="text-sm sm:text-base text-gray-800 font-medium">Overview utilizatori, colaborări și aderență cu grafice și export.</p>
+			<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2"><BarChart3 class="w-8 h-8" /> Rapoarte Admin</h1>
+			<p class="text-sm sm:text-base text-black dark:text-white font-medium">Overview utilizatori, colaborări și aderență cu grafice și export.</p>
 		</div>
 		
 		
@@ -114,7 +115,7 @@
 		<div class="bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
 			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
 				<div class="flex items-start gap-3">
-					<div class="text-2xl">⚡</div>
+					<Zap class="w-6 h-6" />
 					<div>
 						<h3 class="font-semibold text-gray-900 dark:text-gray-100">Rapoarte Asincrone</h3>
 						<p class="text-xs sm:text-sm text-gray-700 dark:text-gray-300 mt-0.5">
@@ -126,7 +127,7 @@
 					href="/admin/reports/jobs"
 					class="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium text-sm whitespace-nowrap"
 				>
-					<span>📋</span>
+					<FileText class="w-5 h-5" />
 					<span>Gestionează Job-uri</span>
 				</a>
 			</div>
@@ -145,17 +146,17 @@
 		<!-- Charts Row -->
 		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-6 shadow-md">
-				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">👥 Utilizatori după Rol</h2>
+				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2"><Users class="w-5 h-5" /> Utilizatori după Rol</h2>
 				<canvas id="usersPieChart"></canvas>
 			</div>
 
 			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-6 shadow-md">
-				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">📋 Planuri Tratament</h2>
+				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2"><FileText class="w-5 h-5" /> Planuri Tratament</h2>
 				<canvas id="treatmentsBarChart"></canvas>
 			</div>
 
 			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-6 shadow-md">
-				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">📈 Aderență</h2>
+			<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2"><BarChart3 class="w-5 h-5" /> Aderență</h2>
 				<canvas id="adherenceLineChart"></canvas>
 			</div>
 		</div>
@@ -164,25 +165,31 @@
 		<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
 				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
-					<span class="text-base sm:text-lg">👤</span>
+					<Users class="w-5 h-5" />
 					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">Utilizatori</h3>
 				</div>
 				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{overview.users.active + overview.users.inactive}</p>
-				<p class="text-xs text-green-600 dark:text-green-400 truncate">🟢 {overview.users.active} activi</p>
+				<p class="text-xs text-green-600 dark:text-green-400 truncate flex items-center gap-1">
+					<Check class="w-3 h-3" />
+					{overview.users.active} activi
+				</p>
 			</div>
 
 			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
 				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
-					<span class="text-base sm:text-lg">📋</span>
+					<FileText class="w-5 h-5" />
 					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">Tratamente</h3>
 				</div>
 				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{overview.treatments.total}</p>
-				<p class="text-xs text-blue-600 dark:text-blue-400 truncate">🟢 {overview.treatments.active} active</p>
+				<p class="text-xs text-blue-600 dark:text-blue-400 truncate flex items-center gap-1">
+					<Check class="w-3 h-3" />
+					{overview.treatments.active} active
+				</p>
 			</div>
 
 			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
 				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
-					<span class="text-base sm:text-lg">💊</span>
+					<Pill class="w-5 h-5" />
 					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">Doze</h3>
 				</div>
 				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{overview.doses.total}</p>
@@ -191,7 +198,7 @@
 
 			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
 				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
-					<span class="text-base sm:text-lg">✅</span>
+					<CheckCircle2 class="w-5 h-5" />
 					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">Aderență</h3>
 				</div>
 				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{formatPercent(overview.adherence.last30Days.rate)}</p>
@@ -202,7 +209,7 @@
 		<!-- Detailed Tables -->
 		<div class="grid gap-6 md:grid-cols-2">
 			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-6 shadow-md">
-				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">👥 Utilizatori după Rol</h2>
+				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2"><Users class="w-5 h-5" /> Utilizatori după Rol</h2>
 				<div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
 					<table class="min-w-full text-sm">
 						<thead class="bg-slate-50/80 dark:bg-gray-900/50 text-gray-700 dark:text-gray-300 uppercase tracking-wide text-xs">
@@ -211,7 +218,7 @@
 								<th class="px-4 py-3 text-right">Număr</th>
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-200">
+						<tbody class="divide-y divide-gray-200 dark:divide-slate-700 text-black dark:text-white">
 							{#each overview.users.byRole as row}
 								<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
 									<td class="px-4 py-3 capitalize font-medium">{row.role}</td>
@@ -224,7 +231,7 @@
 			</div>
 
 			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-6 shadow-md">
-				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">🤝 Colaborări după Status</h2>
+				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2"><Users class="w-5 h-5" /> Colaborări după Status</h2>
 				<div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
 					<table class="min-w-full text-sm">
 						<thead class="bg-slate-50/80 dark:bg-gray-900/50 text-gray-700 dark:text-gray-300 uppercase tracking-wide text-xs">
@@ -233,7 +240,7 @@
 								<th class="px-4 py-3 text-right">Număr</th>
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-200">
+						<tbody class="divide-y divide-gray-200 dark:divide-slate-700 text-black dark:text-white">
 							{#each overview.collaborations as row}
 								<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
 									<td class="px-4 py-3 capitalize font-medium">{row.status}</td>
@@ -248,17 +255,17 @@
 
 		<!-- Adherence Details -->
 		<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-6 shadow-md">
-			<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">📊 Detalii Aderență</h2>
+			<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2"><BarChart3 class="w-5 h-5" /> Detalii Aderență</h2>
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-					<p class="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">📅 Ultima 7 zile</p>
+					<p class="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">Ultima 7 zile</p>
 					<p class="text-2xl font-bold text-blue-900 dark:text-blue-100">{formatPercent(overview.adherence.last7Days.rate)}</p>
 					<p class="text-xs text-blue-700 dark:text-blue-300 mt-2">
 						{overview.adherence.last7Days.confirmed} confirmate din {overview.adherence.last7Days.scheduled} programate
 					</p>
 				</div>
 				<div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-					<p class="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">📆 Ultima 30 zile</p>
+					<p class="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">Ultima 30 zile</p>
 					<p class="text-2xl font-bold text-green-900 dark:text-green-100">{formatPercent(overview.adherence.last30Days.rate)}</p>
 					<p class="text-xs text-green-700 dark:text-green-300 mt-2">
 						{overview.adherence.last30Days.confirmed} confirmate din {overview.adherence.last30Days.scheduled} programate
@@ -266,5 +273,5 @@
 				</div>
 			</div>
 		</div>
-	{/if}
+{/if}
 </main>

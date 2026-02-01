@@ -5,6 +5,7 @@
 	import { loadUserProfile } from '$lib/utils/loaders';
 	import { BADGES, getBadgeMeta } from '$lib/constants/badges';
 	import { toast } from '$lib/utils/toast';
+	import { User, Lock, Bell, BarChart3, Loader, CheckCircle2, Info, AlertTriangle, Trash2, Star, X, XCircle, Copy, Download, RotateCcw, Shield, Key, Zap } from '@lucide/svelte';
 	import {
 		subscribeToPush,
 		unsubscribeFromPush,
@@ -179,11 +180,21 @@
 	});
 
 	const tabs = [
-		{ id: 'general' as TabType, name: 'General', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-		{ id: 'security' as TabType, name: 'Securitate', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
-		{ id: 'notifications' as TabType, name: 'Notificări', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' },
-		{ id: 'stats' as TabType, name: 'Statistici', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', show: $isPacient }
+		{ id: 'general' as TabType, name: 'General', icon: User },
+		{ id: 'security' as TabType, name: 'Securitate', icon: Lock },
+		{ id: 'notifications' as TabType, name: 'Notificări', icon: Bell },
+		{ id: 'stats' as TabType, name: 'Statistici', icon: BarChart3, show: $isPacient }
 	];
+
+	function getTabIcon(tabId: TabType) {
+		const iconMap: Record<TabType, any> = {
+			general: User,
+			security: Lock,
+			notifications: Bell,
+			stats: BarChart3
+		};
+		return iconMap[tabId];
+	}
 
 	onMount(async () => {
 		try {
@@ -364,8 +375,8 @@
 					{/if}
 				</div>
 				<div>
-					<h1 class="text-3xl font-bold text-gray-900">{fullName}</h1>
-					<p class="text-gray-800 capitalize font-medium">{$authStore.user?.role}</p>
+					<h1 class="text-3xl font-bold text-gray-900 dark:text-white">{fullName}</h1>
+					<p class="text-gray-800 dark:text-slate-300 capitalize font-medium">{$authStore.user?.role}</p>
 					{#if $isPacient}
 						<p class="text-sm text-blue-600 dark:text-blue-400 mt-1">{stats.totalXp} XP · {getBadgeName(stats.currentBadge)}</p>
 					{/if}
@@ -382,9 +393,15 @@
 								onclick={() => activeTab = tab.id}
 								class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md {activeTab === tab.id ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium scale-105 shadow-md' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}"
 							>
-								<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={tab.icon}/>
-								</svg>
+								{#if tab.id === 'general'}
+									<User class="w-5 h-5 flex-shrink-0" />
+								{:else if tab.id === 'security'}
+									<Lock class="w-5 h-5 flex-shrink-0" />
+								{:else if tab.id === 'notifications'}
+									<Bell class="w-5 h-5 flex-shrink-0" />
+								{:else if tab.id === 'stats'}
+									<BarChart3 class="w-5 h-5 flex-shrink-0" />
+								{/if}
 								<span class="truncate">{tab.name}</span>
 							</button>
 						{/if}
@@ -451,15 +468,10 @@
 									class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
 								>
 									{#if savingProfile}
-										<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-											<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-											<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-										</svg>
+										<Loader class="animate-spin h-4 w-4" />
 										Se salvează...
 									{:else}
-										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-										</svg>
+										<CheckCircle2 class="w-5 h-5" />
 										Salvează modificările
 									{/if}
 								</button>
@@ -533,15 +545,10 @@
 									class="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 hover:shadow-xl hover:shadow-purple-500/50 hover:scale-105 active:scale-95 disabled:bg-gray-400 disabled:hover:scale-100 disabled:hover:shadow-none text-white rounded-lg transition-all duration-300 ease-in-out flex items-center gap-2"
 								>
 									{#if savingPassword}
-										<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-											<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-											<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-										</svg>
+										<Loader class="animate-spin h-4 w-4" />
 										Se schimbă...
 									{:else}
-										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-										</svg>
+										<Key class="w-5 h-5" />
 										Schimbă parola
 									{/if}
 								</button>
@@ -552,9 +559,7 @@
 					<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6 mt-6">
 						<div class="flex items-center gap-3 mb-6">
 							<div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-								<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-								</svg>
+								<Lock class="w-6 h-6 text-white" />
 							</div>
 							<div>
 								<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Autentificare în doi pași (2FA)</h3>
@@ -565,9 +570,7 @@
 						{#if mfaStep === 'idle'}
 							<div class="space-y-4">
 								<div class="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-									<svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-									</svg>
+									<Info class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
 									<div class="text-sm text-blue-900 dark:text-blue-100">
 										<p class="font-medium mb-1">De ce să activezi 2FA?</p>
 										<p class="text-blue-700 dark:text-blue-300">Protejează-ți contul cu un cod generat de o aplicație de autentificare (Google Authenticator, Authy, Microsoft Authenticator).</p>
@@ -578,9 +581,7 @@
 									disabled={mfaWorking} 
 									onclick={startMfaSetup}
 								>
-									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-									</svg>
+									<Shield class="w-5 h-5" />
 									Activează 2FA
 								</button>
 							</div>
@@ -612,24 +613,18 @@
 										/>
 										{#if mfaTotp.length === 6}
 											<div class="absolute right-3 top-1/2 -translate-y-1/2">
-												<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-												</svg>
+												<CheckCircle2 class="w-5 h-5 text-green-500" />
 											</div>
 										{/if}
 									</div>
 									<div class="mt-2 flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
-										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-										</svg>
+										<Info class="w-4 h-4" />
 										<span>Codul se actualizează la fiecare 30 de secunde</span>
 									</div>
 								</div>
 								{#if mfaError}
 									<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg animate-shake">
-										<svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-										</svg>
+										<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
 										<p class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
 									</div>
 								{/if}
@@ -640,15 +635,10 @@
 										onclick={verifyMfaSetup}
 									>
 										{#if mfaWorking}
-											<svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-												<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-												<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-											</svg>
+											<Loader class="animate-spin h-5 w-5" />
 											Se verifică...
 										{:else}
-											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-											</svg>
+											<CheckCircle2 class="w-5 h-5" />
 											Verifică și activează
 										{/if}
 									</button>
@@ -665,9 +655,7 @@
 						{#if mfaStep === 'done'}
 							<div class="space-y-5">
 								<div class="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-									<svg class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-									</svg>
+									<CheckCircle2 class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
 									<div>
 										<p class="font-medium text-green-900 dark:text-green-100">Autentificarea în doi pași este activată</p>
 										<p class="text-sm text-green-700 dark:text-green-300 mt-1">Contul tău este acum mai bine protejat.</p>
@@ -677,9 +665,7 @@
 								{#if mfaBackupCodes.length > 0}
 									<div class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
 										<div class="flex items-start gap-3 mb-3">
-											<svg class="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-											</svg>
+											<AlertTriangle class="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
 											<div class="flex-1">
 												<p class="font-medium text-amber-900 dark:text-amber-100 mb-1">Coduri de backup</p>
 												<p class="text-sm text-amber-700 dark:text-amber-300 mb-3">Salvează aceste coduri într-un loc sigur. Poți folosi fiecare o singură dată dacă pierzi accesul la aplicația de autentificare.</p>
@@ -695,14 +681,10 @@
 														disabled={copiedCode}
 													>
 														{#if copiedCode}
-															<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-																<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-															</svg>
+															<CheckCircle2 class="w-4 h-4" />
 															Copiat!
 														{:else}
-															<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-																<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-															</svg>
+															<Copy class="w-4 h-4" />
 															Copiază toate
 														{/if}
 													</button>
@@ -710,9 +692,7 @@
 														class="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm font-medium hover:shadow-lg hover:scale-105 active:scale-95"
 														onclick={downloadBackupCodes}
 													>
-														<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-															<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-														</svg>
+														<Download class="w-4 h-4" />
 														Descarcă .txt
 													</button>
 												</div>
@@ -727,18 +707,14 @@
 										onclick={regenerateBackupCodes} 
 										disabled={mfaWorking}
 									>
-										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-										</svg>
+										<RotateCcw class="w-4 h-4" />
 										Generează coduri noi
 									</button>
 									<button 
 										class="px-5 py-2.5 bg-red-600 hover:bg-red-700 hover:shadow-lg hover:scale-105 active:scale-95 text-white rounded-lg transition-all duration-200 flex items-center gap-2 font-medium" 
 										onclick={openDisableMfaDialog}
 									>
-										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-										</svg>
+										<X class="w-4 h-4" />
 										Dezactivează 2FA
 									</button>
 								</div>
@@ -755,9 +731,7 @@
 						<div class="space-y-6">
 							<div class="flex items-center gap-3 mb-4">
 								<div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center flex-shrink-0">
-									<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-									</svg>
+									<Bell class="w-6 h-6 text-white" />
 								</div>
 								<div>
 									<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Notificări Push</h3>
@@ -769,25 +743,19 @@
 							<div class="p-4 rounded-lg border {pushPermission === 'granted' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : pushPermission === 'denied' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'}">
 								<div class="flex items-start gap-3">
 									{#if pushPermission === 'granted'}
-										<svg class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-										</svg>
+										<CheckCircle2 class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
 										<div>
 											<p class="font-medium text-green-900 dark:text-green-100">Permisiuni acordate</p>
 											<p class="text-sm text-green-700 dark:text-green-300 mt-1">Browser-ul tău poate trimite notificări push</p>
 										</div>
 									{:else if pushPermission === 'denied'}
-										<svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-										</svg>
+										<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
 										<div>
 											<p class="font-medium text-red-900 dark:text-red-100">Permisiuni refuzate</p>
 											<p class="text-sm text-red-700 dark:text-red-300 mt-1">Activează notificările în setările browser-ului</p>
 										</div>
 									{:else}
-										<svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-										</svg>
+										<Info class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
 										<div>
 											<p class="font-medium text-blue-900 dark:text-blue-100">Permisiuni necesare</p>
 											<p class="text-sm text-blue-700 dark:text-blue-300 mt-1">Activează notificările pentru a primi alerte</p>
@@ -822,9 +790,7 @@
 							{#if $authStore.user?.role === 'admin'}
 								<div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
 									<div class="flex items-start gap-3">
-										<svg class="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-										</svg>
+										<Zap class="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
 										<div class="flex-1">
 											<p class="font-medium text-purple-900 dark:text-purple-100 mb-1">Test Notificare (Admin)</p>
 											<p class="text-sm text-purple-700 dark:text-purple-300 mb-3">Trimite o notificare de test pentru a verifica configurarea</p>
@@ -834,15 +800,10 @@
 												class="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 flex items-center gap-2 text-sm font-medium hover:shadow-lg hover:scale-105 active:scale-95"
 											>
 												{#if testingPush}
-													<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-														<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-														<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-													</svg>
+													<Loader class="animate-spin h-4 w-4" />
 													Se trimite...
 												{:else}
-													<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-													</svg>
+													<Zap class="w-4 h-4" />
 													Trimite notificare test
 												{/if}
 											</button>
@@ -854,9 +815,7 @@
 							<!-- Info Card -->
 							<div class="p-4 bg-white/70 dark:bg-gray-900/60 rounded-lg border border-slate-200/60 dark:border-gray-800/60">
 								<div class="flex items-start gap-3">
-									<svg class="w-5 h-5 text-gray-700 dark:text-gray-300 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-									</svg>
+									<Info class="w-5 h-5 text-gray-700 dark:text-gray-300 mt-0.5 flex-shrink-0" />
 									<div class="text-sm text-gray-700 dark:text-gray-300">
 										<p class="font-medium mb-1">Despre notificările push</p>
 										<ul class="list-disc list-inside space-y-1">
@@ -879,9 +838,7 @@
 							
 							<div class="flex flex-col items-center mb-8">
 								<div class="w-32 h-32 bg-gradient-to-br {getBadgeColor(stats.currentBadge)} rounded-full flex items-center justify-center mb-4 shadow-lg">
-									<svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
-										<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-									</svg>
+									<Star class="w-16 h-16 text-white" fill="currentColor" />
 								</div>
 								<h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{getBadgeName(stats.currentBadge)}</h3>
 								<p class="text-lg text-gray-700 dark:text-gray-300">{stats.totalXp} XP</p>
@@ -913,9 +870,7 @@
 								{#each BADGES as badge}
 									<div class="flex items-center gap-4">
 										<div class="w-12 h-12 bg-gradient-to-br {badge.gradient} rounded-full flex items-center justify-center flex-shrink-0">
-											<svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-												<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-											</svg>
+											<Star class="w-6 h-6 text-white" fill="currentColor" />
 										</div>
 										<div class="flex-1">
 											<p class="font-medium text-gray-900 dark:text-gray-100">{badge.name}</p>
@@ -970,9 +925,7 @@
 		</div>
 		{#if mfaError}
 			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-				<svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-				</svg>
+				<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
 				<p class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
 			</div>
 		{/if}
@@ -1012,9 +965,7 @@
 		</div>
 		{#if mfaError}
 			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-				<svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-				</svg>
+				<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
 				<p class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
 			</div>
 		{/if}

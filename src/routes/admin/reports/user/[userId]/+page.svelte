@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { adminReportsApi } from '$lib/api/client';
+	import { User } from '@lucide/svelte';
 	import { authStore } from '$lib/stores/auth';
 
 	let report = $state<any | null>(null);
@@ -40,7 +41,7 @@
 
 <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 	<div class="space-y-1">
-		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">👤 Raport utilizator</h1>
+		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100"><User class="w-8 h-8 inline mr-2" /> Raport utilizator</h1>
 		<p class="text-gray-600 dark:text-gray-400">ID: {userId}</p>
 	</div>
 

@@ -22,13 +22,13 @@ export interface ChartTheme {
  */
 export function getChartTheme(isDark: boolean): ChartTheme {
 	return {
-		text: isDark ? '#d1d5db' : '#374151',
-		grid: isDark ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 0.5)',
+		text: isDark ? '#f3f4f6' : '#374151',
+		grid: isDark ? 'rgba(100, 116, 139, 0.2)' : 'rgba(229, 231, 235, 0.5)',
 		tooltip: {
 			bg: isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(249, 250, 251, 0.95)',
-			title: isDark ? '#f3f4f6' : '#111827',
-			body: isDark ? '#e5e7eb' : '#1f2937',
-			border: isDark ? '#4b5563' : '#e5e7eb'
+			title: isDark ? '#ffffff' : '#111827',
+			body: isDark ? '#f3f4f6' : '#1f2937',
+			border: isDark ? '#6b7280' : '#e5e7eb'
 		}
 	};
 }
