@@ -159,6 +159,10 @@ subscriber.on('message', (channel, message) => {
 startReminderCron();
 startStreakCheckCron();
 
+// Start async report worker
+import { startReportWorker } from './workers/reportWorker.js';
+startReportWorker();
+
 // Start server
 const PORT = process.env.PORT || 3000;
 

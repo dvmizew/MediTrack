@@ -2,11 +2,9 @@ import express, { Router, Request, Response } from 'express';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { query } from '../config/database.js';
 import { logger } from '../config/logger.js';
+import path from 'path';
+import fs from 'fs/promises';
 import {
-	generateUsersCSV,
-	generateTreatmentsCSV,
-	generateCollaborationsCSV,
-	generateAdherenceCSV,
 	generatePersonalDataExportCSV
 } from '../utils/csv-export.js';
 
@@ -231,87 +229,6 @@ router.get('/medic/:userId', authenticate, authorize('admin'), async (req: Reque
   }
 });
 
-// Export endpoints for admin
-
-// Export all users as CSV
-router.get('/export/users', authenticate, authorize('admin'), async (req: Request, res: Response) => {
-  try {
-    const users = await query(`SELECT user_id, full_name, email, role, is_active, created_at FROM users ORDER BY created_at DESC`);
-    const csv = generateUsersCSV(users.rows);
-    
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="users_${new Date().toISOString().split('T')[0]}.csv"`);
-    res.send(csv);
-    
-    logger.info('Users export generated', { adminUserId: (req as any).user?.userId, recordCount: users.rows.length });
-  } catch (error) {
-    logger.error('Users export error', { error });
-    res.status(500).json({ error: 'Failed to export users' });
-  }
-});
-
-// Export all treatments as CSV
-router.get('/export/treatments', authenticate, authorize('admin'), async (req: Request, res: Response) => {
-  try {
-    const treatments = await query(`
-      SELECT 
-        tp.plan_id,
-        u1.full_name as patient_full_name,
-        u2.full_name as doctor_full_name,
-        tp.diagnoza,
-        tp.activ,
-        tp.data_creare,
-        COUNT(td.dose_id)::int as medication_count
-      FROM treatment_plans tp
-      LEFT JOIN users u1 ON tp.patient_id = u1.user_id
-      LEFT JOIN users u2 ON tp.doctor_id = u2.user_id
-      LEFT JOIN treatment_doses td ON tp.plan_id = td.plan_id AND td.is_deleted = false
-      WHERE tp.is_deleted = false
-      GROUP BY tp.plan_id, u1.full_name, u2.full_name, tp.diagnoza, tp.activ, tp.data_criere
-      ORDER BY tp.data_criere DESC
-    `);
-    
-    const csv = generateTreatmentsCSV(treatments.rows);
-    
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="treatments_${new Date().toISOString().split('T')[0]}.csv"`);
-    res.send(csv);
-    
-    logger.info('Treatments export generated', { adminUserId: (req as any).user?.userId, recordCount: treatments.rows.length });
-  } catch (error) {
-    logger.error('Treatments export error', { error });
-    res.status(500).json({ error: 'Failed to export treatments' });
-  }
-});
-
-// Export collaboration data as CSV
-router.get('/export/collaborations', authenticate, authorize('admin'), async (req: Request, res: Response) => {
-  try {
-    const collaborations = await query(`
-      SELECT 
-        u1.full_name as patient_full_name,
-        u2.full_name as doctor_full_name,
-        dp.status_invitatie,
-        dp.created_at
-      FROM doctor_patient dp
-      LEFT JOIN users u1 ON dp.patient_id = u1.user_id
-      LEFT JOIN users u2 ON dp.doctor_id = u2.user_id
-      ORDER BY dp.created_at DESC
-    `);
-    
-    const csv = generateCollaborationsCSV(collaborations.rows);
-    
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="collaborations_${new Date().toISOString().split('T')[0]}.csv"`);
-    res.send(csv);
-    
-    logger.info('Collaborations export generated', { adminUserId: (req as any).user?.userId, recordCount: collaborations.rows.length });
-  } catch (error) {
-    logger.error('Collaborations export error', { error });
-    res.status(500).json({ error: 'Failed to export collaborations' });
-  }
-});
-
 // GDPR: Export user's personal data
 router.get('/export/personal-data', authenticate, async (req: Request, res: Response) => {
   try {
@@ -398,6 +315,184 @@ router.post('/delete-account', authenticate, async (req: Request, res: Response)
   } catch (error) {
     logger.error('Account deletion error', { error });
     res.status(500).json({ error: 'Failed to process account deletion' });
+  }
+});
+
+// ==================== ASYNC REPORT JOBS ====================
+
+// Create new async report job
+router.post('/jobs/create', authenticate, authorize('admin'), async (req: Request, res: Response) => {
+  try {
+    const { reportType } = req.body;
+    const userId = (req as any).user?.userId;
+
+    if (!['users', 'treatments', 'doses', 'full_system'].includes(reportType)) {
+      return res.status(400).json({ error: 'Invalid report type' });
+    }
+
+    const result = await query(
+      `INSERT INTO report_jobs (report_type, requested_by, status) 
+       VALUES ($1, $2, 'pending') 
+       RETURNING job_id, report_type, status, created_at`,
+      [reportType, userId]
+    );
+
+    logger.info('Async report job created', { jobId: result.rows[0].job_id, reportType, userId });
+    
+    res.json({
+      message: 'Report generation started',
+      job: result.rows[0]
+    });
+  } catch (error) {
+    logger.error('Failed to create report job', { error });
+    res.status(500).json({ error: 'Failed to create report job' });
+  }
+});
+
+// Get status of a report job
+router.get('/jobs/:jobId/status', authenticate, authorize('admin'), async (req: Request, res: Response) => {
+  try {
+    const { jobId } = req.params;
+    const userId = (req as any).user?.userId;
+
+    const result = await query(
+      `SELECT job_id, report_type, status, file_path, file_size, error_message, 
+              created_at, started_at, completed_at, expires_at
+       FROM report_jobs 
+       WHERE job_id = $1 AND requested_by = $2`,
+      [jobId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Report job not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    logger.error('Failed to get job status', { error });
+    res.status(500).json({ error: 'Failed to get job status' });
+  }
+});
+
+// List all report jobs for current admin
+router.get('/jobs/list', authenticate, authorize('admin'), async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId;
+    const { status, limit = 20 } = req.query;
+
+    let queryText = `
+      SELECT job_id, report_type, status, file_size, error_message,
+             created_at, completed_at, expires_at
+      FROM report_jobs 
+      WHERE requested_by = $1
+    `;
+    const params: any[] = [userId];
+
+    if (status) {
+      queryText += ` AND status = $2`;
+      params.push(status);
+    }
+
+    queryText += ` ORDER BY created_at DESC LIMIT $${params.length + 1}`;
+    params.push(Number(limit));
+
+    const result = await query(queryText, params);
+
+    res.json({ jobs: result.rows });
+  } catch (error) {
+    logger.error('Failed to list jobs', { error });
+    res.status(500).json({ error: 'Failed to list jobs' });
+  }
+});
+
+// Download completed report
+router.get('/jobs/:jobId/download', authenticate, authorize('admin'), async (req: Request, res: Response) => {
+  try {
+    const { jobId } = req.params;
+    const userId = (req as any).user?.userId;
+
+    const result = await query(
+      `SELECT file_path, report_type, status 
+       FROM report_jobs 
+       WHERE job_id = $1 AND requested_by = $2`,
+      [jobId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Report job not found' });
+    }
+
+    const job = result.rows[0];
+
+    if (job.status !== 'completed') {
+      return res.status(400).json({ error: 'Report is not ready yet' });
+    }
+
+    if (!job.file_path) {
+      return res.status(404).json({ error: 'Report file not found' });
+    }
+
+    const filePath = path.join(__dirname, '../../reports', job.file_path);
+    
+    // Check if file exists
+    try {
+      await fs.access(filePath);
+    } catch {
+      return res.status(404).json({ error: 'Report file no longer exists' });
+    }
+
+    // Determine content type
+    const ext = path.extname(job.file_path);
+    const contentType = ext === '.csv' ? 'text/csv' : 'text/plain';
+
+    res.setHeader('Content-Type', `${contentType}; charset=utf-8`);
+    res.setHeader('Content-Disposition', `attachment; filename="${job.report_type}_report_${jobId}${ext}"`);
+    
+    const fileContent = await fs.readFile(filePath, 'utf-8');
+    res.send(fileContent);
+
+    logger.info('Report downloaded', { jobId, userId, filePath: job.file_path });
+  } catch (error) {
+    logger.error('Failed to download report', { error });
+    res.status(500).json({ error: 'Failed to download report' });
+  }
+});
+
+// Delete a report job and its file
+router.delete('/jobs/:jobId', authenticate, authorize('admin'), async (req: Request, res: Response) => {
+  try {
+    const { jobId } = req.params;
+    const userId = (req as any).user?.userId;
+
+    const result = await query(
+      `SELECT file_path FROM report_jobs WHERE job_id = $1 AND requested_by = $2`,
+      [jobId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Report job not found' });
+    }
+
+    const job = result.rows[0];
+
+    // Delete file if exists
+    if (job.file_path) {
+      const filePath = path.join(__dirname, '../../reports', job.file_path);
+      try {
+        await fs.unlink(filePath);
+      } catch (error) {
+        logger.warn('Failed to delete report file', { filePath, error });
+      }
+    }
+
+    // Delete job record
+    await query(`DELETE FROM report_jobs WHERE job_id = $1`, [jobId]);
+
+    logger.info('Report job deleted', { jobId, userId });
+    res.json({ message: 'Report job deleted successfully' });
+  } catch (error) {
+    logger.error('Failed to delete report job', { error });
+    res.status(500).json({ error: 'Failed to delete report job' });
   }
 });
 

@@ -641,7 +641,6 @@
 		// On theme change, reinitialize all charts to apply new theme colors
 		initializeCharts();
 	}
-
 </script>
 
 {#if $isMedic}
@@ -689,36 +688,50 @@
 			<div class="p-6 text-red-600 dark:text-red-400">{adminError}</div>
 		{:else if adminOverview}
 			<div class="space-y-4 md:space-y-6">
-				<!-- KPI Cards + Action Button Row -->
-				<div class="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-5">
-					<!-- Cards Section (4 columns) -->
-					<div class="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
-						{#each adminCards as card}
-							<Card title={card.title} value={card.value} sub={card.sub} accent={card.accent} />
-						{/each}
-					</div>
-					
-					<!-- Action Buttons (1 column, stacked) -->
-					<div class="lg:col-span-1 flex flex-col gap-4">
-						<ActionButton 
-							label="Gestionează Utilizatori"
-							description="Vizualizează, editează și monitorizează"
-							href="/admin/users"
-							borderHover="border-blue-400 dark:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10"
-							iconBg="bg-blue-100 dark:bg-blue-900/30"
-							iconColor="text-blue-600 dark:text-blue-400"
-							iconPath="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-						/>
-						<ActionButton 
-							label="Rapoarte"
-							description="Overview și rapoarte detaliate"
-							href="/admin/reports"
-							borderHover="border-emerald-400 dark:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10"
-							iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-							iconColor="text-emerald-600 dark:text-emerald-400"
-							iconPath="M9 17v-6a2 2 0 012-2h8m-4-4l4 4-4 4"
-						/>
-					</div>
+				<!-- KPI Cards Grid -->
+				<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+					{#each adminCards as card}
+						<article class="bg-gradient-to-br {card.accent === 'text-blue-600 dark:text-blue-400' ? 'from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 border-blue-200 dark:border-blue-800' : card.accent === 'text-green-600 dark:text-green-400' ? 'from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/30 border-green-200 dark:border-green-800' : card.accent === 'text-purple-600 dark:text-purple-400' ? 'from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-900/30 border-purple-200 dark:border-purple-800' : 'from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-900/30 border-orange-200 dark:border-orange-800'} border rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 hover:shadow-md transition-all">
+							<div class="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 truncate">{card.title}</div>
+							<div class="text-xl sm:text-2xl md:text-3xl font-bold {card.accent} mb-1">{card.value}</div>
+							<p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{card.sub}</p>
+						</article>
+					{/each}
+				</div>
+
+				<!-- Admin Modules Quick Links -->
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+					<!-- Users Management Card -->
+					<a
+						href="/admin/users"
+						class="group bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 sm:p-5 md:p-6 hover:shadow-lg hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+						aria-label="Gestionează Utilizatori: Vizualizează, editează și monitorizează"
+					>
+						<div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">
+							<div class="text-4xl sm:text-5xl flex-shrink-0">👥</div>
+							<svg class="w-5 h-5 text-blue-400 dark:text-blue-300 group-hover:translate-x-1 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+							</svg>
+						</div>
+						<h3 class="text-base sm:text-lg font-bold text-blue-900 dark:text-blue-100 mb-1">Utilizatori</h3>
+						<p class="text-xs sm:text-sm text-blue-800 dark:text-blue-300">Vizualizează, editează și monitorizează conturi</p>
+					</a>
+
+					<!-- Reports Card -->
+					<a
+						href="/admin/reports"
+						class="group bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 sm:p-5 md:p-6 hover:shadow-lg hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+						aria-label="Rapoarte: Overview și rapoarte detaliate"
+					>
+						<div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">
+							<div class="text-4xl sm:text-5xl flex-shrink-0">📊</div>
+							<svg class="w-5 h-5 text-emerald-400 dark:text-emerald-300 group-hover:translate-x-1 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+							</svg>
+						</div>
+						<h3 class="text-base sm:text-lg font-bold text-emerald-900 dark:text-emerald-100 mb-1">Rapoarte</h3>
+						<p class="text-xs sm:text-sm text-emerald-800 dark:text-emerald-300">Overview și analize detaliate sistem</p>
+					</a>
 				</div>
 
 				<!-- 2-Column Layout for Content Sections -->
@@ -727,25 +740,52 @@
 					<div class="space-y-6">
 						<!-- Users by Role -->
 						<section class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-							<div class="p-6 border-b border-gray-200 dark:border-gray-700">
-								<h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">👤 Utilizatori după Rol</h2>
+							<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+								<div>
+									<h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100">👤 Utilizatori după Rol</h2>
+									<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Distribuție pe roluri sistem</p>
+								</div>
+								<a href="/admin/users" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline w-fit">Gestionează →</a>
 							</div>
-							<div class="p-6 grid gap-3">
+							<div class="p-3 sm:p-4 md:p-6 space-y-3">
 								{#if adminOverview.users.byRole && adminOverview.users.byRole.length > 0}
 									{#each adminOverview.users.byRole as r}
-										<div class="rounded-lg bg-gray-50 dark:bg-gray-900 p-3 flex items-center justify-between hover:shadow-md transition-all">
-											<div class="font-medium capitalize text-gray-900 dark:text-gray-100">
-												{#if r.role === 'admin'}
-													👑 Administrator
-												{:else if r.role === 'medic'}
-													👨‍⚕️ Medic
-												{:else}
-													🧑 Pacient
-												{/if}
+										<div class="rounded-lg bg-gray-50 dark:bg-gray-900 p-3 sm:p-4 hover:shadow-md transition-all">
+											<div class="flex items-center justify-between mb-2">
+												<div class="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
+													{#if r.role === 'admin'}
+														<span class="text-xl sm:text-2xl">👑</span>
+														<span class="text-sm sm:text-base">Administrator</span>
+													{:else if r.role === 'medic'}
+														<span class="text-xl sm:text-2xl">👨‍⚕️</span>
+														<span class="text-sm sm:text-base">Medic</span>
+													{:else}
+														<span class="text-xl sm:text-2xl">🧑</span>
+														<span class="text-sm sm:text-base">Pacient</span>
+													{/if}
+												</div>
+												<div class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">{r.count}</div>
 											</div>
-											<div class="text-xl font-semibold text-gray-900 dark:text-gray-100">{r.count}</div>
+											<!-- Progress bar -->
+											<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 sm:h-2.5 overflow-hidden">
+												<div 
+													class="{r.role === 'admin' ? 'bg-gradient-to-r from-purple-500 to-purple-600' : r.role === 'medic' ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 'bg-gradient-to-r from-green-500 to-green-600'} h-full transition-all duration-500 rounded-full"
+													style="width: {adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0) > 0 ? (r.count / adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0)) * 100 : 0}%"
+												></div>
+											</div>
+											<div class="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
+												{Math.round((r.count / adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0)) * 100)}% din total
+											</div>
 										</div>
 									{/each}
+
+									<!-- Summary -->
+									<div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+										<div class="flex items-center justify-between text-sm">
+											<span class="text-gray-600 dark:text-gray-400">Total utilizatori:</span>
+											<span class="font-bold text-gray-900 dark:text-gray-100">{adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0)}</span>
+										</div>
+									</div>
 								{:else}
 									<div class="py-8 text-center text-gray-500 dark:text-gray-400">
 										<div class="text-3xl mb-2">👥</div>
@@ -757,31 +797,69 @@
 
 						<!-- Collaborations -->
 						<div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-							<div class="p-6 border-b border-gray-200 dark:border-gray-700">
-								<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">🤝 Status Colaborări</h2>
+							<div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+								<div>
+									<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">🤝 Status Colaborări</h2>
+									<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Relații medic-pacient și acceptare</p>
+								</div>
+								<a href="/collaborations" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">Vezi toți →</a>
 							</div>
-							<div class="p-4 space-y-2">
+							<div class="p-4 space-y-3">
 								{#if adminOverview.collaborations && adminOverview.collaborations.length > 0}
 									{#each adminOverview.collaborations as c}
-										<div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
-											<span class="capitalize text-gray-600 dark:text-gray-300 text-sm">
-												{#if c.status === 'pending'}
-													⏳ În așteptare
-												{:else if c.status === 'accepted'}
-													✅ Acceptate
-												{:else if c.status === 'rejected'}
-													❌ Respinse
+										<div class="space-y-1.5">
+											<div class="flex items-center justify-between">
+												<div class="flex items-center gap-2">
+													{#if c.status === 'pending'}
+														<span class="text-lg">⏳</span>
+														<span class="font-medium text-gray-900 dark:text-gray-100">În așteptare</span>
+													{:else if c.status === 'accepted'}
+														<span class="text-lg">✅</span>
+														<span class="font-medium text-green-900 dark:text-green-100">Acceptate</span>
+													{:else if c.status === 'rejected'}
+														<span class="text-lg">❌</span>
+														<span class="font-medium text-red-900 dark:text-red-100">Respinse</span>
+													{:else}
+														<span class="font-medium text-gray-900 dark:text-gray-100">{c.status}</span>
+													{/if}
+												</div>
+												<span class="text-lg font-bold text-gray-900 dark:text-gray-100">{c.count}</span>
+											</div>
+											<!-- Progress bar with percentage -->
+											<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 sm:h-2.5 overflow-hidden">
+												<div 
+													class="{c.status === 'accepted' ? 'bg-gradient-to-r from-green-500 to-green-600' : c.status === 'pending' ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' : 'bg-gradient-to-r from-red-500 to-red-600'} h-full transition-all duration-500 rounded-full"
+													style="width: {adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0 ? (c.count / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100 : 0}%"
+												></div>
+											</div>
+											<div class="text-xs text-gray-500 dark:text-gray-400">
+												{#if c.status === 'accepted'}
+													{Math.round((c.count / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}% dintre relații
+												{:else if c.status === 'pending'}
+													În curs de procesare
 												{:else}
-													{c.status}
+													Nefinalizate
 												{/if}
-											</span>
-											<span class="font-semibold text-gray-900 dark:text-gray-100">{c.count}</span>
+											</div>
 										</div>
 									{/each}
 								{:else}
 									<div class="py-6 text-center text-gray-500 dark:text-gray-400">
 										<div class="text-3xl mb-2">🤷</div>
 										<p class="text-sm">Nicio colaborare în sistem</p>
+									</div>
+								{/if}
+
+								{#if adminOverview.collaborations && adminOverview.collaborations.length > 0}
+									<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2 text-xs">
+										<div class="flex justify-between">
+											<span class="text-gray-600 dark:text-gray-400">Total colaborări:</span>
+											<span class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)}</span>
+										</div>
+										<div class="flex justify-between">
+											<span class="text-gray-600 dark:text-gray-400">Rata acceptare:</span>
+											<span class="font-semibold {(adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0.8 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">{Math.round(((adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}%</span>
+										</div>
 									</div>
 								{/if}
 							</div>
@@ -816,9 +894,17 @@
 					<div class="space-y-6">
 						<!-- Treatments -->
 						<div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-							<div class="p-6 border-b border-gray-200 dark:border-gray-700">
-								<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">💊 Tratamente</h2>
-								<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Status și numere</p>
+							<div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+								<div>
+									<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">💊 Tratamente</h2>
+									<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Status și numere</p>
+								</div>
+								<a href="/treatments" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline transition-colors flex items-center gap-1">
+									Vezi toți
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+									</svg>
+								</a>
 							</div>
 							<div class="p-4 space-y-2">
 								{#if adminOverview.treatments.total > 0}

@@ -314,6 +314,39 @@ export const adminReportsApi = {
 			return r.blob();
 		}),
 
+	// Async Report Jobs
+	createReportJob: (reportType: 'users' | 'treatments' | 'doses' | 'full_system') =>
+		request('/admin/reports/jobs/create', {
+			method: 'POST',
+			body: JSON.stringify({ reportType })
+		}),
+
+	getJobStatus: (jobId: number | string) =>
+		request(`/admin/reports/jobs/${jobId}/status`),
+
+	listJobs: (status?: string, limit?: number) => {
+		const params = new URLSearchParams();
+		if (status) params.append('status', status);
+		if (limit) params.append('limit', limit.toString());
+		const query = params.toString();
+		return request(`/admin/reports/jobs/list${query ? `?${query}` : ''}`);
+	},
+
+	downloadReport: (jobId: number | string) =>
+		fetch(`${API_URL}/admin/reports/jobs/${jobId}/download`, {
+			headers: {
+				'Authorization': `Bearer ${get(authStore).token}`
+			}
+		}).then(r => {
+			if (!r.ok) throw new Error('Download failed');
+			return r.blob();
+		}),
+
+	deleteJob: (jobId: number | string) =>
+		request(`/admin/reports/jobs/${jobId}`, {
+			method: 'DELETE'
+		}),
+
 	// GDPR
 	exportPersonalData: () =>
 		fetch(`${API_URL}/admin/reports/export/personal-data`, {

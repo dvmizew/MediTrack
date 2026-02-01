@@ -3,18 +3,21 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { authStore, isMedic } from '$lib/stores/auth';
-	import { api } from '$lib/api/client';
+	import { api, adminReportsApi } from '$lib/api/client';
 	import Modal from '$lib/components/Modal.svelte';
 	import { loadCollaborations as loadCollabs } from '$lib/utils/loaders';
 	import { treatmentSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
 
 	let treatments = $state<any[]>([]);
+	let adminOverview = $state<any>(null);
 	let loading = $state(true);
 	let error = $state('');
 	let showNewTreatmentModal = $state(false);
 	let isSubmitting = $state(false);
 	let collaborations = $state<any[]>([]);
 	let loadingCollabs = $state(false);
+
+	let isAdmin = $derived($authStore.user?.role === 'admin');
 
 	let formData = $state({
 		patientId: '',
@@ -42,8 +45,15 @@
 		try {
 			loading = true;
 			error = '';
-			const data = await api.getTreatments();
-			treatments = data;
+			
+			if (isAdmin) {
+				// Admin loads global overview
+				adminOverview = await adminReportsApi.getOverview();
+			} else {
+				// Regular users load their treatments
+				const data = await api.getTreatments();
+				treatments = data;
+			}
 		} catch (err: any) {
 			console.error('Failed to load treatments:', err);
 			error = err.message || 'Nu s-au putut încărca tratamentele';
@@ -115,12 +125,14 @@
 </script>
 
 {#if $authStore.isAuthenticated}
-	<main class="page-transition max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-		<div class="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+	<main class="page-transition max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+		<div class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
 			<div>
 				<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">📋 Planuri de Tratament</h1>
-				<p class="text-gray-600 dark:text-gray-400">
-					{#if $isMedic}
+				<p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+					{#if isAdmin}
+						Overview global al tuturor tratamentelor din sistem
+					{:else if $isMedic}
 						Gestionează planurile de tratament pentru pacienții tăi
 					{:else}
 						Vezi și gestionează planurile tale de tratament
@@ -140,18 +152,197 @@
 			{/if}
 		</div>
 
-		{#if loading}
-			<div class="flex justify-center py-20">
-				<div class="animate-spin rounded-full h-14 w-14 border-4 border-blue-600 border-t-transparent"></div>
-			</div>
-		{:else if error}
-			<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6 flex items-start gap-3 animate-shake">
-				<svg class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		{#if error}
+			<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 mb-6 flex items-start gap-3 animate-shake">
+				<svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
 				</svg>
-				<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
+				<p class="text-sm sm:text-base text-red-800 dark:text-red-400 font-medium">{error}</p>
 			</div>
-		{:else if treatments.length === 0}
+		{/if}
+
+		{#if isAdmin}
+			<!-- Admin View: Global Statistics -->
+			{#if loading}
+				<div class="flex justify-center py-16">
+					<div class="animate-spin rounded-full h-12 w-12 border-3 border-blue-600 border-t-transparent shadow-lg shadow-blue-500/50"></div>
+				</div>
+			{:else if adminOverview}
+				<!-- Stats Cards -->
+				<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+					<div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/30 border border-green-200 dark:border-green-800 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5">
+						<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
+							<span class="text-base sm:text-lg">✅</span>
+							<h3 class="text-xs sm:text-sm font-semibold text-green-900 dark:text-green-300 truncate">Active</h3>
+						</div>
+						<p class="text-xl sm:text-2xl md:text-3xl font-bold text-green-900 dark:text-green-100 mb-1">
+							{adminOverview.treatments.active}
+						</p>
+						<p class="text-xs text-green-700 dark:text-green-400 truncate">În derulare</p>
+					</div>
+
+					<div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-900/30 border border-gray-200 dark:border-gray-800 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5">
+						<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
+							<span class="text-base sm:text-lg">⏸️</span>
+							<h3 class="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-300 truncate">Inactive</h3>
+						</div>
+						<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+							{adminOverview.treatments.inactive}
+						</p>
+						<p class="text-xs text-gray-700 dark:text-gray-400 truncate">Finalizate</p>
+					</div>
+
+					<div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5">
+						<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
+							<span class="text-base sm:text-lg">📊</span>
+							<h3 class="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-300 truncate">Total</h3>
+						</div>
+						<p class="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900 dark:text-blue-100 mb-1">
+							{adminOverview.treatments.total}
+						</p>
+						<p class="text-xs text-blue-700 dark:text-blue-400 truncate">În sistem</p>
+					</div>
+				</div>
+
+				<!-- Detailed Breakdown -->
+				<div class="grid gap-4 sm:gap-6 md:grid-cols-2">
+					<!-- Status Breakdown -->
+					<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+						<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+							<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">📊 Detalii Status</h2>
+							<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Distribuție pe statusuri</p>
+						</div>
+						<div class="p-4 sm:p-6 space-y-4">
+							<div class="space-y-2">
+								<div class="flex items-center justify-between">
+									<div class="flex items-center gap-2">
+										<span class="text-lg sm:text-xl">✅</span>
+										<span class="text-sm sm:text-base font-medium text-green-900 dark:text-green-100">Active</span>
+									</div>
+									<span class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">{adminOverview.treatments.active}</span>
+								</div>
+								<!-- Progress bar -->
+								<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 sm:h-2.5 overflow-hidden">
+									<div 
+										class="bg-gradient-to-r from-green-500 to-green-600 h-full transition-all duration-500 rounded-full"
+										style="width: {adminOverview.treatments.total > 0 ? (adminOverview.treatments.active / adminOverview.treatments.total) * 100 : 0}%"
+									></div>
+								</div>
+								<div class="text-xs text-gray-500 dark:text-gray-400">
+									{adminOverview.treatments.total > 0 ? Math.round((adminOverview.treatments.active / adminOverview.treatments.total) * 100) : 0}% din total
+								</div>
+							</div>
+
+							<div class="space-y-2">
+								<div class="flex items-center justify-between">
+									<div class="flex items-center gap-2">
+										<span class="text-lg sm:text-xl">⏸️</span>
+										<span class="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">Inactive</span>
+									</div>
+									<span class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">{adminOverview.treatments.inactive}</span>
+								</div>
+								<!-- Progress bar -->
+								<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 sm:h-2.5 overflow-hidden">
+									<div 
+										class="bg-gradient-to-r from-gray-500 to-gray-600 h-full transition-all duration-500 rounded-full"
+										style="width: {adminOverview.treatments.total > 0 ? (adminOverview.treatments.inactive / adminOverview.treatments.total) * 100 : 0}%"
+									></div>
+								</div>
+								<div class="text-xs text-gray-500 dark:text-gray-400">
+									{adminOverview.treatments.total > 0 ? Math.round((adminOverview.treatments.inactive / adminOverview.treatments.total) * 100) : 0}% din total
+								</div>
+							</div>
+							
+							<!-- Summary -->
+							<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+								<div class="flex justify-between text-sm">
+									<span class="text-gray-600 dark:text-gray-400">Total tratamente:</span>
+									<span class="font-bold text-gray-900 dark:text-gray-100">
+										{adminOverview.treatments.total}
+									</span>
+								</div>
+								<div class="flex justify-between text-sm">
+									<span class="text-gray-600 dark:text-gray-400">Rata activare:</span>
+									<span class="font-bold {adminOverview.treatments.total > 0 && (adminOverview.treatments.active / adminOverview.treatments.total) > 0.7 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">
+										{adminOverview.treatments.total > 0 ? Math.round((adminOverview.treatments.active / adminOverview.treatments.total) * 100) : 0}%
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Quick Actions -->
+					<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+						<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+							<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">⚡ Acțiuni Rapide</h2>
+							<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Administrare sistem</p>
+						</div>
+						<div class="p-4 sm:p-6 space-y-3">
+							<a
+								href="/admin/users"
+								class="block p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
+							>
+								<div class="flex items-center gap-3">
+									<div class="text-2xl sm:text-3xl">👥</div>
+									<div class="flex-1 min-w-0">
+										<h3 class="text-sm sm:text-base font-semibold text-blue-900 dark:text-blue-100 truncate">Gestionează Utilizatori</h3>
+										<p class="text-xs text-blue-700 dark:text-blue-300 truncate">Vezi toți utilizatorii</p>
+									</div>
+									<svg class="w-5 h-5 text-blue-400 dark:text-blue-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+									</svg>
+								</div>
+							</a>
+
+							<a
+								href="/admin/reports"
+								class="block p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/30 border border-green-200 dark:border-green-800 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
+							>
+								<div class="flex items-center gap-3">
+									<div class="text-2xl sm:text-3xl">📊</div>
+									<div class="flex-1 min-w-0">
+										<h3 class="text-sm sm:text-base font-semibold text-green-900 dark:text-green-100 truncate">Rapoarte Detaliate</h3>
+										<p class="text-xs text-green-700 dark:text-green-300 truncate">Export și analize</p>
+									</div>
+									<svg class="w-5 h-5 text-green-400 dark:text-green-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+									</svg>
+								</div>
+							</a>
+
+							<a
+								href="/dashboard"
+								class="block p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
+							>
+								<div class="flex items-center gap-3">
+									<div class="text-2xl sm:text-3xl">📈</div>
+									<div class="flex-1 min-w-0">
+										<h3 class="text-sm sm:text-base font-semibold text-purple-900 dark:text-purple-100 truncate">Dashboard Admin</h3>
+										<p class="text-xs text-purple-700 dark:text-purple-300 truncate">Overview complet</p>
+									</div>
+									<svg class="w-5 h-5 text-purple-400 dark:text-purple-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+									</svg>
+								</div>
+							</a>
+						</div>
+					</div>
+				</div>
+			{/if}
+		{:else}
+			<!-- Regular User View -->
+			{#if loading}
+				<div class="flex justify-center py-20">
+					<div class="animate-spin rounded-full h-14 w-14 border-4 border-blue-600 border-t-transparent"></div>
+				</div>
+			{:else if error}
+				<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6 flex items-start gap-3 animate-shake">
+					<svg class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+					</svg>
+					<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
+				</div>
+			{:else if treatments.length === 0}
 			<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-16 text-center animate-scale-in">
 				<div class="max-w-sm mx-auto">
 					<svg
@@ -252,6 +443,7 @@
 				{/each}
 			</div>
 		{/if}
+	{/if}
 	</main>
 
 	<Modal

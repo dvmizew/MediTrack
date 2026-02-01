@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { adminReportsApi, api } from '$lib/api/client';
+	import { adminReportsApi } from '$lib/api/client';
 	import { authStore } from '$lib/stores/auth';
 	import { toast } from '$lib/utils/toast';
-	import { downloadBlobAsFile } from '$lib/utils/charts';
 	import { createPieChart, createBarChart, createLineChart } from '$lib/utils/charts';
 
 	let overview = $state<any | null>(null);
@@ -12,10 +11,6 @@
 	let error = $state<string | null>(null);
 	let exporting = $state<string | null>(null);
 	let isAdmin = $derived($authStore.user?.role === 'admin');
-
-	let usersPieChart: any = null;
-	let treatmentsBarChart: any = null;
-	let adherenceLineChart: any = null;
 
 	onMount(async () => {
 		if (!isAdmin) {
@@ -25,9 +20,6 @@
 		try {
 			loading = true;
 			overview = await adminReportsApi.getOverview();
-			
-			// Initialize charts after data loads
-			setTimeout(initCharts, 100);
 		} catch (e: any) {
 			error = e?.message || 'Nu s-au putut încărca rapoartele.';
 		} finally {
@@ -42,19 +34,17 @@
 			// Users pie chart
 			const usersCtx = document.getElementById('usersPieChart') as HTMLCanvasElement;
 			if (usersCtx) {
-				if (usersPieChart) usersPieChart.destroy();
 				const userData = overview.users.byRole.map((r: any) => ({
 					label: r.role.charAt(0).toUpperCase() + r.role.slice(1),
 					value: r.count
 				}));
-				usersPieChart = createPieChart(usersCtx.getContext('2d')!, userData, 'Utilizatori după Rol');
+				createPieChart(usersCtx.getContext('2d')!, userData, 'Utilizatori după Rol');
 			}
 
 			// Treatments bar chart
 			const treatmentsCtx = document.getElementById('treatmentsBarChart') as HTMLCanvasElement;
 			if (treatmentsCtx) {
-				if (treatmentsBarChart) treatmentsBarChart.destroy();
-				treatmentsBarChart = createBarChart(
+				createBarChart(
 					treatmentsCtx.getContext('2d')!,
 					['Activ', 'Inactiv'],
 					[{
@@ -65,11 +55,10 @@
 				);
 			}
 
-			// Adherence line chart (simulated data for now)
+			// Adherence line chart
 			const adherenceCtx = document.getElementById('adherenceLineChart') as HTMLCanvasElement;
 			if (adherenceCtx) {
-				if (adherenceLineChart) adherenceLineChart.destroy();
-				adherenceLineChart = createLineChart(
+				createLineChart(
 					adherenceCtx.getContext('2d')!,
 					['Ultima 7 zile', 'Ultima 30 zile'],
 					[{
@@ -87,28 +76,21 @@
 		}
 	}
 
-	async function handleExport(type: 'users' | 'treatments' | 'collaborations') {
+	$effect(() => {
+		if (overview && loading === false) {
+			initCharts();
+		}
+	});
+
+	async function handleAsyncExport(type: 'users' | 'treatments' | 'doses' | 'full_system') {
 		try {
 			exporting = type;
-			let blob: Blob;
-			let filename: string;
-
-			if (type === 'users') {
-				blob = await adminReportsApi.exportUsers();
-				filename = `users_${new Date().toISOString().split('T')[0]}.csv`;
-			} else if (type === 'treatments') {
-				blob = await adminReportsApi.exportTreatments();
-				filename = `treatments_${new Date().toISOString().split('T')[0]}.csv`;
-			} else {
-				blob = await adminReportsApi.exportCollaborations();
-				filename = `collaborations_${new Date().toISOString().split('T')[0]}.csv`;
-			}
-
-			await downloadBlobAsFile(blob, filename);
-			toast.success(`Raport ${type} exportat cu succes`);
+			await adminReportsApi.createReportJob(type);
+			toast.success(`Job ${type} creat! Redirecționare la job-uri...`);
+			setTimeout(() => goto('/admin/reports/jobs'), 1500);
 		} catch (err: any) {
-			console.error('Export error:', err);
-			toast.error(`Eroare la export ${type}`);
+			console.error('Create job error:', err);
+			toast.error(`Eroare la crearea job-ului ${type}`);
 		} finally {
 			exporting = null;
 		}
@@ -119,35 +101,35 @@
 	}
 </script>
 
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-	<div class="flex items-center justify-between">
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-4 sm:space-y-6">
+	<!-- Header Section -->
+	<div class="space-y-3 sm:space-y-4">
 		<div class="space-y-1">
-			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">📊 Rapoarte Admin</h1>
-			<p class="text-gray-600 dark:text-gray-400">Overview utilizatori, colaborări și aderență cu grafice și export.</p>
+			<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">📊 Rapoarte Admin</h1>
+			<p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">Overview utilizatori, colaborări și aderență cu grafice și export.</p>
 		</div>
 		
-		<div class="flex gap-2 flex-wrap justify-end">
-			<button
-				onclick={() => handleExport('users')}
-				disabled={exporting !== null}
-				class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium text-sm"
-			>
-				{exporting === 'users' ? '⏳ Exporta...' : '💾 Export Utilizatori'}
-			</button>
-			<button
-				onclick={() => handleExport('treatments')}
-				disabled={exporting !== null}
-				class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium text-sm"
-			>
-				{exporting === 'treatments' ? '⏳ Exporta...' : '💾 Export Tratamente'}
-			</button>
-			<button
-				onclick={() => handleExport('collaborations')}
-				disabled={exporting !== null}
-				class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium text-sm"
-			>
-				{exporting === 'collaborations' ? '⏳ Exporta...' : '💾 Export Colaborări'}
-			</button>
+		
+		<!-- Async Report Jobs Section -->
+		<div class="bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+				<div class="flex items-start gap-3">
+					<div class="text-2xl">⚡</div>
+					<div>
+						<h3 class="font-semibold text-gray-900 dark:text-gray-100">Rapoarte Asincrone</h3>
+						<p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+							Generează rapoarte mari în background. Recomandă pentru volume mari de date.
+						</p>
+					</div>
+				</div>
+				<a
+					href="/admin/reports/jobs"
+					class="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium text-sm whitespace-nowrap"
+				>
+					<span>📋</span>
+					<span>Gestionează Job-uri</span>
+				</a>
+			</div>
 		</div>
 	</div>
 
@@ -179,29 +161,41 @@
 		</div>
 
 		<!-- Stats Cards -->
-		<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-			<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-md">
-				<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">👤 Total Utilizatori</h3>
-				<p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{overview.users.active + overview.users.inactive}</p>
-				<p class="text-xs text-green-600 dark:text-green-400 mt-2">🟢 Activi: {overview.users.active}</p>
+		<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+			<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
+				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
+					<span class="text-base sm:text-lg">👤</span>
+					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">Utilizatori</h3>
+				</div>
+				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{overview.users.active + overview.users.inactive}</p>
+				<p class="text-xs text-green-600 dark:text-green-400 truncate">🟢 {overview.users.active} activi</p>
 			</div>
 
-			<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-md">
-				<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">📋 Planuri Tratament</h3>
-				<p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{overview.treatments.total}</p>
-				<p class="text-xs text-blue-600 dark:text-blue-400 mt-2">🟢 Active: {overview.treatments.active}</p>
+			<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
+				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
+					<span class="text-base sm:text-lg">📋</span>
+					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">Tratamente</h3>
+				</div>
+				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{overview.treatments.total}</p>
+				<p class="text-xs text-blue-600 dark:text-blue-400 truncate">🟢 {overview.treatments.active} active</p>
 			</div>
 
-			<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-md">
-				<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">💊 Doze Programate</h3>
-				<p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{overview.doses.total}</p>
-				<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Total în sistem</p>
+			<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
+				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
+					<span class="text-base sm:text-lg">💊</span>
+					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">Doze</h3>
+				</div>
+				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{overview.doses.total}</p>
+				<p class="text-xs text-gray-500 dark:text-gray-400 truncate">Total sistem</p>
 			</div>
 
-			<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-md">
-				<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">✅ Aderență 30 zile</h3>
-				<p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{formatPercent(overview.adherence.last30Days.rate)}</p>
-				<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">{overview.adherence.last30Days.confirmed} / {overview.adherence.last30Days.scheduled}</p>
+			<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
+				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
+					<span class="text-base sm:text-lg">✅</span>
+					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">Aderență</h3>
+				</div>
+				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{formatPercent(overview.adherence.last30Days.rate)}</p>
+				<p class="text-xs text-gray-500 dark:text-gray-400 truncate">{overview.adherence.last30Days.confirmed}/{overview.adherence.last30Days.scheduled} doze</p>
 			</div>
 		</div>
 
