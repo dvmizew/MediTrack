@@ -84,19 +84,22 @@
 			title: 'Conformitate săptămânală',
 			value: `${stats?.weeklyAdherence ?? 0}%`,
 			sub: 'Media ultimelor 7 zile',
-			accent: 'text-gray-900 dark:text-slate-100'
+			accent: 'text-gray-900 dark:text-slate-100',
+			ariaLabel: `Conformitate săptămânală: ${stats?.weeklyAdherence ?? 0}%, media ultimelor 7 zile`
 		},
 		{
 			title: 'Astăzi',
 			value: `${stats?.taken ?? 0}/${stats?.total ?? 0}`,
 			sub: `${stats?.snoozed ?? 0} amânate • ${stats?.overdue ?? 0} întârziate`,
-			accent: 'text-gray-900 dark:text-slate-100'
+			accent: 'text-gray-900 dark:text-slate-100',
+			ariaLabel: `Astăzi: ${stats?.taken ?? 0} din ${stats?.total ?? 0}, ${stats?.snoozed ?? 0} amânate, ${stats?.overdue ?? 0} întârziate`
 		},
 		{
 			title: 'Următoarea doză',
 			value: stats.upcomingLabel,
 			sub: `Actualizat la ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-			accent: 'text-gray-900 dark:text-slate-100'
+			accent: 'text-gray-900 dark:text-slate-100',
+			ariaLabel: `Următoarea doză: ${stats.upcomingLabel}, actualizat la ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
 		}
 	]);
 
@@ -106,28 +109,32 @@
 			value: medicStats.totalPatients,
 			iconColor: 'text-blue-600 dark:text-blue-400',
 			iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-			icon: Users
+			icon: Users,
+			ariaLabel: `Pacienți activi: ${medicStats.totalPatients}`
 		},
 		{
 			title: 'Tratamente Active',
 			value: medicStats.activeTreatments,
 			iconColor: 'text-green-600 dark:text-green-400',
 			iconBg: 'bg-green-100 dark:bg-green-900/30',
-			icon: ClipboardList
+			icon: ClipboardList,
+			ariaLabel: `Tratamente active: ${medicStats.activeTreatments}`
 		},
 		{
 			title: 'Invitații În Așteptare',
 			value: medicStats.pendingInvites,
 			iconColor: 'text-yellow-600 dark:text-yellow-400',
 			iconBg: 'bg-yellow-100 dark:bg-yellow-900/30',
-			icon: Mail
+			icon: Mail,
+			ariaLabel: `Invitații în așteptare: ${medicStats.pendingInvites}`
 		},
 		{
 			title: 'Mesaje Noi',
 			value: messagesCount,
 			iconColor: 'text-purple-600 dark:text-purple-400',
 			iconBg: 'bg-purple-100 dark:bg-purple-900/30',
-			icon: MessageCircle
+			icon: MessageCircle,
+			ariaLabel: `Mesaje noi: ${messagesCount}`
 		}
 	]);
 
@@ -729,7 +736,7 @@
 		<!-- Quick Stats -->
 		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
 			{#each medicCards as card}
-				<Card title={card.title} value={card.value} sub="" accent="text-gray-900 dark:text-slate-100" icon={card.icon} iconColor={card.iconColor} iconBg={card.iconBg} />
+				<Card title={card.title} value={card.value} sub="" accent="text-gray-900 dark:text-slate-100" icon={card.icon} iconColor={card.iconColor} iconBg={card.iconBg} ariaLabel={card.ariaLabel} />
 			{/each}
 		</div>
 
@@ -768,7 +775,11 @@
 				<!-- KPI Cards Grid -->
 				<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
 					{#each adminCards as card}
-						<article class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 border-l-4 {card.accent === 'text-blue-600 dark:text-blue-400' ? 'border-l-blue-500' : card.accent === 'text-green-600 dark:text-green-400' ? 'border-l-green-500' : card.accent === 'text-purple-600 dark:text-purple-400' ? 'border-l-purple-500' : 'border-l-orange-500'} rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl transition-all">
+						<article
+							class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 border-l-4 {card.accent === 'text-blue-600 dark:text-blue-400' ? 'border-l-blue-500' : card.accent === 'text-green-600 dark:text-green-400' ? 'border-l-green-500' : card.accent === 'text-purple-600 dark:text-purple-400' ? 'border-l-purple-500' : 'border-l-orange-500'} rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl transition-all"
+							role="region"
+							aria-label={`${card.title}: ${card.value}${card.sub ? `, ${card.sub}` : ''}`}
+						>
 							<div class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2 truncate">{card.title}</div>
 							<div class="text-xl sm:text-2xl md:text-3xl font-bold {card.accent} mb-1">{card.value}</div>
 							<p class="text-xs text-gray-600 dark:text-slate-400 line-clamp-2">{card.sub}</p>
@@ -944,8 +955,8 @@
 							</div>
 							<div class="p-6">
 								{#if adminOverview.adherence.last7Days.scheduled > 0}
-									<div class="mb-4 max-w-[200px] mx-auto">
-										<canvas bind:this={adherence7Canvas}></canvas>
+									<div class="mb-4 max-w-[200px] mx-auto" role="img" aria-label="Conformitate 7 zile - diagramă">
+										<canvas bind:this={adherence7Canvas} aria-hidden="true"></canvas>
 									</div>
 									<div class="grid grid-cols-3 gap-2 text-xs text-center">
 										<div><div class="text-gray-700 dark:text-slate-300">Programate</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last7Days.scheduled}</div></div>
@@ -1006,8 +1017,8 @@
 							</div>
 							<div class="p-6">
 								{#if adminOverview.adherence.last30Days.scheduled > 0}
-									<div class="mb-4 max-w-[200px] mx-auto">
-										<canvas bind:this={adherence30Canvas}></canvas>
+									<div class="mb-4 max-w-[200px] mx-auto" role="img" aria-label="Conformitate 30 zile - diagramă">
+										<canvas bind:this={adherence30Canvas} aria-hidden="true"></canvas>
 									</div>
 									<div class="grid grid-cols-3 gap-2 text-xs text-center">
 										<div><div class="text-gray-700 dark:text-slate-300">Programate</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last30Days.scheduled}</div></div>
@@ -1092,7 +1103,7 @@
 	<!-- Quick Stats -->
 	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
 		{#each patientCards as card}
-			<Card title={card.title} value={card.value} sub={card.sub} accent={card.accent} />
+			<Card title={card.title} value={card.value} sub={card.sub} accent={card.accent} ariaLabel={card.ariaLabel} />
 		{/each}
 	</div>
 

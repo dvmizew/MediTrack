@@ -88,6 +88,17 @@ class SocketClient {
 			}
 		});
 
+		this.socket.on('message-sent', (data) => {
+			try {
+				// Dispatch confirmation that message was saved with real ID
+				if (typeof window !== 'undefined') {
+					window.dispatchEvent(new CustomEvent('message-sent', { detail: data }));
+				}
+			} catch (error) {
+				console.error('Error processing message-sent:', error);
+			}
+		});
+
 		this.socket.on('user-typing', (userId) => {
 			try {
 				if (typeof window !== 'undefined') {

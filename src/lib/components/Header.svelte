@@ -350,6 +350,7 @@
 						<div 
 							transition:fly={{ y: -10, duration: 300, easing: quintOut }}
 													class="fixed md:absolute bottom-0 md:bottom-auto left-0 md:left-auto right-0 md:right-0 top-16 md:top-auto md:mt-2 w-full md:w-96 h-[calc(100vh-4rem)] md:h-auto max-h-screen md:max-h-[32rem] md:rounded-xl rounded-t-2xl shadow-2xl border border-gray-200 dark:border-slate-700 bg-white/98 dark:bg-slate-800/98 backdrop-blur-md overflow-hidden z-50 flex flex-col md:block"
+							data-arrow-nav="true"
 						>
 							<!-- Header with actions -->
 							<div class="p-3 sm:p-4 border-b border-gray-200 dark:border-slate-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 flex-shrink-0">
@@ -515,6 +516,9 @@
 					<button
 						onclick={() => {showUserMenu = !showUserMenu; showNotifications = false; showMobileMenu = false;}}
 						class="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition focus:outline-none"
+						aria-label="Meniu utilizator"
+						aria-expanded={showUserMenu}
+						aria-haspopup="true"
 					>
 						<div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
 							<span class="text-white text-sm font-medium">{$authStore.user?.fullName?.charAt(0).toUpperCase() || '?'}</span>
@@ -523,6 +527,7 @@
 					<div 
 						transition:fly={{ y: -10, duration: 300, easing: quintOut }}
 						class="absolute right-0 mt-2 w-56 bg-white/98 dark:bg-slate-800/98 backdrop-blur-md rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 dropdown-container"
+						data-arrow-nav="true"
 					>
 						<div class="p-4 border-b border-gray-200 dark:border-slate-700">
 							<p class="font-medium text-gray-900 dark:text-slate-100">{$authStore.user?.fullName || 'User'}</p>

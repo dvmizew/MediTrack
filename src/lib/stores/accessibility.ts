@@ -4,26 +4,40 @@ export type AccessibilitySettings = {
   textSize: 'normal' | 'large' | 'xlarge'; // 100% | 125% | 150%
   highContrast: boolean;
   reduceMotion: boolean;
+  readingMode: boolean;
 };
 
 const DEFAULT_SETTINGS: AccessibilitySettings = {
   textSize: 'normal',
   highContrast: false,
-  reduceMotion: false
+  reduceMotion: false,
+  readingMode: false
 };
 
 function createAccessibilityStore() {
   // Try to load from localStorage
   let saved: AccessibilitySettings = DEFAULT_SETTINGS;
+  let hasStoredSettings = false;
   
   if (typeof window !== 'undefined') {
     try {
       const stored = localStorage.getItem('accessibility-settings');
       if (stored) {
         saved = JSON.parse(stored);
+        hasStoredSettings = true;
       }
     } catch (err) {
       console.warn('Failed to load accessibility settings:', err);
+    }
+  }
+
+  // If no stored settings, respect prefers-reduced-motion by default
+  if (typeof window !== 'undefined' && !hasStoredSettings) {
+    try {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      saved = { ...saved, reduceMotion: prefersReducedMotion };
+    } catch (err) {
+      // ignore matchMedia errors
     }
   }
 
@@ -44,6 +58,11 @@ function createAccessibilityStore() {
     
     setReduceMotion: (enabled: boolean) => {
       update(settings => ({ ...settings, reduceMotion: enabled }));
+      persistSettings();
+    },
+
+    setReadingMode: (enabled: boolean) => {
+      update(settings => ({ ...settings, readingMode: enabled }));
       persistSettings();
     },
     
@@ -83,6 +102,15 @@ function createAccessibilityStore() {
           } else {
             root.classList.remove('reduce-motion');
           }
+
+          // Reading mode
+          if (settings.readingMode) {
+            root.classList.add('reading-mode');
+          } else {
+            root.classList.remove('reading-mode');
+          }
+
+          root.setAttribute('data-accessibility-reading-mode', String(settings.readingMode));
         } catch (err) {
           console.warn('Failed to persist accessibility settings:', err);
         }

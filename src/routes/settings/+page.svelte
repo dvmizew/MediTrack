@@ -611,6 +611,7 @@
 											maxlength={6} 
 											placeholder="000000"
 											autocomplete="off"
+											aria-describedby={`mfa-help${mfaError ? ' mfa-error-setup' : ''}`}
 											oninput={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); }}
 										/>
 										{#if mfaTotp.length === 6}
@@ -619,7 +620,7 @@
 											</div>
 										{/if}
 									</div>
-									<div class="mt-2 flex items-center gap-2 text-xs text-gray-700 dark:text-slate-300">
+										<div id="mfa-help" class="mt-2 flex items-center gap-2 text-xs text-gray-700 dark:text-slate-300">
 										<Info class="w-4 h-4" />
 										<span>Codul se actualizează la fiecare 30 de secunde</span>
 									</div>
@@ -627,7 +628,7 @@
 								{#if mfaError}
 									<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg animate-shake">
 										<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-										<p class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
+											<p id="mfa-error-setup" class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
 									</div>
 								{/if}
 								<div class="flex gap-3">
@@ -922,13 +923,14 @@
 				maxlength={6} 
 				placeholder="000000"
 				autocomplete="off"
+				aria-describedby={mfaError ? 'mfa-error-regenerate' : undefined}
 				oninput={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); }}
 			/>
 		</div>
 		{#if mfaError}
 			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
 				<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-				<p class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
+				<p id="mfa-error-regenerate" class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
 			</div>
 		{/if}
 	</div>
@@ -963,12 +965,13 @@
 				bind:value={disableMfaPassword} 
 				placeholder="Introdu parola"
 				autocomplete="current-password"
+				aria-describedby={mfaError ? 'mfa-error-disable' : undefined}
 			/>
 		</div>
 		{#if mfaError}
 			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
 				<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-				<p class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
+				<p id="mfa-error-disable" class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
 			</div>
 		{/if}
 	</div>

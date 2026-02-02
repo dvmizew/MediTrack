@@ -9,6 +9,7 @@
 	import { themeStore } from '$lib/stores/theme';
 	import { goto } from '$app/navigation';
 	import { Sun, Moon, FileText } from '@lucide/svelte';
+	import AccessibilityMenu from '$lib/components/AccessibilityMenu.svelte';
 	import { authRegisterSchema, authLoginSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
 
 	let email = $state('');
@@ -111,20 +112,23 @@
 	<!-- Skip to main content link for keyboard users -->
 	<a href="#auth-form" class="skip-link">Sari la formular</a>
 
-	<!-- Theme Toggle Button (Top Right) -->
-	<button
-		onclick={themeStore.toggle}
-		class="absolute top-4 right-4 p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800 hover:shadow-lg hover:scale-110 transition-all duration-300 ease-in-out group"
-		aria-label={$themeStore === 'dark' ? 'Comută la modul luminos' : 'Comută la modul întunecat'}
-		aria-pressed={$themeStore === 'dark'}
-		type="button"
-	>
-		{#if $themeStore === 'dark'}
-			<Sun class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
-		{:else}
-			<Moon class="w-5 h-5 transition-transform duration-500" />
-		{/if}
-	</button>
+	<!-- Top Right Controls -->
+	<div class="absolute top-4 right-4 flex items-center gap-2">
+		<AccessibilityMenu />
+		<button
+			onclick={themeStore.toggle}
+			class="p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800 hover:shadow-lg hover:scale-110 transition-all duration-300 ease-in-out group"
+			aria-label={$themeStore === 'dark' ? 'Comută la modul luminos' : 'Comută la modul întunecat'}
+			aria-pressed={$themeStore === 'dark'}
+			type="button"
+		>
+			{#if $themeStore === 'dark'}
+				<Sun class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+			{:else}
+				<Moon class="w-5 h-5 transition-transform duration-500" />
+			{/if}
+		</button>
+	</div>
 
 	<div class="max-w-md w-full animate-slide-up">
 		<!-- Logo & Title -->
@@ -149,20 +153,21 @@
 		<!-- Card -->
 		<div class="bg-white/98 dark:bg-slate-800/98 backdrop-blur-md rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 p-6 md:p-8 hover:shadow-2xl transition-shadow duration-300" role="main">
 			{#if error}
-			<div 
-				class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm animate-shake"
-				role="alert"
-				aria-live="assertive"
-			>
-				{error}
-			</div>
-		{/if}
+				<div 
+					id="auth-error"
+					class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm animate-shake"
+					role="alert"
+					aria-live="assertive"
+				>
+					{error}
+				</div>
+			{/if}
 
 		{#if showMfaStep}
 			<form onsubmit={handleMfaVerify} id="auth-form" aria-labelledby="auth-subtitle" class="space-y-4">
 				<div class="mb-4">
 					<label for="mfaCode" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Cod autentificator (6 cifre) sau backup (8 caractere)</label>
-					<input id="mfaCode" name="mfaCode" type="text" bind:value={mfaCode} maxlength={8} placeholder="000000 sau XXXXXXXX" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" autocomplete="off"/>
+					<input id="mfaCode" name="mfaCode" type="text" bind:value={mfaCode} maxlength={8} placeholder="000000 sau XXXXXXXX" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" autocomplete="off" aria-describedby={error ? 'auth-error' : undefined}/>
 					<div class="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-slate-300">
 						<input id="rememberDevice" type="checkbox" bind:checked={rememberDevice} class="w-4 h-4 text-blue-600 bg-white/95 dark:bg-slate-700/95 backdrop-blur-sm border-slate-300 dark:border-slate-600 rounded"/>
 						<label for="rememberDevice" class="select-none">Ține-mă minte pe acest dispozitiv (nu cere 2FA timp de 30 zile)</label>
@@ -194,6 +199,7 @@
 						autocomplete="name"
 						aria-required="true"
 						aria-invalid={error && !fullName ? 'true' : 'false'}
+						aria-describedby={error ? 'auth-error' : undefined}
 						class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 						placeholder="Ion Popescu"
 						onblur={() => (touchedFullName = true)}
@@ -217,6 +223,7 @@
 					autocomplete="email"
 					aria-required="true"
 					aria-invalid={error && !email ? 'true' : 'false'}
+					aria-describedby={error ? 'auth-error' : undefined}
 					class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 					placeholder="email@example.com"
 					onblur={() => (touchedEmail = true)}
@@ -240,7 +247,7 @@
 					autocomplete={isRegister ? 'new-password' : 'current-password'}
 					aria-required="true"
 					aria-invalid={error && !password ? 'true' : 'false'}
-					aria-describedby="password-hint"
+					aria-describedby={error ? 'auth-error password-hint' : 'password-hint'}
 					class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 					placeholder="••••••••"
 					onblur={() => (touchedPassword = true)}

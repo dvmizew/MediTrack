@@ -75,7 +75,7 @@ export const setupSocketHandlers = (io: Server) => {
     });
 
     // Handle chat messages - use messages table
-    socket.on('send-message', async (data: { receiverId: number; continut: string }) => {
+    socket.on('send-message', async (data: { receiverId: number; continut: string; tempId?: string }) => {
       try {
         const { receiverId, continut } = data;
 
@@ -117,9 +117,14 @@ export const setupSocketHandlers = (io: Server) => {
           sender_avatar: userInfo.rows[0]?.avatar_url,
         };
 
-        // Emit to conversation room
-        const roomName = `conversation:${Math.min(userId, receiverId)}-${Math.max(userId, receiverId)}`;
-        io.to(roomName).emit('new-message', messageData);
+        // Send confirmation to sender with real message_id
+        socket.emit('message-sent', {
+          tempId: data.tempId,
+          message: messageData
+        });
+
+        // Emit ONLY to receiver (sender already has optimistic UI update)
+        io.to(`user:${receiverId}`).emit('new-message', messageData);
 
         // Send notification to receiver with status_notif='sent'
         await query(
