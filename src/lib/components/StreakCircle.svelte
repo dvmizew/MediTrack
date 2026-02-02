@@ -1,15 +1,40 @@
 <script lang="ts">
-	export let streak: number = 0;
-	export let countdownText: string = '--:--:--';
-	export let progress: number = 0;
-	export let status: 'none' | 'normal' | 'warning' | 'critical' | 'done' = 'none';
-	export let muted: boolean = false;
+	let {
+		streak = 0,
+		countdownText = '--:--:--',
+		progress = 0,
+		status = 'none' as 'none' | 'normal' | 'warning' | 'critical' | 'done',
+		muted = false
+	} = $props<{
+		streak?: number;
+		countdownText?: string;
+		progress?: number;
+		status?: 'none' | 'normal' | 'warning' | 'critical' | 'done';
+		muted?: boolean;
+	}>();
 
 	const radius = 48;
 	const circumference = 2 * Math.PI * radius;
 
-	$: safeProgress = Math.max(0, Math.min(progress, 1));
-	$: dashOffset = circumference * (1 - safeProgress);
+	const safeProgress = $derived(Math.max(0, Math.min(progress, 1)));
+	const dashOffset = $derived(circumference * (1 - safeProgress));
+	
+	let isDark = $state(false);
+	
+	$effect(() => {
+		isDark = document.documentElement.classList.contains('dark');
+		
+		const observer = new MutationObserver(() => {
+			isDark = document.documentElement.classList.contains('dark');
+		});
+		
+		observer.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ['class']
+		});
+		
+		return () => observer.disconnect();
+	});
 </script>
 
 <div class="flex items-center justify-center">
@@ -20,6 +45,11 @@
 					<stop offset="0%" stop-color="#f0f9ff" />
 					<stop offset="60%" stop-color="#e0f2fe" />
 					<stop offset="100%" stop-color="#ecfeff" />
+				</radialGradient>
+				<radialGradient id="innerGlowDark" cx="35%" cy="30%" r="70%">
+					<stop offset="0%" stop-color="#0e7490" />
+					<stop offset="60%" stop-color="#0891b2" />
+					<stop offset="100%" stop-color="#06b6d4" />
 				</radialGradient>
 			</defs>
 
@@ -41,7 +71,13 @@
 			/>
 
 			<!-- Inner badge -->
-			<circle class={`inner-core ${status} ${muted ? 'muted' : ''}`} cx="60" cy="60" r="40" fill="url(#innerGlow)" />
+			<circle 
+				class={`inner-core ${status} ${muted ? 'muted' : ''}`} 
+				cx="60" 
+				cy="60" 
+				r="40" 
+				fill={isDark ? 'url(#innerGlowDark)' : 'url(#innerGlow)'} 
+			/>
 			<circle cx="60" cy="60" r="40" fill="none" stroke="rgba(148, 163, 184, 0.35)" stroke-width="1" />
 
 			<!-- Streak + countdown -->
@@ -100,26 +136,6 @@
 
 	.progress-ring.muted {
 		stroke: #94a3b8;
-	}
-
-	.inner-core.normal {
-		fill: #ecfeff;
-}
-
-	.inner-core.warning {
-		fill: #fef3c7;
-	}
-
-	.inner-core.critical {
-		fill: #fee2e2;
-	}
-
-	.inner-core.done {
-		fill: #dcfce7;
-	}
-
-	.inner-core.muted {
-		fill: #e2e8f0;
 	}
 
 	.ring-breathe.normal {
