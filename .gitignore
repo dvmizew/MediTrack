@@ -23,6 +23,8 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+/server/reports
+
 /docs
 localhost.pem
 localhost-key.pem

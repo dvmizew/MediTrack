@@ -4,9 +4,13 @@ import { query } from '../config/database.js';
 import { logger } from '../config/logger.js';
 import path from 'path';
 import fs from 'fs/promises';
+import { fileURLToPath } from 'url';
 import {
 	generatePersonalDataExportCSV
 } from '../utils/csv-export.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router: Router = express.Router();
 
@@ -323,7 +327,7 @@ router.post('/delete-account', authenticate, async (req: Request, res: Response)
 // Create new async report job
 router.post('/jobs/create', authenticate, authorize('admin'), async (req: Request, res: Response) => {
   try {
-    const { reportType } = req.body;
+    const { reportType, isAnonymous = false } = req.body;
     const userId = (req as any).user?.userId;
 
     if (!['users', 'treatments', 'doses', 'full_system'].includes(reportType)) {
@@ -331,13 +335,13 @@ router.post('/jobs/create', authenticate, authorize('admin'), async (req: Reques
     }
 
     const result = await query(
-      `INSERT INTO report_jobs (report_type, requested_by, status) 
-       VALUES ($1, $2, 'pending') 
-       RETURNING job_id, report_type, status, created_at`,
-      [reportType, userId]
+      `INSERT INTO report_jobs (report_type, requested_by, status, is_anonymous) 
+       VALUES ($1, $2, 'pending', $3) 
+       RETURNING job_id, report_type, status, is_anonymous, created_at`,
+      [reportType, userId, isAnonymous]
     );
 
-    logger.info('Async report job created', { jobId: result.rows[0].job_id, reportType, userId });
+    logger.info('Async report job created', { jobId: result.rows[0].job_id, reportType, isAnonymous, userId });
     
     res.json({
       message: 'Report generation started',

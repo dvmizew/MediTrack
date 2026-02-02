@@ -4,6 +4,14 @@ import { generateCSV } from '../utils/csv.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import {
+	generateUsersCSV,
+	generateUsersCSVAnonymous,
+	generateTreatmentsCSV,
+	generateTreatmentsCSVAnonymous,
+	generateAdherenceCSV,
+	generateAdherenceCSVAnonymous
+} from '../utils/csv-export.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,7 +29,7 @@ async function ensureReportsDir() {
 }
 
 // Process users export
-async function processUsersReport(jobId: number): Promise<{ filePath: string; fileSize: number }> {
+async function processUsersReport(jobId: number, isAnonymous: boolean = false): Promise<{ filePath: string; fileSize: number }> {
 	const result = await query(`
 		SELECT 
 			u.user_id,
@@ -38,12 +46,14 @@ async function processUsersReport(jobId: number): Promise<{ filePath: string; fi
 		ORDER BY u.created_at DESC
 	`);
 
-	const csv = generateCSV(
-		['user_id', 'email', 'full_name', 'role', 'is_active', 'created_at', 'xp', 'streak', 'badge'],
-		result.rows
-	);
+	let csv: string;
+	if (isAnonymous) {
+		csv = generateUsersCSVAnonymous(result.rows);
+	} else {
+		csv = generateUsersCSV(result.rows);
+	}
 
-	const fileName = `users_export_${jobId}_${Date.now()}.csv`;
+	const fileName = `users_export_${jobId}_${Date.now()}${isAnonymous ? '_anon' : ''}.csv`;
 	const filePath = path.join(REPORTS_DIR, fileName);
 	await fs.writeFile(filePath, csv, 'utf-8');
 	
@@ -52,10 +62,12 @@ async function processUsersReport(jobId: number): Promise<{ filePath: string; fi
 }
 
 // Process treatments export
-async function processTreatmentsReport(jobId: number): Promise<{ filePath: string; fileSize: number }> {
+async function processTreatmentsReport(jobId: number, isAnonymous: boolean = false): Promise<{ filePath: string; fileSize: number }> {
 	const result = await query(`
 		SELECT 
 			tp.plan_id,
+			tp.patient_id,
+			tp.doctor_id,
 			tp.diagnoza as diagnosis,
 			tp.activ as is_active,
 			tp.data_creare as created_at,
@@ -73,12 +85,14 @@ async function processTreatmentsReport(jobId: number): Promise<{ filePath: strin
 		ORDER BY tp.data_creare DESC
 	`);
 
-	const csv = generateCSV(
-		['plan_id', 'diagnosis', 'is_active', 'created_at', 'patient_name', 'patient_email', 'doctor_name', 'doctor_email', 'total_doses'],
-		result.rows
-	);
+	let csv: string;
+	if (isAnonymous) {
+		csv = generateTreatmentsCSVAnonymous(result.rows);
+	} else {
+		csv = generateTreatmentsCSV(result.rows);
+	}
 
-	const fileName = `treatments_export_${jobId}_${Date.now()}.csv`;
+	const fileName = `treatments_export_${jobId}_${Date.now()}${isAnonymous ? '_anon' : ''}.csv`;
 	const filePath = path.join(REPORTS_DIR, fileName);
 	await fs.writeFile(filePath, csv, 'utf-8');
 	
@@ -87,33 +101,35 @@ async function processTreatmentsReport(jobId: number): Promise<{ filePath: strin
 }
 
 // Process doses export
-async function processDosesReport(jobId: number): Promise<{ filePath: string; fileSize: number }> {
+async function processDosesReport(jobId: number, isAnonymous: boolean = false): Promise<{ filePath: string; fileSize: number }> {
 	const result = await query(`
 		SELECT 
 			td.dose_id,
-			td.nume_medicament as medication_name,
-			td.dozaj as dosage,
-			td.ora_administrare as scheduled_time,
+			tp.patient_id,
+			td.medication_name,
+			td.cantitate as dosage,
+			td.ora as scheduled_time,
 			tp.diagnoza as treatment_diagnosis,
 			u.full_name as patient_name,
 			u.email as patient_email,
-			COALESCE(dc.rezultat, 'not_confirmed') as status,
-			dc.timestamp_confirmare as confirmed_at
+			td.status,
+			td.created_at as confirmed_at
 		FROM treatment_doses td
 		JOIN treatment_plans tp ON td.plan_id = tp.plan_id
 		JOIN users u ON tp.patient_id = u.user_id
-		LEFT JOIN dose_confirmations dc ON td.dose_id = dc.dose_id
 		WHERE tp.is_deleted = false
-		ORDER BY td.ora_administrare DESC
+		ORDER BY td.ora DESC
 		LIMIT 10000
 	`);
 
-	const csv = generateCSV(
-		['dose_id', 'medication_name', 'dosage', 'scheduled_time', 'treatment_diagnosis', 'patient_name', 'patient_email', 'status', 'confirmed_at'],
-		result.rows
-	);
+	let csv: string;
+	if (isAnonymous) {
+		csv = generateAdherenceCSVAnonymous(result.rows);
+	} else {
+		csv = generateAdherenceCSV(result.rows);
+	}
 
-	const fileName = `doses_export_${jobId}_${Date.now()}.csv`;
+	const fileName = `doses_export_${jobId}_${Date.now()}${isAnonymous ? '_anon' : ''}.csv`;
 	const filePath = path.join(REPORTS_DIR, fileName);
 	await fs.writeFile(filePath, csv, 'utf-8');
 	
@@ -122,16 +138,17 @@ async function processDosesReport(jobId: number): Promise<{ filePath: string; fi
 }
 
 // Process full system report
-async function processFullSystemReport(jobId: number): Promise<{ filePath: string; fileSize: number }> {
+async function processFullSystemReport(jobId: number, isAnonymous: boolean = false): Promise<{ filePath: string; fileSize: number }> {
 	// Generate comprehensive system report with multiple sheets (CSV files)
 	const [users, treatments, doses] = await Promise.all([
-		processUsersReport(jobId),
-		processTreatmentsReport(jobId),
-		processDosesReport(jobId)
+		processUsersReport(jobId, isAnonymous),
+		processTreatmentsReport(jobId, isAnonymous),
+		processDosesReport(jobId, isAnonymous)
 	]);
 
 	// Create a summary file that references all exports
-	const summary = `MediTrack System Report - Generated: ${new Date().toISOString()}
+	const anonLabel = isAnonymous ? ' (Anonimizat)' : '';
+	const summary = `MediTrack System Report${anonLabel} - Generated: ${new Date().toISOString()}
 
 Exported Files:
 - Users: ${users.filePath} (${(users.fileSize / 1024).toFixed(2)} KB)
@@ -141,7 +158,7 @@ Exported Files:
 Total Size: ${((users.fileSize + treatments.fileSize + doses.fileSize) / 1024).toFixed(2)} KB
 `;
 
-	const fileName = `full_system_report_${jobId}_${Date.now()}.txt`;
+	const fileName = `full_system_report_${jobId}_${Date.now()}${isAnonymous ? '_anon' : ''}.txt`;
 	const filePath = path.join(REPORTS_DIR, fileName);
 	await fs.writeFile(filePath, summary, 'utf-8');
 	
@@ -150,9 +167,9 @@ Total Size: ${((users.fileSize + treatments.fileSize + doses.fileSize) / 1024).t
 }
 
 // Process a single report job
-async function processReportJob(jobId: number, reportType: string): Promise<void> {
+async function processReportJob(jobId: number, reportType: string, isAnonymous: boolean = false): Promise<void> {
 	try {
-		logger.info('Processing report job', { jobId, reportType });
+		logger.info('Processing report job', { jobId, reportType, isAnonymous });
 
 		// Update status to processing
 		await query(
@@ -165,16 +182,16 @@ async function processReportJob(jobId: number, reportType: string): Promise<void
 		
 		switch (reportType) {
 			case 'users':
-				result = await processUsersReport(jobId);
+				result = await processUsersReport(jobId, isAnonymous);
 				break;
 			case 'treatments':
-				result = await processTreatmentsReport(jobId);
+				result = await processTreatmentsReport(jobId, isAnonymous);
 				break;
 			case 'doses':
-				result = await processDosesReport(jobId);
+				result = await processDosesReport(jobId, isAnonymous);
 				break;
 			case 'full_system':
-				result = await processFullSystemReport(jobId);
+				result = await processFullSystemReport(jobId, isAnonymous);
 				break;
 			default:
 				throw new Error(`Unknown report type: ${reportType}`);
@@ -200,26 +217,28 @@ async function processReportJob(jobId: number, reportType: string): Promise<void
 
 		// Send notification to user
 		if (userId) {
+			const anonLabel = isAnonymous ? ' (anonimizat)' : '';
 			await query(
-				`INSERT INTO notifications (user_id, tip_notificare, titlu, mesaj, status) 
+				`INSERT INTO notifications (user_id, tip, title, message, status_notif) 
 				 VALUES ($1, 'alert', $2, $3, 'sent')`,
 				[
 					userId,
 					'Raport Gata',
-					`Raportul ${reportType} a fost generat cu succes și este disponibil pentru download.`
+					`Raportul ${reportType}${anonLabel} a fost generat cu succes și este disponibil pentru download.`
 				]
 			);
 		}
 
 		logger.info('Report job completed successfully', { 
 			jobId, 
-			reportType, 
+			reportType,
+			isAnonymous,
 			filePath: result.filePath,
 			fileSize: result.fileSize 
 		});
 
 	} catch (error: any) {
-		logger.error('Report job failed', { jobId, reportType, error: error.message });
+		logger.error('Report job failed', { jobId, reportType, isAnonymous, error: error.message });
 
 		// Update job as failed
 		await query(
@@ -240,7 +259,7 @@ async function processReportJob(jobId: number, reportType: string): Promise<void
 
 		if (userId) {
 			await query(
-				`INSERT INTO notifications (user_id, tip_notificare, titlu, mesaj, status) 
+				`INSERT INTO notifications (user_id, tip, title, message, status_notif) 
 				 VALUES ($1, 'alert', $2, $3, 'sent')`,
 				[
 					userId,
@@ -263,7 +282,7 @@ export async function startReportWorker() {
 		try {
 			// Get pending jobs
 			const result = await query(
-				`SELECT job_id, report_type 
+				`SELECT job_id, report_type, is_anonymous 
 				 FROM report_jobs 
 				 WHERE status = 'pending' 
 				 ORDER BY created_at ASC 
@@ -272,7 +291,7 @@ export async function startReportWorker() {
 
 			if (result.rows.length > 0) {
 				const job = result.rows[0];
-				await processReportJob(job.job_id, job.report_type);
+				await processReportJob(job.job_id, job.report_type, job.is_anonymous || false);
 			}
 		} catch (error) {
 			logger.error('Report worker error', { error });

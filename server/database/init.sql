@@ -216,6 +216,7 @@ CREATE TABLE report_jobs (
     file_path TEXT,
     file_size INTEGER,
     error_message TEXT,
+    is_anonymous BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     started_at TIMESTAMP,
     completed_at TIMESTAMP,
