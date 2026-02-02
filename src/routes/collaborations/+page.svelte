@@ -27,7 +27,7 @@
 
 	let collaborations = $state<any[]>([]);
 	let pendingInvites = $state<any[]>([]);
-	let adminOverview = $state<any>(null);
+	let overview = $state<any>(null);
 	let loading = $state(true);
 	let error = $state('');
 	let medicEmail = $state('');
@@ -51,7 +51,7 @@
 			
 			if (isAdmin) {
 				// Admin loads global overview
-				adminOverview = await adminReportsApi.getOverview();
+				overview = await adminReportsApi.getOverview();
 			} else {
 				// Regular users load their collaborations
 				const [collabData, pendingData] = await Promise.all([
@@ -144,7 +144,7 @@
 				<div class="flex justify-center py-16">
 					<div class="animate-spin rounded-full h-12 w-12 border-3 border-blue-600 border-t-transparent shadow-lg shadow-blue-500/50"></div>
 				</div>
-			{:else if adminOverview}
+			{:else if overview}
 				<!-- Stats Cards -->
 				<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
 <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border border-green-200 dark:border-green-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-md">
@@ -153,7 +153,7 @@
 									<h3 class="text-xs sm:text-sm font-semibold text-green-900 dark:text-green-200 truncate">Acceptate</h3>
 								</div>
 								<p class="text-xl sm:text-2xl md:text-3xl font-bold text-green-900 dark:text-green-100 mb-1">
-									{adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0}
+									{overview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0}
 								</p>
 								<p class="text-xs text-green-700 dark:text-green-300 truncate">Active în sistem</p>
 					</div>
@@ -164,7 +164,7 @@
 									<h3 class="text-xs sm:text-sm font-semibold text-yellow-900 dark:text-yellow-200 truncate">În așteptare</h3>
 								</div>
 								<p class="text-xl sm:text-2xl md:text-3xl font-bold text-yellow-900 dark:text-yellow-100 mb-1">
-									{adminOverview.collaborations.find((c: any) => c.status === 'pending')?.count || 0}
+									{overview.collaborations.find((c: any) => c.status === 'pending')?.count || 0}
 								</p>
 								<p class="text-xs text-yellow-700 dark:text-yellow-300 truncate">De procesat</p>
 					</div>
@@ -175,7 +175,7 @@
 						<h3 class="text-xs sm:text-sm font-semibold text-red-900 dark:text-red-200 truncate">Respinse</h3>
 					</div>
 					<p class="text-xl sm:text-2xl md:text-3xl font-bold text-red-900 dark:text-red-100 mb-1">
-						{adminOverview.collaborations.find((c: any) => c.status === 'rejected')?.count || 0}
+						{overview.collaborations.find((c: any) => c.status === 'rejected')?.count || 0}
 					</p>
 					<p class="text-xs text-red-700 dark:text-red-300 truncate">Nefinalizate</p>
 					</div>
@@ -193,7 +193,7 @@
 							<p class="text-xs text-gray-700 dark:text-slate-300 mt-1">Distribuție pe statusuri</p>
 						</div>
 						<div class="p-4 sm:p-6 space-y-4">
-							{#each adminOverview.collaborations as c}
+							{#each overview.collaborations as c}
 								<div class="space-y-2">
 									<div class="flex items-center justify-between">
 										<div class="flex items-center gap-2">
@@ -214,11 +214,11 @@
 										<div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 sm:h-2.5 overflow-hidden">
 										<div 
 											class="{c.status === 'accepted' ? 'bg-gradient-to-r from-green-500 to-green-600' : c.status === 'pending' ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' : 'bg-gradient-to-r from-red-500 to-red-600'} h-full transition-all duration-500 rounded-full"
-											style="width: {adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0 ? (c.count / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100 : 0}%"
+											style="width: {overview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0 ? (c.count / overview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100 : 0}%"
 										></div>
 									</div>
 												<div class="text-xs text-gray-700 dark:text-slate-300">
-										{Math.round((c.count / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}% din total
+										{Math.round((c.count / overview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}% din total
 									</div>
 								</div>
 							{/each}
@@ -228,13 +228,13 @@
 								<div class="flex justify-between text-sm">
 								<span class="text-gray-700 dark:text-slate-300">Total colaborări:</span>
 								<span class="font-bold text-gray-900 dark:text-slate-100">
-									{adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)}
+									{overview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)}
 								</span>
 							</div>
 							<div class="flex justify-between text-sm">
 								<span class="text-gray-700 dark:text-slate-300">Rata acceptare:</span>
-									<span class="font-bold {(adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0.8 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">
-										{Math.round(((adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}%
+									<span class="font-bold {(overview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / overview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0.8 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">
+										{Math.round(((overview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / overview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}%
 									</span>
 								</div>
 							</div>

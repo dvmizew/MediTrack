@@ -137,7 +137,7 @@
 						{#if user.role === 'pacient'}
 							<div class="flex items-center gap-4 mt-2">
 								<span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-full">
-									{stats.totalXp} XP
+								{stats?.totalXp ?? 0} XP
 								</span>
 								<span class="px-3 py-1 bg-gradient-to-r {getBadgeColor(stats.currentBadge)} text-white text-sm font-medium rounded-full">
 									{getBadgeName(stats.currentBadge)}
@@ -198,14 +198,14 @@
 						<div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
 							<div>
 								<p class="text-sm text-gray-700 dark:text-slate-300">Zile consecutive</p>
-								<p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.currentStreak}</p>
+								<p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats?.currentStreak ?? 0}</p>
 							</div>
 							<TrendingUp class="w-8 h-8 text-blue-600 dark:text-blue-400" />
 						</div>
 						<div class="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
 							<div>
 								<p class="text-sm text-gray-700 dark:text-slate-300">Record streak</p>
-								<p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.longestStreak}</p>
+								<p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats?.longestStreak ?? 0}</p>
 							</div>
 							<Award class="w-8 h-8 text-purple-600 dark:text-purple-400" />
 						</div>
@@ -225,7 +225,7 @@
 							<Star class="w-12 h-12 text-white" fill="currentColor" />
 						</div>
 						<p class="text-2xl font-bold text-gray-900 dark:text-slate-100">{getBadgeName(stats.currentBadge)}</p>
-							<p class="text-gray-700 dark:text-slate-300 mt-1">{stats.totalXp} XP</p>
+							<p class="text-gray-700 dark:text-slate-300 mt-1">{stats?.totalXp ?? 0} XP</p>
 					</div>
 				</div>
 			{:else}

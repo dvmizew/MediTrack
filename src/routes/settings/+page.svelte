@@ -843,24 +843,24 @@
 									<Star class="w-16 h-16 text-white" fill="currentColor" />
 								</div>
 								<h3 class="text-2xl font-bold text-gray-900 dark:text-slate-100">{getBadgeName(stats.currentBadge)}</h3>
-								<p class="text-lg text-gray-700 dark:text-slate-300">{stats.totalXp} XP</p>
+							<p class="text-lg text-gray-700 dark:text-slate-300">{stats?.totalXp ?? 0} XP</p>
 							</div>
 
 							<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 								<div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-									<p class="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.currentStreak}</p>
+							<p class="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats?.currentStreak ?? 0}</p>
 									<p class="text-sm text-gray-700 dark:text-slate-300 mt-1">Zile consecutive</p>
 								</div>
 								<div class="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-									<p class="text-3xl font-bold text-purple-600 dark:text-purple-400">{stats.longestStreak}</p>
+							<p class="text-3xl font-bold text-purple-600 dark:text-purple-400">{stats?.longestStreak ?? 0}</p>
 									<p class="text-sm text-gray-700 dark:text-slate-300 mt-1">Record</p>
 								</div>
 								<div class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-									<p class="text-3xl font-bold text-green-600 dark:text-green-400">{stats.completedTreatments}</p>
+								<p class="text-3xl font-bold text-green-600 dark:text-green-400">{stats?.completedTreatments ?? 0}</p>
 									<p class="text-sm text-gray-700 dark:text-slate-300 mt-1">Tratamente finalizate</p>
 								</div>
 								<div class="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-									<p class="text-3xl font-bold text-orange-600 dark:text-orange-400">{stats.activeTreatments}</p>
+								<p class="text-3xl font-bold text-orange-600 dark:text-orange-400">{stats?.activeTreatments ?? 0}</p>
 									<p class="text-sm text-gray-700 dark:text-slate-300 mt-1">Tratamente active</p>
 								</div>
 							</div>

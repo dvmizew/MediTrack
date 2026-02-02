@@ -23,7 +23,7 @@
 	import { treatmentSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
 
 	let treatments = $state<any[]>([]);
-	let adminOverview = $state<any>(null);
+	let overview = $state<any>(null);
 	let loading = $state(true);
 	let error = $state('');
 	let showNewTreatmentModal = $state(false);
@@ -62,7 +62,7 @@
 			
 			if (isAdmin) {
 				// Admin loads global overview
-				adminOverview = await adminReportsApi.getOverview();
+				overview = await adminReportsApi.getOverview();
 			} else {
 				// Regular users load their treatments
 				const data = await api.getTreatments();
@@ -180,7 +180,7 @@
 				<div class="flex justify-center py-16">
 					<div class="animate-spin rounded-full h-12 w-12 border-3 border-blue-600 border-t-transparent shadow-lg shadow-blue-500/50"></div>
 				</div>
-			{:else if adminOverview}
+			{:else if overview}
 				<!-- Stats Cards -->
 				<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
 				<div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border border-green-200 dark:border-green-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-md">
@@ -189,7 +189,7 @@
 						<h3 class="text-xs sm:text-sm font-semibold text-green-900 dark:text-green-200 truncate">Active</h3>
 					</div>
 					<p class="text-xl sm:text-2xl md:text-3xl font-bold text-green-900 dark:text-green-100 mb-1">
-						{adminOverview.treatments.active}
+					{overview.treatments.active ?? 0}
 					</p>
 					<p class="text-xs text-green-700 dark:text-green-300 truncate">În derulare</p>
 				</div>
@@ -200,7 +200,7 @@
 						<h3 class="text-xs sm:text-sm font-semibold text-gray-900 dark:text-slate-200 truncate">Inactive</h3>
 					</div>
 					<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-1">
-						{adminOverview.treatments.inactive}
+					{overview.treatments.inactive ?? 0}
 					</p>
 					<p class="text-xs text-gray-700 dark:text-slate-400 truncate">Finalizate</p>
 				</div>
@@ -211,7 +211,7 @@
 						<h3 class="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-200 truncate">Total</h3>
 					</div>
 					<p class="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900 dark:text-blue-100 mb-1">
-						{adminOverview.treatments.total}
+					{overview.treatments.total ?? 0}
 					</p>
 					<p class="text-xs text-blue-700 dark:text-blue-300 truncate">În sistem</p>
 				</div>
@@ -235,17 +235,17 @@
 										<CheckCircle2 class="w-4 h-4 sm:w-5 sm:h-5 text-green-700 dark:text-green-200" />
 										<span class="text-sm sm:text-base font-medium text-green-900 dark:text-green-100">Active</span>
 									</div>
-									<span class="text-lg sm:text-xl font-bold text-gray-900 dark:text-slate-100">{adminOverview.treatments.active}</span>
+									<span class="text-lg sm:text-xl font-bold text-gray-900 dark:text-slate-100">{overview.treatments.active ?? 0}</span>
 								</div>
 								<!-- Progress bar -->
 								<div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 sm:h-2.5 overflow-hidden">
 									<div 
 										class="bg-gradient-to-r from-green-500 to-green-600 h-full transition-all duration-500 rounded-full"
-										style="width: {adminOverview.treatments.total > 0 ? (adminOverview.treatments.active / adminOverview.treatments.total) * 100 : 0}%"
+										style="width: {overview.treatments.total > 0 ? (overview.treatments.active / overview.treatments.total) * 100 : 0}%"
 									></div>
 								</div>
 							<div class="text-xs text-gray-700 dark:text-slate-200">
-									{adminOverview.treatments.total > 0 ? Math.round((adminOverview.treatments.active / adminOverview.treatments.total) * 100) : 0}% din total
+									{overview.treatments.total > 0 ? Math.round((overview.treatments.active / overview.treatments.total) * 100) : 0}% din total
 								</div>
 							</div>
 
@@ -255,17 +255,17 @@
 										<PauseCircle class="w-4 h-4 sm:w-5 sm:h-5 text-slate-700 dark:text-slate-200" />
 										<span class="text-sm sm:text-base font-medium text-gray-900 dark:text-slate-100">Inactive</span>
 									</div>
-									<span class="text-lg sm:text-xl font-bold text-gray-900 dark:text-slate-100">{adminOverview.treatments.inactive}</span>
+									<span class="text-lg sm:text-xl font-bold text-gray-900 dark:text-slate-100">{overview.treatments.inactive ?? 0}</span>
 								</div>
 								<!-- Progress bar -->
 								<div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 sm:h-2.5 overflow-hidden">
 									<div 
 										class="bg-gradient-to-r from-gray-500 to-gray-600 h-full transition-all duration-500 rounded-full"
-										style="width: {adminOverview.treatments.total > 0 ? (adminOverview.treatments.inactive / adminOverview.treatments.total) * 100 : 0}%"
+										style="width: {overview.treatments.total > 0 ? (overview.treatments.inactive / overview.treatments.total) * 100 : 0}%"
 									></div>
 								</div>
 							<div class="text-xs text-gray-700 dark:text-slate-200">
-									{adminOverview.treatments.total > 0 ? Math.round((adminOverview.treatments.inactive / adminOverview.treatments.total) * 100) : 0}% din total
+									{overview.treatments.total > 0 ? Math.round((overview.treatments.inactive / overview.treatments.total) * 100) : 0}% din total
 								</div>
 							</div>
 							
@@ -274,13 +274,13 @@
 								<div class="flex justify-between text-sm">
 								<span class="text-gray-700 dark:text-slate-200">Total tratamente:</span>
 								<span class="font-bold text-gray-900 dark:text-slate-100">
-									{adminOverview.treatments.total}
+									{overview.treatments.total ?? 0}
 								</span>
 							</div>
 							<div class="flex justify-between text-sm">
 								<span class="text-gray-700 dark:text-slate-200">Rata activare:</span>
-									<span class="font-bold {adminOverview.treatments.total > 0 && (adminOverview.treatments.active / adminOverview.treatments.total) > 0.7 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">
-										{adminOverview.treatments.total > 0 ? Math.round((adminOverview.treatments.active / adminOverview.treatments.total) * 100) : 0}%
+									<span class="font-bold {overview.treatments.total > 0 && (overview.treatments.active / overview.treatments.total) > 0.7 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">
+										{overview.treatments.total > 0 ? Math.round((overview.treatments.active / overview.treatments.total) * 100) : 0}%
 									</span>
 								</div>
 							</div>

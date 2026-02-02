@@ -106,7 +106,7 @@
 	<!-- Header Section -->
 	<div class="space-y-3 sm:space-y-4">
 		<div class="space-y-1">
-			<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2"><BarChart3 class="w-8 h-8" /> Rapoarte Admin</h1>
+			<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2"><BarChart3 class="w-8 h-8" /> Rapoarte Admin</h1>
 			<p class="text-sm sm:text-base text-gray-900 dark:text-slate-100 font-medium">Overview utilizatori, colaborări și aderență cu grafice și export.</p>
 		</div>
 		
@@ -168,10 +168,10 @@
 					<Users class="w-5 h-5" />
 					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-300 truncate">Utilizatori</h3>
 				</div>
-				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-1">{overview.users.active + overview.users.inactive}</p>
+				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-1">{(overview.users.active ?? 0) + (overview.users.inactive ?? 0)}</p>
 				<p class="text-xs text-green-600 dark:text-green-400 truncate flex items-center gap-1">
 					<Check class="w-3 h-3" />
-					{overview.users.active} activi
+					{overview.users.active ?? 0} activi
 				</p>
 			</div>
 
@@ -180,10 +180,10 @@
 					<FileText class="w-5 h-5" />
 					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-300 truncate">Tratamente</h3>
 				</div>
-				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-1">{overview.treatments.total}</p>
+				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-1">{overview.treatments.total ?? 0}</p>
 				<p class="text-xs text-blue-600 dark:text-blue-400 truncate flex items-center gap-1">
 					<Check class="w-3 h-3" />
-					{overview.treatments.active} active
+					{overview.treatments.active ?? 0} active
 				</p>
 			</div>
 
@@ -192,7 +192,7 @@
 					<Pill class="w-5 h-5" />
 					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-300 truncate">Doze</h3>
 				</div>
-				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-1">{overview.doses.total}</p>
+				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-1">{overview.doses.total ?? 0}</p>
 				<p class="text-xs text-gray-700 dark:text-slate-300 truncate">Total sistem</p>
 			</div>
 

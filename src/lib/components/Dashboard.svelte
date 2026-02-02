@@ -81,14 +81,14 @@
 	const patientCards = $derived([
 		{
 			title: 'Conformitate săptămânală',
-			value: `${stats.weeklyAdherence}%`,
+			value: `${stats?.weeklyAdherence ?? 0}%`,
 			sub: 'Media ultimelor 7 zile',
 			accent: 'text-gray-900 dark:text-slate-100'
 		},
 		{
 			title: 'Astăzi',
-			value: `${stats.taken}/${stats.total}`,
-			sub: `${stats.snoozed} amânate • ${stats.overdue} întârziate`,
+			value: `${stats?.taken ?? 0}/${stats?.total ?? 0}`,
+			sub: `${stats?.snoozed ?? 0} amânate • ${stats?.overdue ?? 0} întârziate`,
 			accent: 'text-gray-900 dark:text-slate-100'
 		},
 		{
@@ -163,8 +163,8 @@
 	const adminCards = $derived(adminOverview ? [
 		{
 			title: 'Utilizatori Total',
-			value: adminOverview.users.active + adminOverview.users.inactive,
-			sub: `Activi ${adminOverview.users.active} · Inactivi ${adminOverview.users.inactive}`,
+			value: (adminOverview.users.active ?? 0) + (adminOverview.users.inactive ?? 0),
+			sub: `Activi ${adminOverview.users.active ?? 0} · Inactivi ${adminOverview.users.inactive ?? 0}`,
 			accent: 'text-blue-600 dark:text-blue-400'
 		},
 		{
@@ -175,8 +175,8 @@
 		},
 		{
 			title: 'Tratamente Active',
-			value: adminOverview.treatments.active,
-			sub: `Total ${adminOverview.treatments.total}`,
+			value: adminOverview.treatments.active ?? 0,
+			sub: `Total ${adminOverview.treatments.total ?? 0}`,
 			accent: 'text-purple-600 dark:text-purple-400'
 		},
 		{
@@ -979,15 +979,15 @@
 								{#if adminOverview.treatments.total > 0}
 									<div class="flex items-center justify-between p-3 rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
 										<span class="text-gray-700 dark:text-slate-300 text-sm">Activ</span>
-										<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.treatments.active}</span>
+										<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.treatments.active ?? 0}</span>
 									</div>
 									<div class="flex items-center justify-between p-3 rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
 										<span class="text-gray-700 dark:text-slate-300 text-sm">Inactiv</span>
-										<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.treatments.inactive}</span>
+										<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.treatments.inactive ?? 0}</span>
 									</div>
 									<div class="flex items-center justify-between p-3 rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
 										<span class="text-gray-700 dark:text-slate-300 text-sm">Total</span>
-										<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.treatments.total}</span>
+										<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.treatments.total ?? 0}</span>
 									</div>
 								{:else}
 									<div class="py-6 text-center text-gray-500 dark:text-slate-400">

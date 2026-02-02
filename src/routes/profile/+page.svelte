@@ -129,7 +129,7 @@
 				<p class="text-lg text-gray-900 dark:text-slate-100 capitalize mt-1 font-medium">{user.role}</p>
 					{#if $isPacient}						<p class="text-sm text-blue-600 dark:text-blue-400 mt-2">Profil personalizat, statistici și progres tratamente</p>						<div class="flex items-center gap-4 mt-2">
 							<span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-full">
-								{stats.totalXp} XP
+							{stats?.totalXp ?? 0} XP
 							</span>
 							<span class="px-3 py-1 bg-gradient-to-r {getBadgeColor(stats.currentBadge)} text-white text-sm font-medium rounded-full">
 								{getBadgeName(stats.currentBadge)}
@@ -180,14 +180,14 @@
 						<div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
 							<div>
 								<p class="text-sm text-gray-600 dark:text-slate-400">Zile consecutive</p>
-								<p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.currentStreak}</p>
+								<p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats?.currentStreak ?? 0}</p>
 							</div>
 							<BarChart3 class="w-8 h-8 text-blue-600 dark:text-blue-400" />
 						</div>
 						<div class="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
 							<div>
 								<p class="text-sm text-gray-600 dark:text-slate-400">Record streak</p>
-								<p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.longestStreak}</p>
+								<p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats?.longestStreak ?? 0}</p>
 							</div>
 							<Award class="w-8 h-8 text-purple-600 dark:text-purple-400" />
 						</div>
@@ -207,7 +207,7 @@
 							<Award class="w-12 h-12 text-white" />
 						</div>
 						<p class="text-2xl font-bold text-gray-900 dark:text-slate-100">{getBadgeName(stats.currentBadge)}</p>
-						<p class="text-gray-600 dark:text-slate-400 mt-1">{stats.totalXp} XP</p>
+						<p class="text-gray-600 dark:text-slate-400 mt-1">{stats?.totalXp ?? 0} XP</p>
 					</div>
 				</div>
 			{:else}

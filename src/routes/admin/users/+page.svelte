@@ -344,11 +344,11 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<div class="flex items-center justify-between mb-8">
 		<div>
-			<h1 class="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+			<h1 class="text-3xl font-bold text-gray-900 dark:text-slate-100 mb-2 flex items-center gap-2">
 				<Users class="w-7 h-7 text-gray-900 dark:text-slate-100" />
 				Gestionare Utilizatori
 			</h1>
-			<p class="text-sm text-gray-800 font-medium">Administrează rolurile și statusul utilizatorilor</p>
+			<p class="text-sm text-gray-800 dark:text-slate-300 font-medium">Administrează rolurile și statusul utilizatorilor</p>
 		</div>
 		<div class="flex gap-3">
 			<button

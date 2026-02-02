@@ -91,7 +91,7 @@
 			platinum: 'bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300 border-blue-300 dark:border-blue-700',
 			diamond: 'bg-purple-100 dark:bg-purple-900/30 text-purple-900 dark:text-purple-300 border-purple-300 dark:border-purple-700'
 		};
-		return colors[badge || 'bronze'] || 'bg-gray-100 text-gray-900 border-gray-300';
+		return colors[badge || 'bronze'] || 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100 border-gray-300 dark:border-slate-700';
 	}
 
 	function getRankMedalIcon(position: number) {

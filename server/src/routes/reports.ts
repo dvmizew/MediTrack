@@ -75,13 +75,13 @@ router.get('/overview', authenticate, authorize('admin'), async (req: Request, r
     const [usersByRole, usersActive, collabCounts, treatmentCounts, doseCounts, adherence7, adherence30] = await Promise.all([
       query(`SELECT role, COUNT(*)::int as count FROM users GROUP BY role`),
       query(`SELECT 
-                SUM(CASE WHEN is_active THEN 1 ELSE 0 END)::int AS active,
-                SUM(CASE WHEN NOT is_active THEN 1 ELSE 0 END)::int AS inactive
+                COALESCE(SUM(CASE WHEN is_active THEN 1 ELSE 0 END), 0)::int AS active,
+                COALESCE(SUM(CASE WHEN NOT is_active THEN 1 ELSE 0 END), 0)::int AS inactive
              FROM users`),
       query(`SELECT status_invitatie as status, COUNT(*)::int as count FROM doctor_patient GROUP BY status_invitatie`),
       query(`SELECT 
-                SUM(CASE WHEN activ THEN 1 ELSE 0 END)::int AS active,
-                SUM(CASE WHEN NOT activ THEN 1 ELSE 0 END)::int AS inactive,
+                COALESCE(SUM(CASE WHEN activ THEN 1 ELSE 0 END), 0)::int AS active,
+                COALESCE(SUM(CASE WHEN NOT activ THEN 1 ELSE 0 END), 0)::int AS inactive,
                 COUNT(*)::int AS total
               FROM treatment_plans WHERE is_deleted = false`),
             query(`SELECT COUNT(*)::int AS total FROM treatment_doses WHERE is_deleted = false`),
@@ -112,31 +112,31 @@ router.get('/overview', authenticate, authorize('admin'), async (req: Request, r
     res.json({
       users: {
         byRole: usersByRole.rows,
-        active: usersActive.rows[0].active,
-        inactive: usersActive.rows[0].inactive,
+        active: usersActive.rows[0]?.active ?? 0,
+        inactive: usersActive.rows[0]?.inactive ?? 0,
       },
       collaborations: collabCounts.rows,
       treatments: {
-        active: treatmentCounts.rows[0].active,
-        inactive: treatmentCounts.rows[0].inactive,
-        total: treatmentCounts.rows[0].total,
+        active: treatmentCounts.rows[0]?.active ?? 0,
+        inactive: treatmentCounts.rows[0]?.inactive ?? 0,
+        total: treatmentCounts.rows[0]?.total ?? 0,
       },
       doses: {
-        total: doseCounts.rows[0].total,
+        total: doseCounts.rows[0]?.total ?? 0,
       },
       adherence: {
         last7Days: {
-          scheduled: Number(adherence7.rows[0].scheduled) || 0,
-          confirmed: Number(adherence7.rows[0].confirmed) || 0,
+          scheduled: Number(adherence7.rows[0]?.scheduled) || 0,
+          confirmed: Number(adherence7.rows[0]?.confirmed) || 0,
           rate: (() => {
-            const s = Number(adherence7.rows[0].scheduled) || 0; const c = Number(adherence7.rows[0].confirmed) || 0; return s > 0 ? +(c / s).toFixed(2) : 0;
+            const s = Number(adherence7.rows[0]?.scheduled) || 0; const c = Number(adherence7.rows[0]?.confirmed) || 0; return s > 0 ? +(c / s).toFixed(2) : 0;
           })(),
         },
         last30Days: {
-          scheduled: Number(adherence30.rows[0].scheduled) || 0,
-          confirmed: Number(adherence30.rows[0].confirmed) || 0,
+          scheduled: Number(adherence30.rows[0]?.scheduled) || 0,
+          confirmed: Number(adherence30.rows[0]?.confirmed) || 0,
           rate: (() => {
-            const s = Number(adherence30.rows[0].scheduled) || 0; const c = Number(adherence30.rows[0].confirmed) || 0; return s > 0 ? +(c / s).toFixed(2) : 0;
+            const s = Number(adherence30.rows[0]?.scheduled) || 0; const c = Number(adherence30.rows[0]?.confirmed) || 0; return s > 0 ? +(c / s).toFixed(2) : 0;
           })(),
         },
       },
@@ -198,9 +198,9 @@ router.get('/medic/:userId', authenticate, authorize('admin'), async (req: Reque
       query(`SELECT COUNT(*)::int AS plans FROM treatment_plans WHERE doctor_id = $1 AND is_deleted = false`, [userId]),
       query(`SELECT COUNT(*)::int AS messages FROM messages WHERE sender_id = $1`, [userId]),
       query(`SELECT 
-              SUM(CASE WHEN status_invitatie = 'accepted' THEN 1 ELSE 0 END)::int AS accepted,
-              SUM(CASE WHEN status_invitatie = 'rejected' THEN 1 ELSE 0 END)::int AS rejected,
-              SUM(CASE WHEN status_invitatie = 'pending' THEN 1 ELSE 0 END)::int AS pending
+              COALESCE(SUM(CASE WHEN status_invitatie = 'accepted' THEN 1 ELSE 0 END), 0)::int AS accepted,
+              COALESCE(SUM(CASE WHEN status_invitatie = 'rejected' THEN 1 ELSE 0 END), 0)::int AS rejected,
+              COALESCE(SUM(CASE WHEN status_invitatie = 'pending' THEN 1 ELSE 0 END), 0)::int AS pending
             FROM doctor_patient WHERE doctor_id = $1`, [userId]),
     ]);
 
@@ -208,7 +208,7 @@ router.get('/medic/:userId', authenticate, authorize('admin'), async (req: Reque
       return res.status(404).json({ error: 'Medic not found or not a medic' });
     }
 
-    const inv = inviteAcceptance.rows[0];
+    const inv = inviteAcceptance.rows[0] || { accepted: 0, rejected: 0, pending: 0 };
     const totalResp = (inv.accepted + inv.rejected) || 0;
     const acceptanceRate = totalResp > 0 ? +(inv.accepted / totalResp).toFixed(2) : 0;
 
@@ -218,9 +218,9 @@ router.get('/medic/:userId', authenticate, authorize('admin'), async (req: Reque
 
     res.json({
       medic: medic.rows[0],
-      patients: patientsCount.rows[0].patients,
-      plans: plansCount.rows[0].plans,
-      messages: messagesCount.rows[0].messages,
+      patients: patientsCount.rows[0]?.patients ?? 0,
+      plans: plansCount.rows[0]?.plans ?? 0,
+      messages: messagesCount.rows[0]?.messages ?? 0,
       invites: { ...inv, acceptanceRate },
     });
   } catch (error) {
