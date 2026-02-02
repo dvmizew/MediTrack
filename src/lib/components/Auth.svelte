@@ -9,6 +9,7 @@
 	import { themeStore } from '$lib/stores/theme';
 	import { goto } from '$app/navigation';
 	import { Sun, Moon, FileText } from '@lucide/svelte';
+	import AccessibilityMenu from '$lib/components/AccessibilityMenu.svelte';
 	import { authRegisterSchema, authLoginSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
 
 	let email = $state('');
@@ -111,20 +112,23 @@
 	<!-- Skip to main content link for keyboard users -->
 	<a href="#auth-form" class="skip-link">Sari la formular</a>
 
-	<!-- Theme Toggle Button (Top Right) -->
-	<button
-		onclick={themeStore.toggle}
-		class="absolute top-4 right-4 p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800 hover:shadow-lg hover:scale-110 transition-all duration-300 ease-in-out group"
-		aria-label={$themeStore === 'dark' ? 'Comută la modul luminos' : 'Comută la modul întunecat'}
-		aria-pressed={$themeStore === 'dark'}
-		type="button"
-	>
-		{#if $themeStore === 'dark'}
-			<Sun class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
-		{:else}
-			<Moon class="w-5 h-5 transition-transform duration-500" />
-		{/if}
-	</button>
+	<!-- Top Right Controls -->
+	<div class="absolute top-4 right-4 flex items-center gap-2">
+		<AccessibilityMenu />
+		<button
+			onclick={themeStore.toggle}
+			class="p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800 hover:shadow-lg hover:scale-110 transition-all duration-300 ease-in-out group"
+			aria-label={$themeStore === 'dark' ? 'Comută la modul luminos' : 'Comută la modul întunecat'}
+			aria-pressed={$themeStore === 'dark'}
+			type="button"
+		>
+			{#if $themeStore === 'dark'}
+				<Sun class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+			{:else}
+				<Moon class="w-5 h-5 transition-transform duration-500" />
+			{/if}
+		</button>
+	</div>
 
 	<div class="max-w-md w-full animate-slide-up">
 		<!-- Logo & Title -->
