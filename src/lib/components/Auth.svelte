@@ -147,7 +147,7 @@
 		</div>
 
 		<!-- Card -->
-		<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 p-6 md:p-8 hover:shadow-2xl transition-shadow duration-300" role="main">
+		<div class="bg-white/98 dark:bg-slate-800/98 backdrop-blur-md rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 p-6 md:p-8 hover:shadow-2xl transition-shadow duration-300" role="main">
 			{#if error}
 			<div 
 				class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm animate-shake"
@@ -164,7 +164,7 @@
 					<label for="mfaCode" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Cod autentificator (6 cifre) sau backup (8 caractere)</label>
 					<input id="mfaCode" name="mfaCode" type="text" bind:value={mfaCode} maxlength={8} placeholder="000000 sau XXXXXXXX" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" autocomplete="off"/>
 					<div class="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-slate-300">
-						<input id="rememberDevice" type="checkbox" bind:checked={rememberDevice} class="w-4 h-4 text-blue-600 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 rounded"/>
+						<input id="rememberDevice" type="checkbox" bind:checked={rememberDevice} class="w-4 h-4 text-blue-600 bg-white/95 dark:bg-slate-700/95 backdrop-blur-sm border-slate-300 dark:border-slate-600 rounded"/>
 						<label for="rememberDevice" class="select-none">Ține-mă minte pe acest dispozitiv (nu cere 2FA timp de 30 zile)</label>
 					</div>
 				</div>
@@ -265,7 +265,7 @@
 					<div class="w-full border-t border-gray-200 dark:border-slate-700"></div>
 				</div>
 				<div class="relative flex justify-center text-sm">
-					<span class="px-3 bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400">sau</span>
+					<span class="px-3 bg-white/98 dark:bg-slate-800/98 backdrop-blur-md text-gray-500 dark:text-slate-400">sau</span>
 				</div>
 			</div>
 
@@ -273,7 +273,7 @@
 				type="button"
 				onclick={handleGoogleLogin}
 				aria-label="Continuă cu Google"
-				class="mt-4 w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-700 border-2 border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-200 py-3 px-4 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-600 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-lg hover:scale-[1.02] focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 font-medium transition-all duration-200 touch-manipulation active:scale-95"
+				class="mt-4 w-full flex items-center justify-center gap-3 bg-white/95 dark:bg-slate-700/95 backdrop-blur-sm border-2 border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-200 py-3 px-4 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-600 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-lg hover:scale-[1.02] focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 font-medium transition-all duration-200 touch-manipulation active:scale-95"
 			>
 				<svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
 					<path

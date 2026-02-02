@@ -105,7 +105,7 @@
 					<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
 				</div>
 			{:else if collaborations.length === 0}
-				<div class="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 dark:shadow-lg p-8 sm:p-12 md:p-16 text-center animate-scale-in">
+				<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 dark:shadow-lg p-8 sm:p-12 md:p-16 text-center animate-scale-in">
 					<div class="max-w-sm mx-auto">
 						<MessageCircle
 							class="mx-auto h-16 w-16 sm:h-20 sm:w-20 text-slate-300 dark:text-slate-600 mb-3 sm:mb-4"
@@ -127,7 +127,7 @@
 					{#each collaborations as collab}
 						<button
 							onclick={() => openChat(collab.user_id)}
-								class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/50 dark:shadow-lg p-4 sm:p-5 md:p-6 hover:shadow-md dark:hover:shadow-xl hover:shadow-blue-500/10 active:border-blue-300 dark:active:border-blue-500 sm:hover:border-blue-300 sm:dark:hover:border-blue-500 sm:hover:-translate-y-1 transition-all duration-300 text-left group animate-scale-in touch-manipulation {selectedUserId === collab.user_id ? 'scale-95 opacity-50' : ''}"
+								class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/50 dark:shadow-lg p-4 sm:p-5 md:p-6 hover:shadow-md dark:hover:shadow-xl hover:shadow-blue-500/10 active:border-blue-300 dark:active:border-blue-500 sm:hover:border-blue-300 sm:dark:hover:border-blue-500 sm:hover:-translate-y-1 transition-all duration-300 text-left group animate-scale-in touch-manipulation {selectedUserId === collab.user_id ? 'scale-95 opacity-50' : ''}"
 						>
 							<div class="flex items-center justify-between gap-2 sm:gap-4">
 								<div class="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">

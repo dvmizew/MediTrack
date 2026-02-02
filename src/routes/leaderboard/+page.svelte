@@ -139,7 +139,7 @@
 				class={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform ${
 					timeFilter === 'all'
 						? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xl scale-105 ring-4 ring-blue-200 dark:ring-blue-900'
-						: 'bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
+						: 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm text-gray-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
 				}`}
 			>
 				<span class="inline-flex items-center gap-2">
@@ -152,7 +152,7 @@
 				class={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform ${
 					timeFilter === 'week'
 						? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xl scale-105 ring-4 ring-blue-200 dark:ring-blue-900'
-						: 'bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
+						: 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm text-gray-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
 				}`}
 			>
 				<span class="inline-flex items-center gap-2">
@@ -165,7 +165,7 @@
 				class={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform ${
 					timeFilter === 'month'
 						? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xl scale-105 ring-4 ring-blue-200 dark:ring-blue-900'
-						: 'bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
+						: 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm text-gray-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
 				}`}
 			>
 				<span class="inline-flex items-center gap-2">
@@ -180,7 +180,7 @@
 			<button
 				onclick={() => loadLeaderboard()}
 				disabled={refreshing}
-				class="px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 hover:border-green-300 disabled:opacity-50"
+				class="px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm text-gray-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 hover:border-green-300 disabled:opacity-50"
 			>
 				{#if refreshing}
 					<RefreshCw class="w-4 h-4 animate-spin" />
@@ -263,7 +263,7 @@
 										: 'bg-gradient-to-r from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-950 dark:via-amber-950 dark:to-yellow-950 ring-4 ring-orange-300 dark:ring-orange-700/50'
 								: isCurrentUser
 									? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 ring-2 ring-blue-400 dark:ring-blue-600/50'
-									: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 dark:shadow-lg hover:shadow-xl'
+									: 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 dark:shadow-lg hover:shadow-xl'
 		} rounded-2xl shadow-lg p-6`}
 					>
 						<div class="flex items-center justify-between gap-4">
@@ -401,7 +401,7 @@
 
 		<!-- Info Section -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-		<div class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm dark:shadow-lg">
+		<div class="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm dark:shadow-lg">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center text-3xl shadow-lg">
 						<Star class="w-7 h-7 text-white" />
@@ -413,7 +413,7 @@
 				</p>
 			</div>
 
-		<div class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm dark:shadow-lg">
+		<div class="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm dark:shadow-lg">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center text-3xl shadow-lg">
 						<Flame class="w-7 h-7 text-white" />
@@ -425,7 +425,7 @@
 				</p>
 			</div>
 
-		<div class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm dark:shadow-lg">
+		<div class="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm dark:shadow-lg">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center text-3xl shadow-lg">
 						<Trophy class="w-7 h-7 text-white" />

@@ -230,7 +230,7 @@
 	}
 </script>
 
-<header class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-sm">
+<header class="bg-white/98 dark:bg-slate-800/98 backdrop-blur-md border-b border-gray-200 dark:border-slate-700 shadow-sm">
 	<nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Navigare principală">
 		<div class="flex justify-between items-center h-16">
 			<!-- Logo -->
@@ -349,7 +349,7 @@
 
 						<div 
 							transition:fly={{ y: -10, duration: 300, easing: quintOut }}
-							class="fixed md:absolute bottom-0 md:bottom-auto left-0 md:left-auto right-0 md:right-0 top-16 md:top-auto md:mt-2 w-full md:w-96 h-[calc(100vh-4rem)] md:h-auto max-h-screen md:max-h-[32rem] md:rounded-xl rounded-t-2xl shadow-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden z-50 flex flex-col md:block"
+													class="fixed md:absolute bottom-0 md:bottom-auto left-0 md:left-auto right-0 md:right-0 top-16 md:top-auto md:mt-2 w-full md:w-96 h-[calc(100vh-4rem)] md:h-auto max-h-screen md:max-h-[32rem] md:rounded-xl rounded-t-2xl shadow-2xl border border-gray-200 dark:border-slate-700 bg-white/98 dark:bg-slate-800/98 backdrop-blur-md overflow-hidden z-50 flex flex-col md:block"
 						>
 							<!-- Header with actions -->
 							<div class="p-3 sm:p-4 border-b border-gray-200 dark:border-slate-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 flex-shrink-0">
@@ -485,7 +485,7 @@
 										<!-- Delete button (appears on hover) -->
 										<button
 											onclick={(event) => deleteNotification(notification.id, event)}
-											class="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 p-1 sm:p-1.5 opacity-0 group-hover:opacity-100 bg-white dark:bg-slate-800 rounded-lg shadow-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+											class="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 p-1 sm:p-1.5 opacity-0 group-hover:opacity-100 bg-white/98 dark:bg-slate-800/98 backdrop-blur-md rounded-lg shadow-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
 											title="Șterge notificarea"
 										>
 										<Trash2 class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-600 dark:text-red-400" />
@@ -522,7 +522,7 @@
 					</button>						{#if showUserMenu}
 					<div 
 						transition:fly={{ y: -10, duration: 300, easing: quintOut }}
-						class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 dropdown-container"
+						class="absolute right-0 mt-2 w-56 bg-white/98 dark:bg-slate-800/98 backdrop-blur-md rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 dropdown-container"
 					>
 						<div class="p-4 border-b border-gray-200 dark:border-slate-700">
 							<p class="font-medium text-gray-900 dark:text-slate-100">{$authStore.user?.fullName || 'User'}</p>

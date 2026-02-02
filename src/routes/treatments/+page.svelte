@@ -221,7 +221,7 @@
 		<!-- Detailed Breakdown -->
 		<div class="grid gap-4 sm:gap-6 md:grid-cols-2">
 			<!-- Status Breakdown -->
-				<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
+				<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
 					<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
 						<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 							<BarChart3 class="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-slate-200" />
@@ -289,7 +289,7 @@
 					</div>
 
 					<!-- Quick Actions -->
-				<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
+				<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
 					<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
 						<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 							<Zap class="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-slate-200" />
@@ -456,7 +456,7 @@
 						id="patient"
 						bind:value={formData.patientId}
 						required
-						class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 truncate"
+						class="w-full px-4 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 truncate"
 					>
 						<option value="">Selectează pacient</option>
 						{#each collaborations as collab}
@@ -479,7 +479,7 @@
 						bind:value={formData.diagnostic}
 						required
 						placeholder="ex: Hipertensiune arterială"
-						class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
+						class="w-full px-4 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
 					/>
 				</div>
 
@@ -492,7 +492,7 @@
 						bind:value={formData.descriere}
 						rows="3"
 						placeholder="Descrierea completă a tratamentului..."
-						class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 resize-none"
+						class="w-full px-4 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 resize-none"
 					></textarea>
 				</div>
 			{/if}

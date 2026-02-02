@@ -30,7 +30,7 @@
 {#if showBanner}
 	<!-- Cookie Consent Banner - GDPR Compliant -->
 	<div 
-		class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t-4 border-blue-600 dark:border-blue-500 shadow-2xl z-[9999] animate-slide-up"
+		class="fixed bottom-0 left-0 right-0 bg-white/98 dark:bg-slate-800/98 backdrop-blur-md border-t-4 border-blue-600 dark:border-blue-500 shadow-2xl z-[9999] animate-slide-up"
 		role="dialog"
 		aria-labelledby="cookie-consent-title"
 		aria-describedby="cookie-consent-description"

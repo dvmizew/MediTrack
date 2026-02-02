@@ -104,7 +104,7 @@
 	>
 		<div
 			transition:scale={{ duration: 200, start: 0.95 }}
-			class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 p-4 sm:p-6 {sizeClasses[size]} w-11/12 pointer-events-auto max-h-[90vh] flex flex-col overflow-hidden"
+			class="bg-white/98 dark:bg-slate-800/98 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 p-4 sm:p-6 {sizeClasses[size]} w-11/12 pointer-events-auto max-h-[90vh] flex flex-col overflow-hidden"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 			role="dialog"

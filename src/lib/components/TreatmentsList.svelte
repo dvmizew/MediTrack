@@ -5,7 +5,7 @@
 	export let onView: (planId: number) => void;
 </script>
 
-<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
+<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
 	<div class="p-4 md:p-6 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
 		<h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><FileText class="w-5 h-5" /> Tratamente Recente</h3>
 		<slot name="actions"></slot>

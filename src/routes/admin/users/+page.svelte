@@ -395,7 +395,7 @@
 						type="text"
 						bind:value={searchQuery}
 						placeholder="Nume sau email..."
-						class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 transition"
+						class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 transition"
 					/>
 				</div>
 				<div>
@@ -405,7 +405,7 @@
 					<select
 						id="roleFilter"
 						bind:value={roleFilter}
-						class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 transition"
+						class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 transition"
 					>
 						<option value="all">Toți utilizatorii</option>
 						<option value="admin">Administratori</option>

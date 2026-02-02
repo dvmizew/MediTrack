@@ -46,7 +46,7 @@
 			class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
 		>
 			<div
-				class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 p-4 sm:p-6 max-w-sm w-11/12 pointer-events-auto"
+				class="bg-white/98 dark:bg-slate-800/98 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 p-4 sm:p-6 max-w-sm w-11/12 pointer-events-auto"
 				onclick={(e) => e.stopPropagation()}
 				onkeydown={(e) => e.stopPropagation()}
 				role="dialog"

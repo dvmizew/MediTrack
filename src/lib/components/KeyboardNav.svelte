@@ -118,7 +118,7 @@
 
 	<div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
 		<p class="text-xs text-blue-800 dark:text-blue-200">
-			<strong>Sfat:</strong> Apasă <kbd class="px-1.5 py-0.5 bg-white dark:bg-slate-800 rounded text-xs font-mono">ESC</kbd> pentru a închide modalele.
+			<strong>Sfat:</strong> Apasă <kbd class="px-1.5 py-0.5 bg-white/98 dark:bg-slate-800/98 backdrop-blur-md rounded text-xs font-mono">ESC</kbd> pentru a închide modalele.
 		</p>
 	</div>
 </Modal>

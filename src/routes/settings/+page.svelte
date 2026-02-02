@@ -388,7 +388,7 @@
 
 		<div class="flex flex-col md:flex-row gap-6">
 			<div class="md:w-64 flex-shrink-0">
-				<nav class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-2 space-y-1">
+				<nav class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-2 space-y-1">
 					{#each tabs as tab}
 						{#if tab.show !== false}
 							<button
@@ -413,7 +413,7 @@
 
 			<div class="flex-1 min-w-0">
 				{#if activeTab === 'general'}
-					<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Informații generale</h2>
 						<form onsubmit={(e) => { e.preventDefault(); handleSaveProfile(); }} class="space-y-6">
 							<div>
@@ -424,7 +424,7 @@
 									type="text"
 									id="fullName"
 									bind:value={fullName}
-									class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
+									class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
 									placeholder="Numele tău complet"
 									required
 								/>
@@ -438,7 +438,7 @@
 									type="email"
 									id="email"
 									bind:value={email}
-									class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
+									class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
 									placeholder="email@example.com"
 									required
 								/>
@@ -452,7 +452,7 @@
 									type="url"
 									id="avatarUrl"
 									bind:value={avatarUrl}
-									class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
+									class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
 									placeholder="https://example.com/avatar.jpg"
 								/>
 								{#if avatarUrl}
@@ -483,7 +483,7 @@
 				{/if}
 
 				{#if activeTab === 'security'}
-					<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Securitate</h2>
 						<form onsubmit={(e) => { e.preventDefault(); handleChangePassword(); }} class="space-y-6">
 							<div>
@@ -494,7 +494,7 @@
 									type={showPasswords ? 'text' : 'password'}
 									id="currentPassword"
 									bind:value={currentPassword}
-									class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
+									class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
 									placeholder="••••••••"
 									required
 								/>
@@ -508,7 +508,7 @@
 									type={showPasswords ? 'text' : 'password'}
 									id="newPassword"
 									bind:value={newPassword}
-									class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
+									class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
 									placeholder="••••••••"
 									required
 								/>
@@ -522,7 +522,7 @@
 									type={showPasswords ? 'text' : 'password'}
 									id="confirmPassword"
 									bind:value={confirmPassword}
-									class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
+									class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
 									placeholder="••••••••"
 									required
 								/>
@@ -533,7 +533,7 @@
 									type="checkbox"
 									id="showPasswords"
 									bind:checked={showPasswords}
-									class="w-4 h-4 text-blue-600 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 rounded focus:ring-blue-500"
+									class="w-4 h-4 text-blue-600 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-slate-300 dark:border-slate-600 rounded focus:ring-blue-500"
 								/>
 								<label for="showPasswords" class="ml-2 text-sm text-gray-700 dark:text-slate-300">
 									Arată parolele
@@ -558,7 +558,7 @@
 						</form>
 					</div>
 
-					<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6 mt-6">
+					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6 mt-6">
 						<div class="flex items-center gap-3 mb-6">
 							<div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
 								<Lock class="w-6 h-6 text-white" />
@@ -671,7 +671,7 @@
 											<div class="flex-1">
 												<p class="font-medium text-amber-900 dark:text-amber-100 mb-1">Coduri de backup</p>
 												<p class="text-sm text-amber-700 dark:text-amber-300 mb-3">Salvează aceste coduri într-un loc sigur. Poți folosi fiecare o singură dată dacă pierzi accesul la aplicația de autentificare.</p>
-												<div class="bg-white dark:bg-slate-900 p-4 rounded-lg border border-amber-300 dark:border-amber-700 font-mono text-sm space-y-1.5">
+												<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-4 rounded-lg border border-amber-300 dark:border-amber-700 font-mono text-sm space-y-1.5">
 													{#each mfaBackupCodes as code}
 														<div class="text-gray-900 dark:text-slate-100 py-1">{code}</div>
 													{/each}
@@ -726,7 +726,7 @@
 				{/if}
 
 				{#if activeTab === 'notifications'}
-					<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Setări notificări</h2>
 
 						<!-- Push Notifications Section -->
@@ -835,7 +835,7 @@
 
 				{#if activeTab === 'stats' && $isPacient}
 					<div class="space-y-6">
-						<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+						<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 							<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Statistici și realizări</h2>
 							
 							<div class="flex flex-col items-center mb-8">
@@ -866,7 +866,7 @@
 							</div>
 						</div>
 
-						<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+						<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 							<h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Progresie badge-uri</h3>
 							<div class="space-y-4">
 								{#each BADGES as badge}

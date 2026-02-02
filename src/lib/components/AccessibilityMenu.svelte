@@ -24,7 +24,7 @@
 
 	<!-- Dropdown Menu -->
 	{#if isOpen}
-		<div class="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg z-50">
+		<div class="absolute right-0 mt-2 w-72 bg-white/98 dark:bg-slate-800/98 backdrop-blur-md border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg z-50">
 			<!-- Header -->
 			<div class="px-4 py-3 border-b border-gray-200 dark:border-slate-700 flex items-center gap-2">
 				<Accessibility class="w-4 h-4" />

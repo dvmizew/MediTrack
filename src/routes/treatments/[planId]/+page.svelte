@@ -360,7 +360,7 @@
 			</div>
 		{:else if treatment}
 			<!-- Treatment Header -->
-			<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 sm:p-6 mb-6">
+			<div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 sm:p-6 mb-6">
 				<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
 					<div class="flex-1 min-w-0">
 						<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-2 break-words">{treatment.diagnosis}</h1>
@@ -423,7 +423,7 @@
 			</div>
 
 			<!-- Medications Section -->
-			<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 sm:p-6">
+			<div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 sm:p-6">
 				<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
 					<h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 						<Pill class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
@@ -538,7 +538,7 @@
 				type="text"
 				bind:value={treatmentForm.diagnostic}
 				required
-				class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
+				class="w-full px-4 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
 			/>
 		</div>
 		<div>
@@ -549,7 +549,7 @@
 				id="edit-descriere"
 				bind:value={treatmentForm.descriere}
 				rows="4"
-				class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 resize-none"
+				class="w-full px-4 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 resize-none"
 			></textarea>
 		</div>
 	</div>

@@ -160,7 +160,7 @@
 
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 			<!-- Account Information -->
-			<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+			<div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
 						<Info class="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -187,7 +187,7 @@
 
 			{#if user.role === 'pacient'}
 				<!-- Patient Stats Card -->
-				<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+				<div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
 							<Star class="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -213,7 +213,7 @@
 				</div>
 
 				<!-- Badge Display -->
-				<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+				<div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-gradient-to-br {getBadgeColor(stats.currentBadge)} rounded-lg flex items-center justify-center">
 							<Star class="w-6 h-6 text-white" />
@@ -230,7 +230,7 @@
 				</div>
 			{:else}
 				<!-- For Medics/Admins - Professional Info -->
-				<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:col-span-2">
+				<div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:col-span-2">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
 							<CheckCircle2 class="w-6 h-6 text-green-600 dark:text-green-400" />

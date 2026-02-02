@@ -185,7 +185,7 @@
 				<!-- Detailed Breakdown -->
 				<div class="grid gap-4 sm:gap-6 md:grid-cols-2">
 					<!-- Status Breakdown -->
-					<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
+					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
 						<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
 							<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 								<BarChart3 class="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-slate-200" />
@@ -243,7 +243,7 @@
 					</div>
 
 					<!-- Quick Actions -->
-				<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
+				<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
 					<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
 						<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 							<Zap class="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-slate-200" />
@@ -300,7 +300,7 @@
 		{:else}
 			<!-- Send Invite Form (Pacient only) -->
 			{#if $isPacient}
-				<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm dark:shadow-lg border border-slate-200 dark:border-slate-700/50 p-6 mb-6 hover:shadow-lg transition-shadow duration-300 animate-scale-in">
+				<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-xl shadow-sm dark:shadow-lg border border-slate-200 dark:border-slate-700/50 p-6 mb-6 hover:shadow-lg transition-shadow duration-300 animate-scale-in">
 					<h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2">
 						<Plus class="w-6 h-6 text-blue-600 dark:text-blue-400" />
 						Invită un Medic
@@ -336,7 +336,7 @@
 
 			<!-- Pending Invites -->
 			{#if pendingInvites.length > 0}
-			<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm dark:shadow-lg border border-slate-200 dark:border-slate-700/50 overflow-hidden mb-6 animate-scale-in">
+			<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-xl shadow-sm dark:shadow-lg border border-slate-200 dark:border-slate-700/50 overflow-hidden mb-6 animate-scale-in">
 				<div class="p-6 border-b border-gray-100 dark:border-slate-700 bg-gradient-to-r from-yellow-50 to-white dark:from-slate-800/50 dark:to-slate-900">
 					<h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 						<Clock class="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
@@ -407,7 +407,7 @@
 			{/if}
 
 			<!-- Active Collaborations -->
-		<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm dark:shadow-lg border border-slate-200 dark:border-slate-700/50 overflow-hidden animate-scale-in">
+		<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-xl shadow-sm dark:shadow-lg border border-slate-200 dark:border-slate-700/50 overflow-hidden animate-scale-in">
 			<div class="p-6 border-b border-gray-100 dark:border-slate-700 bg-gradient-to-r from-green-50 to-white dark:from-slate-800/50 dark:to-slate-900">
 				<h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 					<CheckCircle2 class="w-6 h-6 text-green-600 dark:text-green-400" />

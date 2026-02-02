@@ -768,7 +768,7 @@
 				<!-- KPI Cards Grid -->
 				<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
 					{#each adminCards as card}
-						<article class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 border-l-4 {card.accent === 'text-blue-600 dark:text-blue-400' ? 'border-l-blue-500' : card.accent === 'text-green-600 dark:text-green-400' ? 'border-l-green-500' : card.accent === 'text-purple-600 dark:text-purple-400' ? 'border-l-purple-500' : 'border-l-orange-500'} rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl transition-all">
+						<article class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 border-l-4 {card.accent === 'text-blue-600 dark:text-blue-400' ? 'border-l-blue-500' : card.accent === 'text-green-600 dark:text-green-400' ? 'border-l-green-500' : card.accent === 'text-purple-600 dark:text-purple-400' ? 'border-l-purple-500' : 'border-l-orange-500'} rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl transition-all">
 							<div class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2 truncate">{card.title}</div>
 							<div class="text-xl sm:text-2xl md:text-3xl font-bold {card.accent} mb-1">{card.value}</div>
 							<p class="text-xs text-gray-600 dark:text-slate-400 line-clamp-2">{card.sub}</p>
@@ -781,7 +781,7 @@
 					<!-- Users Management Card -->
 					<a
 						href="/admin/users"
-						class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 border-l-4 border-l-blue-500 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+						class="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 border-l-4 border-l-blue-500 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
 						aria-label="Gestionează Utilizatori: Vizualizează, editează și monitorizează"
 					>
 						<div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">
@@ -795,7 +795,7 @@
 					<!-- Reports Card -->
 					<a
 						href="/admin/reports"
-						class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 border-l-4 border-l-emerald-500 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+						class="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 border-l-4 border-l-emerald-500 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
 						aria-label="Rapoarte: Overview și rapoarte detaliate"
 					>
 						<div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">
@@ -812,7 +812,7 @@
 					<!-- Left Column -->
 					<div class="space-y-6">
 						<!-- Users by Role -->
-						<section class="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<section class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
 							<div class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
 								<div>
 									<h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2"><User class="w-5 h-5" /> Utilizatori după Rol</h2>
@@ -869,7 +869,7 @@
 						</section>
 
 						<!-- Collaborations -->
-						<div class="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<div class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
 								<div>
 									<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Users class="w-5 h-5" /> Status Colaborări</h2>
@@ -938,7 +938,7 @@
 							</div>
 						</div>
 						<!-- 7-Day Adherence Chart -->
-						<div class="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<div class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700">
 								<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Calendar class="w-5 h-5" /> Conformitate - 7 zile</h2>
 							</div>
@@ -965,7 +965,7 @@
 					<!-- Right Column -->
 					<div class="space-y-6">
 						<!-- Treatments -->
-						<div class="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<div class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
 								<div>
 									<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Pill class="w-5 h-5" /> Tratamente</h2>
@@ -1000,7 +1000,7 @@
 						</div>
 
 						<!-- 30-Day Adherence Chart -->
-						<div class="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<div class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700">
 								<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><TrendingUp class="w-5 h-5" /> Conformitate - 30 zile</h2>
 							</div>
