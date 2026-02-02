@@ -7,7 +7,7 @@
 	import { socketClient } from '$lib/api/socket';
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
-	import { ArrowLeft, MoreVertical, Plus, FileText, Bell, BarChart3, MessageCircle, AlertCircle, Loader, Send, Calendar, Phone, Stethoscope, User } from '@lucide/svelte';
+	import { ArrowLeft, MoreVertical, Plus, FileText, Bell, BarChart3, MessageCircle, AlertCircle, Loader, Send, Calendar, Phone, Stethoscope, User, Mail } from '@lucide/svelte';
 
 	let otherUserId = $state(0);
 	let otherUser = $state<any>(null);
@@ -60,6 +60,7 @@
 		// Listen for new messages
 		if (typeof window !== 'undefined') {
 			window.addEventListener('new-message', handleNewMessage as EventListener);
+			window.addEventListener('message-sent', handleMessageSent as EventListener);
 			window.addEventListener('user-typing', handleUserTyping as EventListener);
 			window.addEventListener('user-stop-typing', handleUserStopTyping as EventListener);
 			window.addEventListener('user-status-change', handleUserStatusChange as EventListener);
@@ -75,6 +76,7 @@
 	onDestroy(() => {
 		if (typeof window !== 'undefined') {
 			window.removeEventListener('new-message', handleNewMessage as EventListener);
+			window.removeEventListener('message-sent', handleMessageSent as EventListener);
 			window.removeEventListener('user-typing', handleUserTyping as EventListener);
 			window.removeEventListener('user-stop-typing', handleUserStopTyping as EventListener);
 			window.removeEventListener('user-status-change', handleUserStatusChange as EventListener);
@@ -106,6 +108,15 @@
 				}
 			}
 		}
+	}
+
+	function handleMessageSent(event: CustomEvent) {
+		const { tempId, message } = event.detail;
+		
+		// Replace temp message with real message from server
+		messages = messages.map(m => 
+			m.message_id === tempId ? message : m
+		);
 	}
 
 	function handleUserTyping(event: CustomEvent) {
@@ -271,8 +282,9 @@
 		newMessage = '';
 		sending = true;
 
+		const tempId = `temp-${Date.now()}`;
 		const tempMessage = {
-			message_id: `temp-${Date.now()}`,
+			message_id: tempId,
 			sender_id: $authStore.user?.id,
 			receiver_id: otherUserId,
 			continut: messageText,
@@ -283,31 +295,22 @@
 		scrollToBottom();
 
 		try {
-			// Send via socket for real-time delivery
-			// Socket handler will save to DB and emit to receiver only
+			// Send via socket for real-time delivery with tempId for confirmation
 			socketClient.socket?.emit('send-message', {
 				receiverId: otherUserId,
-				continut: messageText
+				continut: messageText,
+				tempId: tempId
 			});
 
 			// Stop typing indicator
 			socketClient.socket?.emit('stop-typing', otherUserId);
-
-			// Wait a bit for confirmation, then remove pending status
-			setTimeout(() => {
-				messages = messages.map(m => 
-					m.message_id === tempMessage.message_id 
-						? { ...m, _pending: false }
-						: m
-				);
-			}, 500);
 
 			scrollToBottom();
 		} catch (err: any) {
 			console.error('Failed to send message:', err);
 			
 			// Remove temp message on error
-			messages = messages.filter(m => m.message_id !== tempMessage.message_id);
+			messages = messages.filter(m => m.message_id !== tempId);
 			
 			// Restore message on error
 			newMessage = messageText;
@@ -362,8 +365,20 @@
 		}
 	}
 
+	function getCurrentUserId(): number | undefined {
+		if ($authStore.user?.id) return $authStore.user.id;
+		
+		// Fallback: derive from messages
+		const myMessage = messages.find(m => m.sender_id !== otherUserId && m.receiver_id === otherUserId);
+		if (myMessage) return myMessage.sender_id;
+		
+		const receivedMessage = messages.find(m => m.receiver_id !== otherUserId && m.sender_id === otherUserId);
+		return receivedMessage?.receiver_id;
+	}
+
 	function isMyMessage(message: any) {
-		return message.sender_id === $authStore.user?.id;
+		const myUserId = getCurrentUserId();
+		return message.sender_id === myUserId;
 	}
 
 	function viewTreatments() {
@@ -631,9 +646,9 @@
 							class="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed hover:shadow-xl hover:shadow-blue-500/50 active:scale-95 transition-all duration-200 flex items-center justify-center font-medium shadow-md touch-manipulation"
 						>
 							{#if sending}
-								<Loader class="animate-spin h-4 w-4" />
+								<Loader class="animate-spin h-4 w-4 sm:w-5 sm:h-5" />
 							{:else}
-								<Send class="w-4 h-4 sm:w-5 sm:h-5" />
+								<Send class="w-5 h-5" />
 							{/if}
 						</button>
 					</form>
