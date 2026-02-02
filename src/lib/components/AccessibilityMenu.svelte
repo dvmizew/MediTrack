@@ -44,10 +44,18 @@
 					void root.offsetHeight;
 					root.classList.add('reduce-motion');
 				}
+
+				// Reading mode - remove first
+				root.classList.remove('reading-mode');
+				if (settings.readingMode) {
+					void root.offsetHeight;
+					root.classList.add('reading-mode');
+				}
 				
 				// Store in data attribute for CSS selectors
 				root.setAttribute('data-accessibility-text-size', settings.textSize);
 				root.setAttribute('data-accessibility-high-contrast', String(settings.highContrast));
+					root.setAttribute('data-accessibility-reading-mode', String(settings.readingMode));
 				root.setAttribute('data-accessibility-reduce-motion', String(settings.reduceMotion));
 			}
 		});
@@ -81,6 +89,7 @@
 		<div 
 			transition:fly={{ y: -10, duration: 300, easing: quintOut }}
 			class="absolute right-0 mt-2 w-72 bg-white/98 dark:bg-slate-800/98 backdrop-blur-md border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg z-50 overflow-hidden"
+			data-arrow-nav="true"
 		>
 			<!-- Header -->
 			<div class="px-4 py-3 border-b border-gray-200 dark:border-slate-700 flex items-center gap-2">
@@ -140,6 +149,21 @@
 						<span class="text-sm font-medium text-gray-700 dark:text-slate-300">Reducere Mișcare</span>
 					</label>
 					<p class="text-xs text-gray-500 dark:text-slate-400 px-2 mt-1">Dezactivează animații și tranzițiile</p>
+				</div>
+
+				<!-- Reading Mode Toggle -->
+				<div>
+					<label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition">
+						<input
+							type="checkbox"
+							checked={$accessibility.readingMode}
+							onchange={(e) => accessibility.setReadingMode(e.currentTarget.checked)}
+							class="w-5 h-5 rounded border-gray-300 accent-blue-600"
+							aria-label="Mod citire"
+						/>
+						<span class="text-sm font-medium text-gray-700 dark:text-slate-300">Mod Citire</span>
+					</label>
+					<p class="text-xs text-gray-500 dark:text-slate-400 px-2 mt-1">Text mai aerisit și lățime optimă</p>
 				</div>
 
 				<!-- Reset Button -->

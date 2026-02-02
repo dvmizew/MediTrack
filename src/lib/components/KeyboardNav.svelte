@@ -29,6 +29,28 @@
 			return;
 		}
 
+		// Arrow key navigation inside menus/lists
+		if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+			const target = e.target as HTMLElement | null;
+			const container = target?.closest('[data-arrow-nav], [role="menu"], [role="listbox"]') as HTMLElement | null;
+			if (container) {
+				const focusables = Array.from(
+					container.querySelectorAll<HTMLElement>(
+						'a[href], button:not([disabled]), [role="menuitem"], [tabindex]:not([tabindex="-1"])'
+					)
+				);
+				const enabled = focusables.filter((el) => !el.hasAttribute('disabled') && el.getAttribute('aria-disabled') !== 'true');
+				const currentIndex = enabled.indexOf(document.activeElement as HTMLElement);
+				if (enabled.length > 0 && currentIndex !== -1) {
+					const delta = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1;
+					const nextIndex = (currentIndex + delta + enabled.length) % enabled.length;
+					e.preventDefault();
+					enabled[nextIndex].focus();
+					return;
+				}
+			}
+		}
+
 		const key = e.key.toLowerCase();
 		const now = Date.now();
 

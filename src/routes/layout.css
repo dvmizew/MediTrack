@@ -148,6 +148,33 @@ body {
 	line-height: 1.6;
 }
 
+/* ============================================
+   ACCESSIBILITY - Reading Mode
+   ============================================ */
+.reading-mode body {
+	line-height: 1.8;
+	letter-spacing: 0.01em;
+}
+
+.reading-mode p,
+.reading-mode li {
+	line-height: 1.85;
+}
+
+.reading-mode main {
+	max-width: 72rem;
+	margin-left: auto;
+	margin-right: auto;
+	padding-left: 1rem;
+	padding-right: 1rem;
+}
+
+.reading-mode h1,
+.reading-mode h2,
+.reading-mode h3 {
+	letter-spacing: 0.01em;
+}
+
 /* Larger headings for better readability */
 h1 {
 	font-size: 2.5rem; /* increased from default */
@@ -201,6 +228,41 @@ button:disabled:hover, a:disabled:hover, [disabled]:hover {
 	transform: none !important;
 	box-shadow: none !important;
 	scale: 1 !important;
+}
+
+/* ============================================
+   ACCESSIBILITY - Forced Colors (Windows High Contrast)
+   ============================================ */
+@media (forced-colors: active) {
+	html,
+	body {
+		background: Canvas !important;
+		color: CanvasText !important;
+		forced-color-adjust: auto;
+	}
+
+	* {
+		background: transparent !important;
+		color: CanvasText !important;
+		border-color: CanvasText !important;
+		box-shadow: none !important;
+		text-shadow: none !important;
+		outline-color: CanvasText !important;
+	}
+
+	a {
+		color: LinkText !important;
+		text-decoration: underline;
+	}
+
+	button,
+	input,
+	select,
+	textarea {
+		background: Canvas !important;
+		color: CanvasText !important;
+		border: 1px solid CanvasText !important;
+	}
 }
 
 /* Enhanced minimum touch target size for elderly users (WCAG 2.1 AAA) */

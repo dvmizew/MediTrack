@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { scale, fade } from 'svelte/transition';
+	import { tick } from 'svelte';
 	import { Info, AlertCircle, XCircle, CheckCircle2, Loader, X } from '@lucide/svelte';
+	import { FocusManager, generateAriaId, isFocusable } from '$lib/utils/accessibility';
 
 	export interface Props {
 		isOpen: boolean;
@@ -38,6 +40,11 @@
 	}: Props = $props();
 
 	let isProcessing = $state(false);
+	let modalEl = $state<HTMLDivElement | null>(null);
+	let wasOpen = $state(false);
+	const focusManager = new FocusManager();
+	const titleId = generateAriaId('modal-title');
+	const contentId = generateAriaId('modal-content');
 
 	const sizeClasses = {
 		sm: 'max-w-sm',
@@ -73,6 +80,52 @@
 		}
 	}
 
+	function getFocusableElements(): HTMLElement[] {
+		if (!modalEl) return [];
+		const elements = Array.from(
+			modalEl.querySelectorAll<HTMLElement>(
+				'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+			)
+		);
+		return elements.filter((el) => isFocusable(el));
+	}
+
+	function handleDialogKeyDown(e: KeyboardEvent) {
+		if (e.key !== 'Tab') return;
+		const focusable = getFocusableElements();
+		if (focusable.length === 0) {
+			e.preventDefault();
+			return;
+		}
+		const first = focusable[0];
+		const last = focusable[focusable.length - 1];
+		const active = document.activeElement as HTMLElement | null;
+		if (e.shiftKey && active === first) {
+			e.preventDefault();
+			last.focus();
+			return;
+		}
+		if (!e.shiftKey && active === last) {
+			e.preventDefault();
+			first.focus();
+		}
+	}
+
+	$effect(() => {
+		if (isOpen && !wasOpen) {
+			wasOpen = true;
+			focusManager.saveFocus();
+			void tick().then(() => {
+				modalEl?.focus();
+			});
+		}
+
+		if (!isOpen && wasOpen) {
+			wasOpen = false;
+			focusManager.restoreFocus();
+		}
+	});
+
 	async function handleConfirm() {
 		if (onConfirm) {
 			isProcessing = true;
@@ -106,11 +159,13 @@
 			transition:scale={{ duration: 200, start: 0.95 }}
 			class="bg-white/98 dark:bg-slate-800/98 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 p-4 sm:p-6 {sizeClasses[size]} w-11/12 pointer-events-auto max-h-[90vh] flex flex-col overflow-hidden"
 			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
+			onkeydown={handleDialogKeyDown}
 			role="dialog"
 			aria-modal="true"
-			aria-labelledby={title ? 'modal-title' : undefined}
+			aria-labelledby={title ? titleId : undefined}
+			aria-describedby={content ? contentId : undefined}
 			tabindex="-1"
+			bind:this={modalEl}
 		>
 			<!-- Header with type indicator -->
 			{#if title || type !== 'info'}
@@ -122,7 +177,7 @@
 							</span>
 						{/if}
 						{#if title}
-							<h2 id="modal-title" class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100">
+							<h2 id={titleId} class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100">
 								{title}
 							</h2>
 						{/if}
@@ -140,7 +195,7 @@
 			{/if}
 
 			<!-- Content -->
-			<div class="mb-6 overflow-y-auto flex-1 pr-2">
+			<div class="mb-6 overflow-y-auto flex-1 pr-2" id={content ? contentId : undefined}>
 				{#if content}
 					<p class="text-sm sm:text-base text-gray-600 dark:text-slate-400">
 						{content}

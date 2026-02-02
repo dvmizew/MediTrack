@@ -169,7 +169,7 @@
 		</div>
 
 		{#if error}
-			<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 mb-6 flex items-start gap-3 animate-shake">
+			<div id="treatment-error" class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 mb-6 flex items-start gap-3 animate-shake" role="alert" aria-live="assertive">
 				<AlertCircle class="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
 				<p class="text-sm sm:text-base text-red-800 dark:text-red-400 font-medium">{error}</p>
 			</div>
@@ -457,6 +457,7 @@
 						bind:value={formData.patientId}
 						required
 						class="w-full px-4 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 truncate"
+							aria-describedby={error ? 'treatment-error' : undefined}
 					>
 						<option value="">Selectează pacient</option>
 						{#each collaborations as collab}
@@ -480,6 +481,7 @@
 						required
 						placeholder="ex: Hipertensiune arterială"
 						class="w-full px-4 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
+							aria-describedby={error ? 'treatment-error' : undefined}
 					/>
 				</div>
 
@@ -493,6 +495,7 @@
 						rows="3"
 						placeholder="Descrierea completă a tratamentului..."
 						class="w-full px-4 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 resize-none"
+							aria-describedby={error ? 'treatment-error' : undefined}
 					></textarea>
 				</div>
 			{/if}
