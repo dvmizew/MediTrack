@@ -5,6 +5,7 @@
 	import { authStore } from '$lib/stores/auth';
 	import { toast } from '$lib/utils/toast';
 	import { downloadBlobAsFile } from '$lib/utils/charts';
+	import Modal from '$lib/components/Modal.svelte';
 	import {
 		CheckCircle2,
 		ClipboardList,
@@ -16,7 +17,9 @@
 		Syringe,
 		Users,
 		XCircle,
-		Zap
+		Zap,
+		Shield,
+		Eye
 	} from '@lucide/svelte';
 
 	let isAdmin = $derived($authStore.user?.role === 'admin');
@@ -25,6 +28,8 @@
 	let error = $state<string | null>(null);
 	let creatingJob = $state(false);
 	let refreshInterval: ReturnType<typeof setInterval> | null = null;
+	let showAnonModal = $state(false);
+	let selectedAnonType = $state<'users' | 'treatments' | 'doses' | 'full_system' | null>(null);
 
 	onMount(async () => {
 		if (!isAdmin) {
@@ -57,11 +62,14 @@
 		}
 	}
 
-	async function createJob(reportType: 'users' | 'treatments' | 'doses' | 'full_system') {
+	async function createJob(reportType: 'users' | 'treatments' | 'doses' | 'full_system', isAnonymous: boolean = false) {
 		try {
 			creatingJob = true;
-			const result = await adminReportsApi.createReportJob(reportType);
-			toast.success(`Raport ${reportType} creat! Vei primi notificare când e gata.`);
+			const result = await adminReportsApi.createReportJob(reportType, isAnonymous);
+			const label = isAnonymous ? `${reportType} (anonimizat)` : reportType;
+			toast.success(`Raport ${label} creat! Vei primi notificare când e gata.`);
+			showAnonModal = false;
+			selectedAnonType = null;
 			await loadJobs();
 		} catch (e: any) {
 			toast.error(e?.message || 'Nu s-a putut crea job-ul');
@@ -129,6 +137,11 @@
 			timeStyle: 'short' 
 		});
 	}
+
+	function closeAnonModal() {
+		showAnonModal = false;
+		selectedAnonType = null;
+	}
 </script>
 
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
@@ -160,6 +173,7 @@
 				onclick={() => createJob('users')}
 				disabled={creatingJob}
 				class="p-4 border-2 border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition disabled:opacity-50"
+				aria-label="Creează raport utilizatori"
 			>
 				<Users class="w-8 h-8 mb-2 text-blue-600 dark:text-blue-300" />
 				<div class="font-semibold text-gray-900 dark:text-slate-100">Utilizatori</div>
@@ -170,6 +184,7 @@
 				onclick={() => createJob('treatments')}
 				disabled={creatingJob}
 				class="p-4 border-2 border-green-200 dark:border-green-800 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition disabled:opacity-50"
+				aria-label="Creează raport tratamente"
 			>
 				<Pill class="w-8 h-8 mb-2 text-green-600 dark:text-green-300" />
 				<div class="font-semibold text-gray-900 dark:text-slate-100">Tratamente</div>
@@ -180,6 +195,7 @@
 				onclick={() => createJob('doses')}
 				disabled={creatingJob}
 				class="p-4 border-2 border-purple-200 dark:border-purple-800 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition disabled:opacity-50"
+				aria-label="Creează raport doze"
 			>
 				<Syringe class="w-8 h-8 mb-2 text-purple-600 dark:text-purple-300" />
 				<div class="font-semibold text-gray-900 dark:text-slate-100">Doze</div>
@@ -190,11 +206,82 @@
 				onclick={() => createJob('full_system')}
 				disabled={creatingJob}
 				class="p-4 border-2 border-orange-200 dark:border-orange-800 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition disabled:opacity-50"
+				aria-label="Creează raport sistem complet"
 			>
 				<Package class="w-8 h-8 mb-2 text-orange-600 dark:text-orange-300" />
 				<div class="font-semibold text-gray-900 dark:text-slate-100">Sistem Complet</div>
 				<div class="text-xs text-gray-600 dark:text-slate-400 mt-1">Export toate datele</div>
 			</button>
+		</div>
+
+		<!-- Anonymous Export Section -->
+		<div class="mt-6 pt-6 border-t border-gray-200 dark:border-slate-700">
+			<div class="flex items-start gap-3 mb-4">
+				<Shield class="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+				<div>
+					<h3 class="font-semibold text-gray-900 dark:text-slate-100">Export Anonimizat</h3>
+					<p class="text-xs sm:text-sm text-gray-600 dark:text-slate-400 mt-0.5">
+						Exportă date cu informații personale anonimizate pentru distribuire sigură
+					</p>
+				</div>
+			</div>
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+				<button
+					onclick={() => {
+						selectedAnonType = 'users';
+						showAnonModal = true;
+					}}
+					disabled={creatingJob}
+					class="p-4 border-2 border-green-200 dark:border-green-800 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition disabled:opacity-50"
+					aria-label="Creează raport anonimizat utilizatori"
+				>
+					<Users class="w-8 h-8 mb-2 text-green-600 dark:text-green-300" />
+					<div class="font-semibold text-gray-900 dark:text-slate-100 text-sm">Utilizatori (Anon.)</div>
+					<div class="text-xs text-gray-600 dark:text-slate-400 mt-1">Fără email/nume</div>
+				</button>
+
+				<button
+					onclick={() => {
+						selectedAnonType = 'treatments';
+						showAnonModal = true;
+					}}
+					disabled={creatingJob}
+					class="p-4 border-2 border-green-200 dark:border-green-800 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition disabled:opacity-50"
+					aria-label="Creează raport anonimizat tratamente"
+				>
+					<Pill class="w-8 h-8 mb-2 text-green-600 dark:text-green-300" />
+					<div class="font-semibold text-gray-900 dark:text-slate-100 text-sm">Tratamente (Anon.)</div>
+					<div class="text-xs text-gray-600 dark:text-slate-400 mt-1">Fără pacient/medic</div>
+				</button>
+
+				<button
+					onclick={() => {
+						selectedAnonType = 'doses';
+						showAnonModal = true;
+					}}
+					disabled={creatingJob}
+					class="p-4 border-2 border-green-200 dark:border-green-800 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition disabled:opacity-50"
+					aria-label="Creează raport anonimizat doze"
+				>
+					<Syringe class="w-8 h-8 mb-2 text-green-600 dark:text-green-300" />
+					<div class="font-semibold text-gray-900 dark:text-slate-100 text-sm">Doze (Anon.)</div>
+					<div class="text-xs text-gray-600 dark:text-slate-400 mt-1">Fără informații pacient</div>
+				</button>
+
+				<button
+					onclick={() => {
+						selectedAnonType = 'full_system';
+						showAnonModal = true;
+					}}
+					disabled={creatingJob}
+					class="p-4 border-2 border-green-200 dark:border-green-800 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition disabled:opacity-50"
+					aria-label="Creează raport anonimizat sistem complet"
+				>
+					<Package class="w-8 h-8 mb-2 text-green-600 dark:text-green-300" />
+					<div class="font-semibold text-gray-900 dark:text-slate-100 text-sm">Sistem (Anon.)</div>
+					<div class="text-xs text-gray-600 dark:text-slate-400 mt-1">Toate datele anonimizate</div>
+				</button>
+			</div>
 		</div>
 	</div>
 
@@ -211,7 +298,7 @@
 		<div class="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-12 text-center">
 			<ClipboardList class="w-12 h-12 mx-auto mb-4 text-gray-500 dark:text-slate-400" />
 			<h3 class="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">Niciun job încă</h3>
-			<p class="text-gray-600 dark:text-slate-400">Creează primul tău raport asincrondeasupra</p>
+			<p class="text-gray-600 dark:text-slate-400">Creează primul tău raport asincron deasupra</p>
 		</div>
 	{:else}
 		<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl overflow-hidden">
@@ -295,4 +382,54 @@
 			</div>
 		</div>
 	{/if}
+
+	<!-- Anonymous Export Confirmation Modal -->
+	<Modal
+		isOpen={showAnonModal && selectedAnonType !== null}
+		title="Export Anonimizat"
+		size="md"
+		type="success"
+		showCancel={true}
+		confirmText={creatingJob ? 'Se procesează...' : 'Confirmă'}
+		cancelText="Anulează"
+		onConfirm={() => {
+			if (selectedAnonType) {
+				return createJob(selectedAnonType, true);
+			}
+		}}
+		onCancel={closeAnonModal}
+		onClose={closeAnonModal}
+		isLoading={creatingJob}
+	>
+		{#snippet children()}
+			{#if selectedAnonType}
+				<div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
+					<div class="flex gap-3">
+						<Eye class="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+						<div class="text-sm text-green-800 dark:text-green-200">
+							<p class="font-semibold mb-2">Datele vor fi anonimizate:</p>
+							<ul class="space-y-1 text-xs">
+								{#if selectedAnonType === 'users' || selectedAnonType === 'full_system'}
+									<li>• Email-uri înlocuite cu ID-uri anonime</li>
+									<li>• Nume înlocuite cu "Utilizator #ID"</li>
+								{/if}
+								{#if selectedAnonType === 'treatments' || selectedAnonType === 'full_system'}
+									<li>• Pacienți și medici identificați prin ID</li>
+									<li>• Diagnostic păstrat (informație clinică)</li>
+								{/if}
+								{#if selectedAnonType === 'doses' || selectedAnonType === 'full_system'}
+									<li>• Utilizator identificat prin ID</li>
+									<li>• Date de administrare păstrate (statistic)</li>
+								{/if}
+							</ul>
+						</div>
+					</div>
+				</div>
+
+				<p class="text-xs text-gray-600 dark:text-slate-400">
+					Raportul va fi generat în background. Vei putea descărca fișierul după finalizare.
+				</p>
+			{/if}
+		{/snippet}
+	</Modal>
 </main>

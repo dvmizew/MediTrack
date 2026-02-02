@@ -315,10 +315,10 @@ export const adminReportsApi = {
 		}),
 
 	// Async Report Jobs
-	createReportJob: (reportType: 'users' | 'treatments' | 'doses' | 'full_system') =>
+	createReportJob: (reportType: 'users' | 'treatments' | 'doses' | 'full_system', isAnonymous: boolean = false) =>
 		request('/admin/reports/jobs/create', {
 			method: 'POST',
-			body: JSON.stringify({ reportType })
+			body: JSON.stringify({ reportType, isAnonymous })
 		}),
 
 	getJobStatus: (jobId: number | string) =>
