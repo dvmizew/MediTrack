@@ -25,6 +25,27 @@ export default defineConfig({
 			protocol: hasSSL ? 'wss' : 'ws'
 		}
 	},
+	build: {
+		target: 'esnext',
+		minify: 'terser',
+		terserOptions: {
+			compress: {
+				drop_console: true,
+				drop_debugger: true
+			}
+		},
+		rollupOptions: {
+			output: {
+				manualChunks: {
+					vendor: ['lucide-svelte', 'chart.js'],
+					utils: ['date-fns', 'clsx', 'tailwind-merge']
+				}
+			}
+		},
+		cssCodeSplit: true,
+		sourcemap: false,
+		reportCompressedSize: true
+	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [
