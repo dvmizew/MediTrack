@@ -5,7 +5,7 @@
 	import { loadUserProfile } from '$lib/utils/loaders';
 	import { BADGES, getBadgeMeta } from '$lib/constants/badges';
 	import { toast } from '$lib/utils/toast';
-	import { User, Lock, Bell, BarChart3, Loader, CheckCircle2, Info, AlertTriangle, Trash2, Star, X, XCircle, Copy, Download, RotateCcw, Shield, Key, Zap } from '@lucide/svelte';
+	import { User, Lock, Bell, BarChart3, Loader, CheckCircle2, Info, AlertTriangle, Trash2, Star, X, XCircle, Copy, Download, RotateCcw, Shield, Key, Zap, Cookie } from '@lucide/svelte';
 	import {
 		subscribeToPush,
 		unsubscribeFromPush,
@@ -15,7 +15,7 @@
 	} from '$lib/utils/pushNotifications';
 	import Modal from '$lib/components/Modal.svelte';
 
-	type TabType = 'general' | 'security' | 'notifications' | 'stats';
+	type TabType = 'general' | 'security' | 'notifications' | 'stats' | 'privacy';
 
 	let loading = $state(true);
 	let savingProfile = $state(false);
@@ -51,6 +51,13 @@
 	let pushLoading = $state(false);
 	let pushPermission = $state<NotificationPermission>('default');
 	let testingPush = $state(false);
+
+	// GDPR state
+	let showDeleteAccountDialog = $state(false);
+	let deleteAccountPassword = $state('');
+	let deletingAccount = $state(false);
+	let deleteAccountError = $state('');
+	let downloadingData = $state(false);
 
 	async function startMfaSetup() {
 		try {
@@ -183,7 +190,8 @@
 		{ id: 'general' as TabType, name: 'General', icon: User },
 		{ id: 'security' as TabType, name: 'Securitate', icon: Lock },
 		{ id: 'notifications' as TabType, name: 'Notificări', icon: Bell },
-		{ id: 'stats' as TabType, name: 'Statistici', icon: BarChart3, show: $isPacient }
+		{ id: 'stats' as TabType, name: 'Statistici', icon: BarChart3, show: $isPacient },
+		{ id: 'privacy' as TabType, name: 'Confidențialitate', icon: Shield }
 	];
 
 	function getTabIcon(tabId: TabType) {
@@ -191,7 +199,8 @@
 			general: User,
 			security: Lock,
 			notifications: Bell,
-			stats: BarChart3
+			stats: BarChart3,
+			privacy: Shield
 		};
 		return iconMap[tabId];
 	}
@@ -357,6 +366,90 @@
 			testingPush = false;
 		}
 	}
+
+	async function handleDownloadPersonalData() {
+		if (downloadingData) return;
+
+		try {
+			downloadingData = true;
+			const response = await fetch('/api/admin/reports/export/personal-data', {
+				method: 'GET',
+				headers: {
+					'Authorization': `Bearer ${$authStore.token}`
+				}
+			});
+
+			if (!response.ok) {
+				throw new Error('Nu s-au putut descărca datele');
+			}
+
+			const blob = await response.blob();
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `meditrack_date_personale_${new Date().toISOString().split('T')[0]}.csv`;
+			a.click();
+			window.URL.revokeObjectURL(url);
+
+			toast.success('Datele tale personale au fost descărcate');
+		} catch (error: any) {
+			console.error('Download personal data error:', error);
+			toast.error(error.message || 'Eroare la descărcarea datelor');
+		} finally {
+			downloadingData = false;
+		}
+	}
+
+	function openDeleteAccountDialog() {
+		showDeleteAccountDialog = true;
+		deleteAccountPassword = '';
+		deleteAccountError = '';
+	}
+
+	function closeDeleteAccountDialog() {
+		showDeleteAccountDialog = false;
+		deleteAccountPassword = '';
+		deleteAccountError = '';
+	}
+
+	async function confirmDeleteAccount() {
+		if (!deleteAccountPassword.trim()) {
+			deleteAccountError = 'Introdu parola pentru confirmare';
+			return;
+		}
+
+		try {
+			deletingAccount = true;
+			deleteAccountError = '';
+
+			const response = await fetch('/api/admin/reports/delete-account', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${$authStore.token}`
+				},
+				body: JSON.stringify({ password: deleteAccountPassword })
+			});
+
+			if (!response.ok) {
+				const error = await response.json();
+				throw new Error(error.error || 'Nu s-a putut șterge contul');
+			}
+
+			toast.success('Contul tău a fost șters. Vei fi deconectat.');
+			
+			// Log out and redirect
+			setTimeout(() => {
+				authStore.logout();
+				window.location.href = '/';
+			}, 2000);
+		} catch (error: any) {
+			console.error('Delete account error:', error);
+			deleteAccountError = error.message || 'Eroare la ștergerea contului';
+		} finally {
+			deletingAccount = false;
+		}
+	}
 </script>
 
 <main class="page-transition max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -403,6 +496,8 @@
 									<Bell class="w-5 h-5 flex-shrink-0" />
 								{:else if tab.id === 'stats'}
 									<BarChart3 class="w-5 h-5 flex-shrink-0" />
+								{:else if tab.id === 'privacy'}
+									<Shield class="w-5 h-5 flex-shrink-0" />
 								{/if}
 								<span class="truncate">{tab.name}</span>
 							</button>
@@ -888,9 +983,128 @@
 						</div>
 					</div>
 				{/if}
-			</div>
+
+				{#if activeTab === 'privacy'}
+					<div class="space-y-6">
+					<!-- GDPR Header -->
+					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+						<div class="flex items-center gap-3 mb-4">
+							<div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
+								<Shield class="w-6 h-6 text-white" />
+							</div>
+							<div>
+								<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100">Confidențialitate și Date Personale</h2>
+								<p class="text-sm text-gray-600 dark:text-slate-400">Gestionare date conform GDPR</p>
+							</div>
+						</div>
+
+						<div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+							<div class="flex items-start gap-3">
+								<Info class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+								<div class="text-sm text-blue-900 dark:text-blue-100">
+									<p class="font-medium mb-1">Protecția datelor tale</p>
+									<p class="text-blue-700 dark:text-blue-300">Conform GDPR, ai dreptul la:</p>
+									<ul class="list-disc list-inside mt-2 space-y-1 text-blue-700 dark:text-blue-300">
+										<li>Acces la datele tale personale</li>
+										<li>Export complet al informațiilor tale</li>
+										<li>Ștergerea contului și a datelor asociate</li>
+										<li>Confidențialitate și securitate maximă</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Export Personal Data -->
+					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+						<div class="flex items-start gap-4">
+							<div class="flex-shrink-0 w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+								<Download class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+							</div>
+							<div class="flex-1">
+								<h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-2">Descarcă datele tale personale</h3>
+								<p class="text-sm text-gray-600 dark:text-slate-400 mb-4">
+									Primești un fișier CSV cu toate informațiile tale: date cont, tratamente, confirmări medicamente și istoric.
+								</p>
+								<button
+									onclick={handleDownloadPersonalData}
+									disabled={downloadingData}
+									class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 flex items-center gap-2 font-medium"
+								>
+									{#if downloadingData}
+										<Loader class="animate-spin h-4 w-4" />
+										Se descarcă...
+									{:else}
+										<Download class="w-4 h-4" />
+										Descarcă datele mele (CSV)
+									{/if}
+								</button>
+							</div>
+						</div>
+					</div>
+
+					<!-- Cookie Consent Info -->
+					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+						<div class="flex items-start gap-4">
+							<div class="flex-shrink-0 w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+								<Cookie class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+							</div>
+							<div class="flex-1">
+								<h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-2">Cookies și tracking</h3>
+								<p class="text-sm text-gray-600 dark:text-slate-400 mb-3">
+									MediTrack folosește doar cookies esențiale pentru autentificare și preferințe UI (tema dark/light).
+								</p>
+								<div class="space-y-2 text-sm">
+									<div class="flex items-center gap-2">
+										<CheckCircle2 class="w-4 h-4 text-green-600 dark:text-green-400" />
+										<span class="text-gray-700 dark:text-slate-300">Fără tracking de terțe părți</span>
+									</div>
+									<div class="flex items-center gap-2">
+										<CheckCircle2 class="w-4 h-4 text-green-600 dark:text-green-400" />
+										<span class="text-gray-700 dark:text-slate-300">Fără publicitate</span>
+									</div>
+									<div class="flex items-center gap-2">
+										<CheckCircle2 class="w-4 h-4 text-green-600 dark:text-green-400" />
+										<span class="text-gray-700 dark:text-slate-300">Datele medicale rămân confidențiale</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Delete Account -->
+					<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl shadow-sm p-6">
+						<div class="flex items-start gap-4">
+							<div class="flex-shrink-0 w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-lg flex items-center justify-center">
+								<AlertTriangle class="w-5 h-5 text-red-600 dark:text-red-400" />
+							</div>
+							<div class="flex-1">
+								<h3 class="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">Șterge contul definitiv</h3>
+								<p class="text-sm text-red-700 dark:text-red-300 mb-4">
+									<strong>Atenție:</strong> Această acțiune este ireversibilă. Toate datele tale personale vor fi anonimizate sau șterse:
+								</p>
+								<ul class="list-disc list-inside text-sm text-red-700 dark:text-red-300 space-y-1 mb-4">
+									<li>Informații cont (nume, email, parolă)</li>
+									<li>Toate tratamentele și medicamentele</li>
+									<li>Istoric confirmări și notificări</li>
+									<li>Mesaje și colaborări cu medici</li>
+									<li>Statistici și progres (XP, streak-uri, badge-uri)</li>
+								</ul>
+								<button
+									onclick={openDeleteAccountDialog}
+									class="px-5 py-2.5 bg-red-600 hover:bg-red-700 hover:shadow-lg hover:scale-105 active:scale-95 text-white rounded-lg transition-all duration-200 flex items-center gap-2 font-medium"
+								>
+									<Trash2 class="w-4 h-4" />
+									Șterge contul meu
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			{/if}
 		</div>
-	{/if}
+	</div>
+{/if}
 </main>
 
 <!-- Regenerate Backup Codes Modal -->
@@ -972,6 +1186,66 @@
 			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
 				<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
 				<p id="mfa-error-disable" class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
+			</div>
+		{/if}
+	</div>
+</Modal>
+
+<!-- Delete Account Confirmation Modal -->
+<Modal
+	isOpen={showDeleteAccountDialog}
+	title="Șterge cont definitiv"
+	type="error"
+	size="md"
+	showCancel={true}
+	confirmText={deletingAccount ? 'Se șterge...' : 'Șterge contul definitiv'}
+	cancelText="Anulează"
+	isLoading={deletingAccount}
+	onConfirm={confirmDeleteAccount}
+	onCancel={closeDeleteAccountDialog}
+	onClose={closeDeleteAccountDialog}
+>
+	<div class="space-y-4">
+		<div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+			<div class="flex items-start gap-3">
+				<AlertTriangle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+				<div class="text-sm text-red-900 dark:text-red-100">
+					<p class="font-bold mb-2">Această acțiune este IREVERSIBILĂ!</p>
+					<p class="text-red-700 dark:text-red-300">Toate datele tale vor fi șterse permanent:</p>
+					<ul class="list-disc list-inside mt-2 space-y-1 text-red-700 dark:text-red-300">
+						<li>Cont și informații personale</li>
+						<li>Tratamente și medicamente</li>
+						<li>Istoric și confirmări</li>
+						<li>Mesaje și colaborări</li>
+						<li>Statistici și realizări</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<p class="text-sm text-gray-600 dark:text-slate-400">
+			Pentru confirmare, introdu parola ta:
+		</p>
+		
+		<div>
+			<label for="deleteAccountPassword" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+				Parola contului
+			</label>
+			<input 
+				id="deleteAccountPassword" 
+				type="password"
+				class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" 
+				bind:value={deleteAccountPassword} 
+				placeholder="Introdu parola pentru confirmare"
+				autocomplete="current-password"
+				aria-describedby={deleteAccountError ? 'delete-account-error' : undefined}
+			/>
+		</div>
+		
+		{#if deleteAccountError}
+			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+				<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+				<p id="delete-account-error" class="text-sm text-red-700 dark:text-red-300">{deleteAccountError}</p>
 			</div>
 		{/if}
 	</div>
