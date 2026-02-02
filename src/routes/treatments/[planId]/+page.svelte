@@ -58,6 +58,23 @@
 		return value.slice(0, 5);
 	}
 
+	function isPastTimeForToday(dateValue: string, timeValue: string) {
+		if (!dateValue || !timeValue) return false;
+		const today = new Date();
+		const selectedDate = new Date(dateValue);
+		if (Number.isNaN(selectedDate.getTime())) return false;
+		const isToday =
+			selectedDate.getFullYear() === today.getFullYear() &&
+			selectedDate.getMonth() === today.getMonth() &&
+			selectedDate.getDate() === today.getDate();
+		if (!isToday) return false;
+		const [hours, minutes] = timeValue.split(':').map(Number);
+		if (Number.isNaN(hours) || Number.isNaN(minutes)) return false;
+		const selectedTime = new Date(today);
+		selectedTime.setHours(hours, minutes, 0, 0);
+		return selectedTime.getTime() < today.getTime();
+	}
+
 	function showModal(options: {
 		title: string;
 		content: string;
@@ -178,6 +195,14 @@
 	}
 
 	async function handleAddMedication() {
+		if ($isMedic && isPastTimeForToday(newMedication.startDate, newMedication.ora)) {
+			showModal({
+				title: 'Oră invalidă',
+				content: 'Nu poți adăuga o doză la o oră care a trecut deja pentru ziua de azi.',
+				type: 'warning'
+			});
+			return;
+		}
 		try {
 			await api.addMedication({
 				planId,
@@ -235,6 +260,14 @@
 
 	async function handleUpdateMedication() {
 		if (!editingMedication) return;
+		if ($isMedic && isPastTimeForToday(newMedication.startDate, newMedication.ora)) {
+			showModal({
+				title: 'Oră invalidă',
+				content: 'Nu poți seta o doză la o oră care a trecut deja pentru ziua de azi.',
+				type: 'warning'
+			});
+			return;
+		}
 
 		try {
 			await api.updateMedication(editingMedication.doseId, {

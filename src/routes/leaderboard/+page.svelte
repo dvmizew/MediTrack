@@ -117,6 +117,14 @@
 		const progress = (xp / current.xp) * 100;
 		return { progress: Math.min(progress, 100), next: current.next, target: current.xp };
 	}
+
+	const badgeShowcase = [
+		{ key: 'bronze', label: 'Bronze', xp: '0 XP', hint: 'Start' },
+		{ key: 'silver', label: 'Silver', xp: '500 XP', hint: 'Primul prag' },
+		{ key: 'gold', label: 'Gold', xp: '1500 XP', hint: 'Progres stabil' },
+		{ key: 'platinum', label: 'Platinum', xp: '3000 XP', hint: 'Nivel avansat' },
+		{ key: 'diamond', label: 'Diamond', xp: '5000+ XP', hint: 'Maxim' }
+	];
 </script>
 
 <div class="min-h-screen bg-transparent p-4 sm:p-6 page-transition">
@@ -229,24 +237,31 @@
 			</div>
 		{/if}
 
-		<!-- Badge Achievements Showcase -->
+		<!-- Badge thresholds overview -->
 		<div class="bg-gradient-to-r from-purple-50 via-blue-50 to-indigo-50 dark:from-purple-950 dark:via-blue-950 dark:to-indigo-950 rounded-2xl shadow-lg p-8 mb-8 border-2 border-purple-200 dark:border-purple-800">
-			<div class="flex items-center gap-2 mb-6">
-				<Sparkles class="w-6 h-6 text-purple-600 dark:text-purple-400 animate-pulse" />
-				<h2 class="text-2xl font-black text-purple-900 dark:text-purple-100">Cele mai frumoase realizări</h2>
+			<div class="flex flex-col gap-2 mb-6">
+				<div class="flex items-center gap-2">
+					<Sparkles class="w-6 h-6 text-purple-600 dark:text-purple-400" />
+					<h2 class="text-2xl font-black text-purple-900 dark:text-purple-100">Badge-uri & praguri XP</h2>
+				</div>
+				<p class="text-sm text-purple-800 dark:text-purple-200">
+					Acesta este ghidul de niveluri: fiecare badge se deblochează la un prag de XP.
+				</p>
 			</div>
 			<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-				{#each ['bronze', 'silver', 'gold', 'platinum', 'diamond'] as badge}
-					{@const badgeIcon = getBadgeIconComponent(badge)}
-					{@const badgeColor = getBadgeColor(badge)}
+				{#each badgeShowcase as badge}
+					{@const badgeIcon = getBadgeIconComponent(badge.key)}
+					{@const badgeColor = getBadgeColor(badge.key)}
 					{@const Icon = badgeIcon}
-					<div class="text-center p-4 bg-white/70 dark:bg-slate-800/70 rounded-xl backdrop-blur hover:scale-110 transition-transform duration-300 border-2 border-transparent hover:border-purple-400">
+					<div class="text-center p-4 bg-white/70 dark:bg-slate-800/70 rounded-xl backdrop-blur border-2 border-transparent hover:border-purple-400 transition-transform duration-300 hover:scale-105">
 						<div class="flex justify-center mb-2">
-							<div class={`p-3 rounded-full ${badgeColor} hover:animate-pulse`}>
+							<div class={`p-3 rounded-full ${badgeColor}`}>
 								<Icon class="w-6 h-6 text-white" />
 							</div>
 						</div>
-						<p class="text-sm font-bold text-gray-900 dark:text-slate-100 capitalize">{badge}</p>
+						<p class="text-sm font-bold text-gray-900 dark:text-slate-100">{badge.label}</p>
+						<p class="text-xs text-gray-600 dark:text-slate-300 mt-1">{badge.xp}</p>
+						<p class="text-[11px] text-gray-500 dark:text-slate-400 mt-1">{badge.hint}</p>
 					</div>
 				{/each}
 			</div>

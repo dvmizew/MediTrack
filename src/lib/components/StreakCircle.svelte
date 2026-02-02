@@ -22,6 +22,12 @@
 	
 	// Calculate progress to next milestone
 	const streakProgress = $derived(nextMilestone > streak ? streak / nextMilestone : 1);
+	const streakDigits = $derived(String(streak ?? 0).length);
+	const streakFontSize = $derived(
+		streakDigits <= 2 ? 30 :
+		streakDigits === 3 ? 26 :
+		streakDigits === 4 ? 22 : 20
+	);
 
 	const safeProgress = $derived(Math.max(0, Math.min(progress, 1)));
 	const dashOffset = $derived(circumference * (1 - safeProgress));
@@ -44,8 +50,8 @@
 	});
 </script>
 
-<div class="flex items-center justify-center">
-	<div class={`relative w-64 h-64 ring-breathe ${status} ${status === 'critical' ? 'ring-alert' : ''} ${muted ? 'muted' : ''}`}>
+<div class="flex flex-col items-center justify-center">
+	<div class={`relative w-64 h-64 md:w-80 md:h-80 ring-breathe ${status} ${status === 'critical' ? 'ring-alert' : ''} ${muted ? 'muted' : ''}`}>
 		<svg class="absolute inset-0 w-full h-full" viewBox="0 0 120 120" role="img" aria-label={`Streak curent: ${streak} zile`}> 
 			<defs>
 				<radialGradient id="innerGlow" cx="35%" cy="30%" r="70%">
@@ -92,7 +98,7 @@
 				x="60"
 				y="58"
 				text-anchor="middle"
-				font-size="30"
+				font-size={streakFontSize}
 				font-weight="700"
 				class={muted ? 'fill-slate-600 dark:fill-slate-300' : 'fill-slate-900 dark:fill-slate-100'}
 			>
@@ -102,7 +108,7 @@
 				x="60"
 				y="82"
 				text-anchor="middle"
-				font-size="16"
+				font-size="12"
 				font-weight="700"
 				class={muted ? 'fill-slate-500 dark:fill-slate-400' : 'fill-slate-700 dark:fill-slate-200'}
 			>

@@ -137,8 +137,20 @@
 					<Trophy class="w-6 h-6" />
 				</span>
 				<div>
-					<h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-slate-100">Challenges</h3>
-					<p class="text-xs md:text-sm text-gray-800 dark:text-slate-300 font-medium">Medicamentele de astăzi</p>
+					<h3
+						class={`text-base md:text-lg font-semibold ${
+							muted ? 'text-slate-700 dark:text-slate-200' : 'text-gray-900 dark:text-slate-100'
+						}`}
+					>
+						Challenges
+					</h3>
+					<p
+						class={`text-xs md:text-sm font-medium ${
+						muted ? 'text-slate-600 dark:text-slate-200' : 'text-gray-800 dark:text-slate-200'
+						}`}
+					>
+						Medicamentele de astăzi
+					</p>
 				</div>
 			</div>
 		</div>
@@ -180,8 +192,8 @@
 		{/if}
 	</div>
 
-	<!-- Streak Widget (1 column on large screens) - Just the sphere at TOP -->
-	<div class="flex flex-col items-center justify-start pt-0 relative">
+	<!-- Streak Widget -->
+	<div class="relative flex flex-col items-center justify-center py-4 md:py-6">
 		{#if confettiActive}
 			<div class="confetti-layer" aria-hidden="true">
 				{#key confettiKey}
@@ -203,12 +215,8 @@
 			{maxStreak}
 			{nextMilestone}
 		/>
-		<p
-			class={`text-sm mt-4 text-center font-medium ${
-				muted ? 'text-slate-600 dark:text-slate-300' : 'text-gray-700 dark:text-slate-300'
-			}`}
-		>
-			Zile consecutive
+		<p class="mt-3 text-center text-sm font-semibold text-gray-900 dark:text-slate-100">
+			Streak zilnic
 		</p>
 	</div>
 </div>

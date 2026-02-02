@@ -80,7 +80,6 @@
 	let adherence7Chart: Chart | null = null;
 	let adherence30Chart: Chart | null = null;
 
-	// Derived UI data to avoid duplication
 	const patientCards = $derived([
 		{
 			title: 'Conformitate săptămânală',
@@ -1149,12 +1148,12 @@
 			
 			<div class="relative flex items-center justify-between">
 				<div>
-					<p class="text-sm font-semibold text-yellow-700 dark:text-yellow-300 mb-1 inline-flex items-center gap-2">
+					<p class="text-sm font-semibold text-gray-800 dark:text-yellow-300 mb-1 inline-flex items-center gap-2">
 						<Star class="w-5 h-5 animate-bounce" />
 						Recompensă de astazi
 					</p>
-					<p class="text-4xl font-black text-yellow-900 dark:text-yellow-100">+50 XP</p>
-					<p class="text-sm text-yellow-700 dark:text-yellow-300 mt-2">Felicitări! Ai îndeplinit toate misiunile!</p>
+					<p class="text-4xl font-black text-gray-900 dark:text-yellow-100">+50 XP</p>
+					<p class="text-sm text-gray-700 dark:text-yellow-300 mt-2">Felicitări! Ai îndeplinit toate misiunile!</p>
 				</div>
 				<div class="text-6xl drop-shadow-lg animate-bounce">🎉</div>
 			</div>
