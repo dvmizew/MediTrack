@@ -137,24 +137,24 @@
 						{medication.time}
 					</span>
 					</div>
-			<h4 class="mt-2 text-base md:text-lg font-semibold truncate drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] text-black">
+					<h4 class={`mt-2 text-base md:text-lg font-semibold truncate drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] ${muted ? 'text-white' : 'text-black'}`}>
 						{medication.medicationName}
 					</h4>
 					<div class="mt-3 space-y-2 text-xs md:text-sm">
-			<div class="flex items-center gap-2 text-black">
-			<Beaker class="w-6 h-6 text-black" />
-			<span class="text-black">Doza</span>
-				<span class="font-semibold text-black">{medication.quantity}</span>
+			<div class={`flex items-center gap-2 ${muted ? 'text-white' : 'text-black'}`}>
+			<Beaker class={`w-6 h-6 ${muted ? 'text-white' : 'text-black'}`} />
+			<span class={muted ? 'text-white' : 'text-black'}>Doza</span>
+				<span class={`font-semibold ${muted ? 'text-white' : 'text-black'}`}>{medication.quantity}</span>
 					</div>
-			<div class="flex items-center gap-2 text-black">
-			<RotateCcw class="w-6 h-6 text-black" />
-			<span class="text-black">Frecvență</span>
-				<span class="font-semibold text-black">{medication.frequency}</span>
+			<div class={`flex items-center gap-2 ${muted ? 'text-white' : 'text-black'}`}>
+			<RotateCcw class={`w-6 h-6 ${muted ? 'text-white' : 'text-black'}`} />
+			<span class={muted ? 'text-white' : 'text-black'}>Frecvență</span>
+				<span class={`font-semibold ${muted ? 'text-white' : 'text-black'}`}>{medication.frequency}</span>
 					</div>
 					{#if medication.instructions}
-				<div class="flex items-start gap-2 text-black">
-					<FileText class="w-6 h-6 text-black" />
-					<p class="text-black italic line-clamp-2">{medication.instructions}</p>
+				<div class={`flex items-start gap-2 ${muted ? 'text-white' : 'text-black'}`}>
+					<FileText class={`w-6 h-6 ${muted ? 'text-white' : 'text-black'}`} />
+					<p class={`italic line-clamp-2 ${muted ? 'text-white' : 'text-black'}`}>{medication.instructions}</p>
 							</div>
 						{/if}
 					</div>
