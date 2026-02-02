@@ -4,17 +4,24 @@
 		countdownText = '--:--:--',
 		progress = 0,
 		status = 'none' as 'none' | 'normal' | 'warning' | 'critical' | 'done',
-		muted = false
+		muted = false,
+		maxStreak = 0,
+		nextMilestone = 7
 	} = $props<{
 		streak?: number;
 		countdownText?: string;
 		progress?: number;
 		status?: 'none' | 'normal' | 'warning' | 'critical' | 'done';
 		muted?: boolean;
+		maxStreak?: number;
+		nextMilestone?: number;
 	}>();
 
 	const radius = 48;
 	const circumference = 2 * Math.PI * radius;
+	
+	// Calculate progress to next milestone
+	const streakProgress = $derived(nextMilestone > streak ? streak / nextMilestone : 1);
 
 	const safeProgress = $derived(Math.max(0, Math.min(progress, 1)));
 	const dashOffset = $derived(circumference * (1 - safeProgress));
@@ -102,6 +109,59 @@
 				{countdownText}
 			</text>
 		</svg>
+	</div>
+
+	<!-- Streak Details below circle -->
+	<div class="mt-4 sm:mt-6 space-y-3 w-full max-w-xs">
+		{#if streak > 0 || maxStreak > 0}
+			<div class="text-center">
+				<p class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-300">
+					{#if streak > 0}
+						Streakul tău: <span class="text-lg sm:text-xl text-yellow-600 dark:text-yellow-400">{streak}</span> zile
+					{:else}
+						Record personal: <span class="text-lg text-yellow-600 dark:text-yellow-400">{maxStreak}</span> zile
+					{/if}
+				</p>
+			</div>
+
+			{#if nextMilestone > 0 && streak < nextMilestone}
+				<!-- Progress to next milestone -->
+				<div class="space-y-1.5">
+					<div class="flex items-center justify-between text-xs">
+						<span class="text-gray-600 dark:text-slate-400">Progres spre ziua {nextMilestone}</span>
+						<span class="font-semibold text-gray-900 dark:text-slate-100">{streak}/{nextMilestone}</span>
+					</div>
+					<div class="w-full bg-gray-200/70 dark:bg-slate-700/50 rounded-full h-2 overflow-hidden">
+						<div
+							class="h-full bg-gradient-to-r from-yellow-500 to-yellow-600 dark:from-yellow-400 dark:to-yellow-500 transition-all duration-500 ease-out rounded-full"
+							style="width: {streakProgress * 100}%"
+							role="progressbar"
+							aria-valuenow={streak}
+							aria-valuemin={0}
+							aria-valuemax={nextMilestone}
+							aria-label="Progres streak"
+						></div>
+					</div>
+					<div class="text-xs text-gray-600 dark:text-slate-400 text-right">
+						{nextMilestone - streak} zile rămase
+					</div>
+				</div>
+			{:else if streak >= nextMilestone}
+				<!-- Milestone reached -->
+				<div class="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/30 dark:to-amber-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-2 text-center">
+					<p class="text-xs sm:text-sm font-semibold text-yellow-900 dark:text-yellow-200">
+						🎉 Felicitări! Ai atins ziua {nextMilestone}!
+					</p>
+				</div>
+			{/if}
+		{:else if muted}
+			<!-- Streak lost state -->
+			<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-2 text-center">
+				<p class="text-xs sm:text-sm font-semibold text-red-900 dark:text-red-200">
+					Streak resetat. Reia din nou!
+				</p>
+			</div>
+		{/if}
 	</div>
 </div>
 

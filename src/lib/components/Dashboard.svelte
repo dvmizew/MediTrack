@@ -22,11 +22,13 @@
 		UserCircle,
 		Clock,
 		AlertCircle,
+		AlertTriangle,
 		HelpCircle,
 		Calendar,
 		TrendingUp,
 		ChevronRight,
-		ArrowRight
+		ArrowRight,
+		Star
 	} from '@lucide/svelte';
 	import {
 		getChartTheme,
@@ -1083,6 +1085,41 @@
 		}
 	/>
 
+	<!-- Streak Loss Penalty Alert -->
+	{#if streakBroken}
+		<div class="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-l-4 border-l-red-600 dark:border-l-red-400 border border-red-200 dark:border-red-800 rounded-lg p-4 md:p-5 animate-pulse-alert">
+			<div class="flex items-start gap-4">
+				<div class="flex-shrink-0 mt-0.5">
+					<div class="w-8 h-8 rounded-full bg-red-600 dark:bg-red-500 flex items-center justify-center text-white font-bold text-sm">−</div>
+				</div>
+				<div class="flex-1">
+					<h3 class="font-bold text-red-900 dark:text-red-200 mb-1">Streak pierdut!</h3>
+					<p class="text-sm text-red-800 dark:text-red-300 mb-2">
+						Ai pierdut streakul tău. Ca penalitate, o parte din XP-ul zilei a fost retras.
+					</p>
+					<div class="text-xs text-red-700 dark:text-red-400 bg-white/40 dark:bg-black/20 rounded px-2 py-1 inline-block">
+						−10% XP din doze completate astazi
+					</div>
+				</div>
+			</div>
+		</div>
+	{:else if countdownStatus === 'critical'}
+		<!-- Critical Warning -->
+		<div class="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-l-4 border-l-orange-600 dark:border-l-orange-400 border border-orange-200 dark:border-orange-800 rounded-lg p-4 md:p-5 animate-pulse">
+			<div class="flex items-start gap-3">
+				<div class="flex-shrink-0">
+					<AlertTriangle class="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5" />
+				</div>
+				<div class="flex-1">
+					<h3 class="font-semibold text-orange-900 dark:text-orange-200 mb-1">Streakul tău este în pericol!</h3>
+					<p class="text-sm text-orange-800 dark:text-orange-300">
+						Ai puțin timp pentru a confirma doza programată înainte să-ți pierzi streakul.
+					</p>
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Medications List -->
 	<MedicationsList
 		loading={loading}
@@ -1093,12 +1130,36 @@
 		onSnooze={snoozeMedication}
 		celebrate={allDoneToday}
 		streak={displayStreak}
+		maxStreak={$authStore.user?.longestStreak || 0}
 		countdownText={countdownText}
 		countdownProgress={countdownProgress}
 		countdownStatus={countdownStatus}
 		nextDoseId={nextDose?.doseId ?? nextDose?.id ?? nextDose?.medicationId ?? null}
 		muted={streakBroken}
 	/>
+
+	<!-- Daily XP Earned Showcase -->
+	{#if allDoneToday}
+		<div class="relative overflow-hidden bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 rounded-2xl shadow-lg p-8 border-2 border-yellow-200 dark:border-yellow-800">
+			<!-- Animated background -->
+			<div class="absolute inset-0 opacity-20">
+				<div class="absolute top-0 left-0 w-40 h-40 bg-yellow-400 rounded-full blur-3xl animate-pulse"></div>
+				<div class="absolute bottom-0 right-0 w-40 h-40 bg-amber-400 rounded-full blur-3xl animate-pulse"></div>
+			</div>
+			
+			<div class="relative flex items-center justify-between">
+				<div>
+					<p class="text-sm font-semibold text-yellow-700 dark:text-yellow-300 mb-1 inline-flex items-center gap-2">
+						<Star class="w-5 h-5 animate-bounce" />
+						Recompensă de astazi
+					</p>
+					<p class="text-4xl font-black text-yellow-900 dark:text-yellow-100">+50 XP</p>
+					<p class="text-sm text-yellow-700 dark:text-yellow-300 mt-2">Felicitări! Ai îndeplinit toate misiunile!</p>
+				</div>
+				<div class="text-6xl drop-shadow-lg animate-bounce">🎉</div>
+			</div>
+		</div>
+	{/if}
 
 	<!-- Quick Stats -->
 	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">

@@ -1,6 +1,5 @@
 import { query } from '../config/database.js';
 import { logger } from '../config/logger.js';
-import { generateCSV } from '../utils/csv.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
