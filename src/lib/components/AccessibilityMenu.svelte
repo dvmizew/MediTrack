@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { fly } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
 	import { accessibility } from '$lib/stores/accessibility';
 	import { Accessibility, RotateCcw, Zap } from '@lucide/svelte';
 
@@ -9,9 +11,18 @@
 		{ value: 'large', label: 'Mare (125%)', icon: 'A+' },
 		{ value: 'xlarge', label: 'Extra Mare (150%)', icon: 'A++' }
 	];
+
+	function handleClickOutside(event: MouseEvent) {
+		const target = event.target as HTMLElement;
+		if (!target.closest('.accessibility-dropdown-container')) {
+			isOpen = false;
+		}
+	}
 </script>
 
-<div class="relative">
+<svelte:window onclick={handleClickOutside} />
+
+<div class="relative accessibility-dropdown-container">
 	<!-- Accessibility Toggle Button -->
 	<button
 		onclick={() => (isOpen = !isOpen)}
@@ -24,10 +35,13 @@
 
 	<!-- Dropdown Menu -->
 	{#if isOpen}
-		<div class="absolute right-0 mt-2 w-72 bg-white/98 dark:bg-slate-800/98 backdrop-blur-md border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg z-50">
+		<div 
+			transition:fly={{ y: -10, duration: 300, easing: quintOut }}
+			class="absolute right-0 mt-2 w-72 bg-white/98 dark:bg-slate-800/98 backdrop-blur-md border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg z-50 overflow-hidden"
+		>
 			<!-- Header -->
 			<div class="px-4 py-3 border-b border-gray-200 dark:border-slate-700 flex items-center gap-2">
-				<Accessibility class="w-4 h-4" />
+				<Accessibility class="w-4 h-4 text-gray-700 dark:text-slate-300" />
 				<h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100">Setări Accesibilitate</h3>
 			</div>
 
@@ -43,9 +57,9 @@
 									accessibility.setTextSize(option.value as any);
 									isOpen = false;
 								}}
-								class="w-full text-left px-3 py-2 rounded-lg border-2 transition {$accessibility.textSize === option.value
+								class="w-full text-left px-3 py-2.5 rounded-lg border-2 transition {$accessibility.textSize === option.value
 									? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100'
-									: 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-slate-300'}"
+									: 'border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300'}"
 								aria-label={option.label}
 							>
 								<span class="font-bold mr-2">{option.icon}</span>
@@ -57,7 +71,7 @@
 
 				<!-- High Contrast Toggle -->
 				<div>
-					<label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-slate-700/50 rounded-lg transition">
+					<label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition">
 						<input
 							type="checkbox"
 							checked={$accessibility.highContrast}
@@ -72,7 +86,7 @@
 
 				<!-- Reduce Motion Toggle -->
 				<div>
-					<label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-slate-700/50 rounded-lg transition">
+					<label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition">
 						<input
 							type="checkbox"
 							checked={$accessibility.reduceMotion}
@@ -91,34 +105,15 @@
 					accessibility.reset();
 					isOpen = false;
 				}}
-				class="w-full px-3 py-2 mt-2 text-sm font-medium text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg transition border border-slate-300 dark:border-slate-600 flex items-center justify-center gap-2"
+				class="w-full px-3 py-2 mt-2 text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition border border-gray-200 dark:border-slate-700 flex items-center justify-center gap-2"
 			>
 				<RotateCcw class="w-4 h-4" />
 				Resetează la Setări Implicite
 			</button>
 			</div>
-
-			<!-- Footer Info -->
-			<div class="px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border-t border-gray-200 dark:border-slate-700 rounded-b-lg">
-				<p class="text-xs text-gray-600 dark:text-slate-400">
-					Setările tale sunt salvate automat și vor fi reamintite la vizita următoare.
-				</p>
-			</div>
 		</div>
 	{/if}
 </div>
-
-<!-- Click outside to close -->
-<svelte:window
-	onclick={(e) => {
-		if (isOpen && !(e.target as HTMLElement).closest('[accessibility-menu]')) {
-			const button = document.querySelector('[title="Setări de accesibilitate"]');
-			if (!button?.contains(e.target as Node)) {
-				isOpen = false;
-			}
-		}
-	}}
-/>
 
 <style>
 	/* Accessibility CSS Classes */
