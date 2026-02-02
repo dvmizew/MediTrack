@@ -471,8 +471,7 @@
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-							{#each filteredUsers as u}
-								<tr class="hover:bg-blue-50/50 dark:hover:bg-slate-700/30 transition duration-150">
+							{#each filteredUsers as u}							{@const RoleIcon = getRoleIconComponent(u.role)}								<tr class="hover:bg-blue-50/50 dark:hover:bg-slate-700/30 transition duration-150">
 									<td class="px-6 py-4">
 										<div class="flex items-center gap-3">
 											<div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-md">
@@ -486,7 +485,7 @@
 									</td>
 									<td class="px-6 py-4">
 										<span class="px-3 py-1 rounded-full text-xs font-semibold {getRoleBadgeColor(u.role)} inline-flex items-center gap-2">
-											<svelte:component this={getRoleIconComponent(u.role)} class="w-4 h-4" />
+										<RoleIcon class="w-4 h-4" />
 											{u.role.charAt(0).toUpperCase() + u.role.slice(1)}
 										</span>
 									</td>
@@ -548,8 +547,7 @@
 
 				<!-- Mobile Card Layout -->
 				<div class="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
-					{#each filteredUsers as u}
-						<div class="p-5 space-y-4 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition">
+					{#each filteredUsers as u}					{@const RoleIcon = getRoleIconComponent(u.role)}						<div class="p-5 space-y-4 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition">
 							<!-- Header with name and status -->
 							<div class="flex items-start justify-between gap-3">
 								<div class="flex items-center gap-3 flex-1 min-w-0">
@@ -571,8 +569,9 @@
 							<div class="grid grid-cols-2 gap-3">
 								<div>
 									<p class="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">Rol</p>
-									<span class="px-2.5 py-1 rounded-full text-xs font-semibold {getRoleBadgeColor(u.role)} inline-flex items-center gap-2">
-										<svelte:component this={getRoleIconComponent(u.role)} class="w-3.5 h-3.5" />
+
+							<span class="px-2.5 py-1 rounded-full text-xs font-semibold {getRoleBadgeColor(u.role)} inline-flex items-center gap-2">
+								<RoleIcon class="w-3.5 h-3.5" />
 										{u.role.charAt(0).toUpperCase() + u.role.slice(1)}
 									</span>
 								</div>

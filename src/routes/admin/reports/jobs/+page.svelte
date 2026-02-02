@@ -229,10 +229,11 @@
 					</thead>
 					<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
 						{#each jobs as job}
-							<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
-								<td class="px-4 py-3">
-									<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium {getStatusColor(job.status)}">
-										<svelte:component this={getStatusIconComponent(job.status)} class="w-3.5 h-3.5" />
+						{@const StatusIcon = getStatusIconComponent(job.status)}
+						<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
+						<td class="px-4 py-3">
+							<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium {getStatusColor(job.status)}">
+								<StatusIcon class="w-3.5 h-3.5" />
 										<span class="capitalize">{job.status}</span>
 									</span>
 								</td>

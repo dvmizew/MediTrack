@@ -218,7 +218,11 @@
 						{/if}
 					</div>
 					<div class="text-7xl sm:text-8xl drop-shadow-2xl animate-pulse">
-						<svelte:component this={getRankMedalIcon(currentUserPosition)} class="w-16 h-16 sm:w-20 sm:h-20 text-white" />
+					{#snippet medalIcon()}
+						{@const Icon = getRankMedalIcon(currentUserPosition)}
+						<Icon class="w-16 h-16 sm:w-20 sm:h-20 text-white" />
+					{/snippet}
+					{@render medalIcon()}
 					</div>
 				</div>
 			</div>
@@ -244,6 +248,7 @@
 				{#each leaderboard as user, index (user.userId)}
 					{@const isCurrentUser = $authStore.user?.id === user.userId}
 					{@const isTop3 = index < 3}
+					{@const BadgeIcon = getBadgeIconComponent(user.badge)}
 					{@const progress = getProgressToNextBadge(user.xp, user.badge)}
 					
 					<button
@@ -268,7 +273,8 @@
 									isTop3 ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-lg animate-pulse' : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200'
 								}`}>
 									{#if index < 3}
-										<svelte:component this={getRankMedalIcon(index)} class="w-7 h-7 text-white" />
+										{@const Icon = getRankMedalIcon(index)}
+										<Icon class="w-7 h-7 text-white" />
 									{:else}
 										#{index + 1}
 									{/if}
@@ -299,7 +305,7 @@
 										{/if}
 									</div>
 									<span class={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold border-2 ${getBadgeColor(user.badge)}`}>
-										<svelte:component this={getBadgeIconComponent(user.badge)} class="w-4 h-4" />
+									<BadgeIcon class="w-4 h-4" />
 										<span class="capitalize">{user.badge || 'bronze'}</span>
 									</span>
 								</div>
@@ -335,10 +341,11 @@
 							<div class="mt-6 pt-6 border-t-2 border-gray-200 dark:border-slate-700 space-y-4 animate-scale-in">
 								<!-- Progress to next badge -->
 								{#if progress}
+									{@const ProgressIcon = getBadgeIconComponent(progress.next)}
 									<div>
 										<div class="flex items-center justify-between mb-2">
 												<span class="text-sm font-semibold text-gray-700 dark:text-slate-300 inline-flex items-center gap-2">
-													<svelte:component this={getBadgeIconComponent(progress.next)} class="w-4 h-4" />
+													<ProgressIcon class="w-4 h-4" />
 													Progres către {progress.next}
 												</span>
 											<span class="text-sm font-bold text-blue-600 dark:text-blue-400">
@@ -369,7 +376,7 @@
 												<p class="text-xl font-black text-blue-900 dark:text-blue-100">#{index + 1}</p>
 										</div>
 											<div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 rounded-xl p-4 text-center">
-												<svelte:component this={getBadgeIconComponent(user.badge)} class="w-6 h-6 mx-auto mb-1 text-purple-700 dark:text-purple-200" />
+												<BadgeIcon class="w-6 h-6 mx-auto mb-1 text-purple-700 dark:text-purple-200" />
 												<p class="text-xs text-purple-700 dark:text-purple-300 font-medium">Badge</p>
 												<p class="text-sm font-black text-purple-900 dark:text-purple-100 capitalize">{user.badge}</p>
 										</div>
