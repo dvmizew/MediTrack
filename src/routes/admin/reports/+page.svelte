@@ -107,7 +107,7 @@
 	<div class="space-y-3 sm:space-y-4">
 		<div class="space-y-1">
 			<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2"><BarChart3 class="w-8 h-8" /> Rapoarte Admin</h1>
-			<p class="text-sm sm:text-base text-black dark:text-white font-medium">Overview utilizatori, colaborări și aderență cu grafice și export.</p>
+			<p class="text-sm sm:text-base text-gray-900 dark:text-slate-100 font-medium">Overview utilizatori, colaborări și aderență cu grafice și export.</p>
 		</div>
 		
 		
@@ -218,7 +218,7 @@
 								<th class="px-4 py-3 text-right">Număr</th>
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-gray-200 dark:divide-slate-700 text-black dark:text-white">
+						<tbody class="divide-y divide-gray-200 dark:divide-slate-700 text-gray-900 dark:text-slate-100">
 							{#each overview.users.byRole as row}
 								<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
 									<td class="px-4 py-3 capitalize font-medium">{row.role}</td>
@@ -240,7 +240,7 @@
 								<th class="px-4 py-3 text-right">Număr</th>
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-gray-200 dark:divide-slate-700 text-black dark:text-white">
+						<tbody class="divide-y divide-gray-200 dark:divide-slate-700 text-gray-900 dark:text-slate-100">
 							{#each overview.collaborations as row}
 								<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
 									<td class="px-4 py-3 capitalize font-medium">{row.status}</td>

@@ -125,8 +125,8 @@
 					{/if}
 				</div>
 				<div>
-					<h1 class="text-4xl font-bold text-gray-900">{user.fullName}</h1>
-				<p class="text-lg text-black dark:text-white capitalize mt-1 font-medium">{user.role}</p>
+					<h1 class="text-4xl font-bold text-gray-900 dark:text-slate-100">{user.fullName}</h1>
+				<p class="text-lg text-gray-900 dark:text-slate-100 capitalize mt-1 font-medium">{user.role}</p>
 					{#if $isPacient}						<p class="text-sm text-blue-600 dark:text-blue-400 mt-2">Profil personalizat, statistici și progres tratamente</p>						<div class="flex items-center gap-4 mt-2">
 							<span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-full">
 								{stats.totalXp} XP

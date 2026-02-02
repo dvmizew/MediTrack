@@ -367,7 +367,7 @@
 						<p class="text-gray-700 dark:text-gray-300 break-words">{treatment.description || 'Fără descriere'}</p>
 					</div>
 					<div class="flex items-center gap-3 flex-shrink-0">
-								<span class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-full whitespace-nowrap {treatment.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-slate-800 text-black dark:text-white'}">
+								<span class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-full whitespace-nowrap {treatment.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100'}">
 							{treatment.isActive ? 'Activ' : 'Inactiv'}
 						</span>
 						{#if $isMedic}
@@ -381,7 +381,7 @@
 									</button>
 									<button
 										onclick={resetDeleteState}
-										class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-black dark:text-white text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap"
+										class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-900 dark:text-slate-100 text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap"
 									>
 										Anulează
 									</button>
@@ -389,7 +389,7 @@
 							{:else}
 								<button
 									onclick={startEditTreatment}
-									class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-black dark:text-white text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap inline-flex items-center gap-2"
+									class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-slate-100 text-xs sm:text-sm font-medium rounded-lg transition whitespace-nowrap inline-flex items-center gap-2"
 								>
 									<Pencil class="w-4 h-4" />
 									Editează
@@ -462,13 +462,13 @@
 									</div>
 									<div class="flex sm:flex-col items-center sm:items-end gap-2 flex-shrink-0">
 									<p class="text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{formatTime(med.time)}</p>
-										<span class="inline-block px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap {med.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-slate-800 text-black dark:text-white'}">
+										<span class="inline-block px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap {med.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100'}">
 										{med.isActive ? 'Activ' : 'Inactiv'}
 										</span>
 										{#if $isMedic}
 											<button
 												onclick={() => startEditMedication(med)}
-												class="px-3 py-1 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-black dark:text-white text-xs font-medium rounded transition whitespace-nowrap inline-flex items-center gap-2"
+												class="px-3 py-1 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-900 dark:text-slate-100 text-xs font-medium rounded transition whitespace-nowrap inline-flex items-center gap-2"
 											>
 												<Pencil class="w-3.5 h-3.5" />
 												Editează

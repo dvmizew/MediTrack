@@ -93,7 +93,7 @@
 <KeyboardNav />
 
 {#if $authStore.isAuthenticated}
-	<div class="min-h-screen bg-gradient-blue-purple dark:bg-gradient-blue-purple-dark">
+	<div class="min-h-screen">
 		<!-- Fixed Header visible everywhere -->
 		<div class="fixed top-0 left-0 right-0 z-50">
 			<Header />
@@ -105,7 +105,7 @@
 		</main>
 	</div>
 {:else}
-	<div class="min-h-screen bg-gradient-blue-purple dark:bg-gradient-blue-purple-dark">
+	<div class="min-h-screen">
 		<main id="main-content">
 			{@render children()}
 		</main>

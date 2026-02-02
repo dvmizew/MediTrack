@@ -173,7 +173,7 @@
 			case 'admin': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
 			case 'medic': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400';
 			case 'pacient': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
-				default: return 'bg-gray-100 dark:bg-slate-800 text-black dark:text-white';
+				default: return 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100';
 		}
 	}
 

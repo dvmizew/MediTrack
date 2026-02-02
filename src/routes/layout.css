@@ -40,6 +40,7 @@ html {
 		#c7f7ff 100%
 	);
 	background-attachment: fixed;
+	position: relative;
 }
 
 html.dark {
@@ -77,6 +78,23 @@ html.dark {
 		);
 	background-attachment: fixed;
 	background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+}
+
+/* Smooth transition overlay for dark theme toggle */
+html::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0);
+	opacity: 0;
+	pointer-events: none;
+	z-index: -1;
+	transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.dark::before {
+	opacity: 1;
+	background: rgba(0, 0, 0, 0.3);
 }
 
 body {

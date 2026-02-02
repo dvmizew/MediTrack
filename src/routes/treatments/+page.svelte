@@ -142,11 +142,11 @@
 	<main class="page-transition max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 		<div class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
 			<div>
-				<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-					<ClipboardList class="w-6 h-6 text-gray-900 dark:text-white" />
+				<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-2 flex items-center gap-2">
+					<ClipboardList class="w-6 h-6 text-gray-900 dark:text-slate-100" />
 					Planuri de Tratament
 				</h1>
-				<p class="text-sm sm:text-base text-black dark:text-white font-medium">
+				<p class="text-sm sm:text-base text-gray-900 dark:text-slate-100 font-medium">
 					{#if isAdmin}
 					Gestionare completă planuri tratament, doze și monitorizare pacienți
 					{:else if $isMedic}

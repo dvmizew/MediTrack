@@ -128,7 +128,7 @@
 			<h1 class="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
 				Leaderboard
 			</h1>
-			<p class="text-sm sm:text-base text-gray-800 dark:text-white font-medium">Clasament pacienți, progres individual și realizări colective</p>
+			<p class="text-sm sm:text-base text-gray-900 dark:text-slate-100 font-medium">Clasament pacienți, progres individual și realizări colective</p>
 		</div>
 
 		<!-- Filter Buttons -->
@@ -231,12 +231,12 @@
 				<div class="inline-block animate-spin">
 					<LoaderCircle class="w-16 h-16 text-blue-600" />
 				</div>
-					<p class="mt-4 text-black dark:text-white font-medium">Se încarcă leaderboard-ul...</p>
+					<p class="mt-4 text-gray-900 dark:text-slate-100 font-medium">Se încarcă leaderboard-ul...</p>
 				</div>
 			{:else if leaderboard.length === 0}
 			<div class="p-12 text-center bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl shadow-lg">
 				<Trophy class="w-14 h-14 mx-auto mb-4 text-yellow-500" />
-					<p class="text-xl text-black dark:text-white font-medium">
+					<p class="text-xl text-gray-900 dark:text-slate-100 font-medium">
 						Nu au fost găsiți pacienți pe leaderboard
 					</p>
 				</div>

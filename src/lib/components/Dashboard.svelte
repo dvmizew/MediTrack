@@ -754,8 +754,8 @@
 	<div class="space-y-4 md:space-y-6">
 		<!-- Header -->
 		<div class="space-y-1">
-			<h1 class="text-3xl font-bold tracking-tight text-gray-900">Admin Dashboard</h1>
-			<p class="text-sm text-gray-800 font-medium">Prezentare generală a sistemului, activitate și conformitate</p>
+			<h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-slate-100">Admin Dashboard</h1>
+			<p class="text-sm text-gray-700 dark:text-slate-300 font-medium">Prezentare generală a sistemului, activitate și conformitate</p>
 		</div>
 
 		{#if adminLoading}
