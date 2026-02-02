@@ -5,6 +5,7 @@ import { logger } from '../config/logger.js';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
+import bcrypt from 'bcrypt';
 import {
 	generatePersonalDataExportCSV
 } from '../utils/csv-export.js';
@@ -243,7 +244,8 @@ router.get('/export/personal-data', authenticate, async (req: Request, res: Resp
 
     const [user, treatments, confirmations] = await Promise.all([
       query(`SELECT user_id, full_name, email, role, created_at FROM users WHERE user_id = $1`, [userId]),
-      query(`SELECT plan_id, diagnoza, descriere, activ, data_creare FROM treatment_plans WHERE patient_id = $1 AND is_deleted = false`, [userId]),
+      query(`SELECT plan_id, diagnoza, descriere, activ, data_creare FROM treatment_plans 
+             WHERE (patient_id = $1 OR doctor_id = $1) AND is_deleted = false`, [userId]),
       query(`SELECT 
         td.medication_name, 
         dc.scheduled_for, 
@@ -252,7 +254,7 @@ router.get('/export/personal-data', authenticate, async (req: Request, res: Resp
       FROM dose_confirmations dc
       JOIN treatment_doses td ON dc.dose_id = td.dose_id
       JOIN treatment_plans tp ON td.plan_id = tp.plan_id
-      WHERE tp.patient_id = $1
+      WHERE (tp.patient_id = $1 OR tp.doctor_id = $1)
       ORDER BY dc.scheduled_for DESC LIMIT 1000`, [userId])
     ]);
 
@@ -289,11 +291,11 @@ router.post('/delete-account', authenticate, async (req: Request, res: Response)
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Check password (simplified - in real app use bcrypt comparison)
-    // const validPassword = await bcrypt.compare(password, userResult.rows[0].password_hash);
-    // if (!validPassword) {
-    //   return res.status(401).json({ error: 'Invalid password' });
-    // }
+    // Check password
+    const validPassword = await bcrypt.compare(password, userResult.rows[0].password_hash);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Parolă incorectă' });
+    }
 
     // Soft delete: mark as deleted and anonymize sensitive data
     await query(`

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { authStore, isPacient } from '$lib/stores/auth';
-	import { api, mfaApi } from '$lib/api/client';
+	import { api, mfaApi, adminReportsApi } from '$lib/api/client';
 	import { loadUserProfile } from '$lib/utils/loaders';
 	import { BADGES, getBadgeMeta } from '$lib/constants/badges';
 	import { toast } from '$lib/utils/toast';
@@ -372,18 +372,8 @@
 
 		try {
 			downloadingData = true;
-			const response = await fetch('/api/admin/reports/export/personal-data', {
-				method: 'GET',
-				headers: {
-					'Authorization': `Bearer ${$authStore.token}`
-				}
-			});
-
-			if (!response.ok) {
-				throw new Error('Nu s-au putut descărca datele');
-			}
-
-			const blob = await response.blob();
+			const blob = await adminReportsApi.exportPersonalData();
+			
 			const url = window.URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = url;
@@ -422,19 +412,7 @@
 			deletingAccount = true;
 			deleteAccountError = '';
 
-			const response = await fetch('/api/admin/reports/delete-account', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${$authStore.token}`
-				},
-				body: JSON.stringify({ password: deleteAccountPassword })
-			});
-
-			if (!response.ok) {
-				const error = await response.json();
-				throw new Error(error.error || 'Nu s-a putut șterge contul');
-			}
+			await adminReportsApi.deleteAccount(deleteAccountPassword);
 
 			toast.success('Contul tău a fost șters. Vei fi deconectat.');
 			
