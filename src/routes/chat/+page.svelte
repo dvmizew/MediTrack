@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
+	import { ChevronRight, Stethoscope, User, AlertCircle, MessageCircle } from '@lucide/svelte';
 	import { loadCollaborations as loadCollabs } from '$lib/utils/loaders';
 
 	let collaborations = $state<any[]>([]);
@@ -89,7 +90,7 @@
 </script>
 
 {#if $authStore.isAuthenticated}
-	<main class="min-h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
+	<main class="min-h-[calc(100vh-4rem)] bg-transparent flex flex-col overflow-hidden">
 		<div class="max-w-6xl mx-auto min-h-[calc(100vh-4rem)] flex flex-col overflow-hidden w-full">
 		<!-- Content -->
 		<div class="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 md:px-6 py-4 sm:py-6">
@@ -100,29 +101,17 @@
 				</div>
 			{:else if error}
 				<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 flex items-start gap-3 animate-shake">
-					<svg class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-					</svg>
+					<AlertCircle class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
 					<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
 				</div>
 			{:else if collaborations.length === 0}
-				<div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 sm:p-12 md:p-16 text-center animate-scale-in">
+				<div class="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 dark:shadow-lg p-8 sm:p-12 md:p-16 text-center animate-scale-in">
 					<div class="max-w-sm mx-auto">
-						<svg
-							class="mx-auto h-16 w-16 sm:h-20 sm:w-20 text-gray-300 dark:text-gray-600 mb-3 sm:mb-4"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-							/>
-						</svg>
-						<h3 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Nicio colaborare activă</h3>
-						<p class="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-4 sm:mb-6 px-4">
+						<MessageCircle
+							class="mx-auto h-16 w-16 sm:h-20 sm:w-20 text-slate-300 dark:text-slate-600 mb-3 sm:mb-4"
+						/>
+						<h3 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">Nicio colaborare activă</h3>
+						<p class="text-sm sm:text-base text-gray-500 dark:text-slate-400 mb-4 sm:mb-6 px-4">
 							Pentru a trimite mesaje, trebuie să ai cel puțin o colaborare acceptată
 						</p>
 						<button
@@ -138,7 +127,7 @@
 					{#each collaborations as collab}
 						<button
 							onclick={() => openChat(collab.user_id)}
-							class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-2 border-gray-200 dark:border-gray-700 p-4 sm:p-5 md:p-6 hover:shadow-xl hover:shadow-blue-500/10 active:border-blue-300 dark:active:border-blue-600 sm:hover:border-blue-300 sm:dark:hover:border-blue-600 sm:hover:-translate-y-1 transition-all duration-300 text-left group animate-scale-in touch-manipulation {selectedUserId === collab.user_id ? 'scale-95 opacity-50' : ''}"
+								class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/50 dark:shadow-lg p-4 sm:p-5 md:p-6 hover:shadow-md dark:hover:shadow-xl hover:shadow-blue-500/10 active:border-blue-300 dark:active:border-blue-500 sm:hover:border-blue-300 sm:dark:hover:border-blue-500 sm:hover:-translate-y-1 transition-all duration-300 text-left group animate-scale-in touch-manipulation {selectedUserId === collab.user_id ? 'scale-95 opacity-50' : ''}"
 						>
 							<div class="flex items-center justify-between gap-2 sm:gap-4">
 								<div class="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
@@ -148,34 +137,37 @@
 											{collab.name?.charAt(0).toUpperCase() || '?'}
 										</div>
 										<!-- Online status indicator -->
-										<div class="absolute bottom-0 right-0 w-3 h-3 sm:w-3.5 sm:h-3.5 {userStatuses.get(collab.user_id)?.online ? 'bg-green-500' : 'bg-gray-400'} border-2 border-white dark:border-gray-800 rounded-full"></div>
+										<div class="absolute bottom-0 right-0 w-3 h-3 sm:w-3.5 sm:h-3.5 {userStatuses.get(collab.user_id)?.online ? 'bg-green-500' : 'bg-gray-400'} border-2 border-white dark:border-slate-800 rounded-full"></div>
 									</div>
 									
 									<div class="min-w-0 flex-1">
 										<!-- Name with role badge -->
 										<div class="flex items-center gap-2 mb-0.5">
-											<h3 class="font-semibold text-gray-900 dark:text-gray-100 text-base sm:text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate">
+												<h3 class="font-semibold text-gray-900 dark:text-slate-100 text-base sm:text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate">
 												{collab.name}
 											</h3>
-											<span class="px-1.5 py-0.5 text-[10px] font-medium rounded flex-shrink-0 {collab.role === 'medic' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}">
-												{collab.role === 'medic' ? '⚕️ Doctor' : '🧑 Pacient'}
+											<span class="px-1.5 py-0.5 text-[10px] font-medium rounded flex-shrink-0 flex items-center gap-1 {collab.role === 'medic' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'}">
+										{#if collab.role === 'medic'}
+											<Stethoscope class="w-3 h-3" />
+										{:else}
+											<User class="w-3 h-3" />
+										{/if}
+											{collab.role === 'medic' ? 'Doctor' : 'Pacient'}
 											</span>
 										</div>
 										<!-- Status text -->
-										<p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
+										<p class="text-xs sm:text-sm text-gray-500 dark:text-slate-400 truncate">
 											{#if userStatuses.get(collab.user_id)?.online}
-												<span class="text-green-600 dark:text-green-500 font-medium">● Active now</span>
+												<span class="text-green-600 dark:text-green-400 font-medium">● Active now</span>
 											{:else}
-												<span class="text-gray-400 dark:text-gray-500">{formatLastSeen(userStatuses.get(collab.user_id)?.lastSeen || null)}</span>
+												<span class="text-gray-400 dark:text-slate-500">{formatLastSeen(userStatuses.get(collab.user_id)?.lastSeen || null)}</span>
 											{/if}
 										</p>
 									</div>
 								</div>
 								
 								<!-- Arrow icon -->
-								<svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 sm:group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-								</svg>
+										<ChevronRight class="w-5 h-5 sm:w-6 sm:h-6 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 sm:group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" />
 							</div>
 						</button>
 					{/each}

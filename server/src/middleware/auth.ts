@@ -1,6 +1,14 @@
 import jwt, { SignOptions, Secret } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 
+// Critical: JWT_SECRET must be set in production
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  throw new Error(
+    'CRITICAL SECURITY ERROR: JWT_SECRET environment variable is required in production. ' +
+    'Generate a secure random string and set it as an environment variable.'
+  );
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 export interface JWTPayload {

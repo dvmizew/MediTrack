@@ -204,6 +204,30 @@ CREATE TRIGGER update_treatment_plans_updated_at BEFORE UPDATE ON treatment_plan
 CREATE TRIGGER update_treatment_doses_updated_at BEFORE UPDATE ON treatment_doses
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- Report Jobs Table (for async report generation)
+CREATE TYPE report_type AS ENUM ('users', 'treatments', 'doses', 'adherence', 'full_system');
+CREATE TYPE job_status AS ENUM ('pending', 'processing', 'completed', 'failed');
+
+CREATE TABLE report_jobs (
+    job_id SERIAL PRIMARY KEY,
+    report_type report_type NOT NULL,
+    requested_by INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    status job_status DEFAULT 'pending',
+    file_path TEXT,
+    file_size INTEGER,
+    error_message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '24 hours'
+);
+
+CREATE INDEX idx_report_jobs_status ON report_jobs(status);
+CREATE INDEX idx_report_jobs_requested_by ON report_jobs(requested_by);
+CREATE INDEX idx_report_jobs_expires ON report_jobs(expires_at);
+
+-- ==================== SEED DATA ====================
+
 -- Initial admin user (password: admin123)
 INSERT INTO users (email, password_hash, full_name, role, mfa_enabled) 
 VALUES ('admin@meditrack.com', '$2b$10$IEHnky61cn5S91TjmW1icuIhhpAeRuUGxct9aoy1BCEfVmTQF3cti', 'Admin User', 'admin', false)

@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { logger } from './logger.js';
 
 dotenv.config();
 
@@ -10,7 +11,7 @@ export const vapidConfig = {
 
 export const validateVapidConfig = () => {
   if (!vapidConfig.publicKey || !vapidConfig.privateKey) {
-    console.warn(
+    logger.warn(
       'VAPID keys not configured. Push notifications will not work. ' +
       'Generate keys with: npm install -g web-push && web-push generate-vapid-keys'
     );

@@ -5,6 +5,37 @@
 	import { authStore, isPacient, isMedic } from '$lib/stores/auth';
 	import { themeStore } from '$lib/stores/theme';
 	import { goto } from '$app/navigation';
+	import {
+		Users,
+		ClipboardList,
+		Mail,
+		MessageCircle,
+		Plus,
+		UserCheck,
+		MessageSquare,
+		BarChart3,
+		User,
+		CheckCircle2,
+		Pill,
+		Crown,
+		Stethoscope,
+		UserCircle,
+		Clock,
+		AlertCircle,
+		HelpCircle,
+		Calendar,
+		TrendingUp,
+		ChevronRight,
+		ArrowRight
+	} from '@lucide/svelte';
+	import {
+		getChartTheme,
+		createPercentageChart,
+		createComparisonBarChart,
+		createTimeSeriesChart,
+		createDistributionChart,
+		type ChartTheme
+	} from '$lib/utils/charts';
 	import Card from '$lib/components/Card.svelte';
 	import ActionButton from '$lib/components/ActionButton.svelte';
 	import PatientsList from '$lib/components/PatientsList.svelte';
@@ -12,13 +43,14 @@
 	import MedicationsList from '$lib/components/MedicationsList.svelte';
 	import ChartsGroup from '$lib/components/ChartsGroup.svelte';
 	import WelcomeCard from '$lib/components/WelcomeCard.svelte';
+	import type { Medication, Treatment, Collaboration, AdminOverview, Stats, MedicStats } from '$lib/types/api';
 
-	let todayMedications = $state<any[]>([]);
+	let todayMedications = $state<Medication[]>([]);
 	let adherenceHistory = $state<any[]>([]);
 	let loading = $state(true);
 	let refreshInterval: ReturnType<typeof setInterval> | null = null;
 	let themeUnsubscribe: (() => void) | null = null;
-	let stats = $state({
+	let stats = $state<Stats>({
 		total: 0,
 		taken: 0,
 		overdue: 0,
@@ -28,17 +60,17 @@
 	});
 
 	// Medic-specific state
-	let patients = $state<any[]>([]);
-	let treatments = $state<any[]>([]);
+	let patients = $state<Collaboration[]>([]);
+	let treatments = $state<Treatment[]>([]);
 	let messagesCount = $state(0);
-	let medicStats = $state({
+	let medicStats = $state<MedicStats>({
 		totalPatients: 0,
 		activeTreatments: 0,
 		pendingInvites: 0
 	});
 
 	// Admin-specific state
-	let adminOverview = $state<any>(null);
+	let adminOverview = $state<AdminOverview | null>(null);
 	let adminLoading = $state(false);
 	let adminError = $state<string | null>(null);
 	let adherence7Canvas = $state<HTMLCanvasElement | null>(null);
@@ -50,27 +82,21 @@
 	const patientCards = $derived([
 		{
 			title: 'Conformitate săptămânală',
-			value: `${stats.weeklyAdherence}%`,
+			value: `${stats?.weeklyAdherence ?? 0}%`,
 			sub: 'Media ultimelor 7 zile',
-			accent: 'text-gray-900 dark:text-gray-100'
+			accent: 'text-gray-900 dark:text-slate-100'
 		},
 		{
 			title: 'Astăzi',
-			value: `${stats.taken}/${stats.total}`,
-			sub: `${stats.snoozed} amânate • ${stats.overdue} întârziate`,
-			accent: 'text-gray-900 dark:text-gray-100'
+			value: `${stats?.taken ?? 0}/${stats?.total ?? 0}`,
+			sub: `${stats?.snoozed ?? 0} amânate • ${stats?.overdue ?? 0} întârziate`,
+			accent: 'text-gray-900 dark:text-slate-100'
 		},
 		{
 			title: 'Următoarea doză',
 			value: stats.upcomingLabel,
 			sub: `Actualizat la ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-			accent: 'text-gray-900 dark:text-gray-100'
-		},
-		{
-			title: 'Streak',
-			value: $authStore.user?.currentStreak || 0,
-			sub: 'zile consecutive',
-			accent: 'text-green-600 dark:text-green-400'
+			accent: 'text-gray-900 dark:text-slate-100'
 		}
 	]);
 
@@ -80,28 +106,28 @@
 			value: medicStats.totalPatients,
 			iconColor: 'text-blue-600 dark:text-blue-400',
 			iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-			iconPath: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
+			icon: Users
 		},
 		{
 			title: 'Tratamente Active',
 			value: medicStats.activeTreatments,
 			iconColor: 'text-green-600 dark:text-green-400',
 			iconBg: 'bg-green-100 dark:bg-green-900/30',
-			iconPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'
+			icon: ClipboardList
 		},
 		{
 			title: 'Invitații În Așteptare',
 			value: medicStats.pendingInvites,
 			iconColor: 'text-yellow-600 dark:text-yellow-400',
 			iconBg: 'bg-yellow-100 dark:bg-yellow-900/30',
-			iconPath: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
+			icon: Mail
 		},
 		{
 			title: 'Mesaje Noi',
 			value: messagesCount,
 			iconColor: 'text-purple-600 dark:text-purple-400',
 			iconBg: 'bg-purple-100 dark:bg-purple-900/30',
-			iconPath: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z'
+			icon: MessageCircle
 		}
 	]);
 
@@ -113,7 +139,7 @@
 			borderHover: 'border-blue-400 dark:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10',
 			iconBg: 'bg-blue-100 dark:bg-blue-900/30',
 			iconColor: 'text-blue-600 dark:text-blue-400',
-			iconPath: 'M12 4v16m8-8H4'
+			icon: Plus
 		},
 		{
 			label: 'Vezi Invitații',
@@ -122,7 +148,7 @@
 			borderHover: 'border-green-400 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/10',
 			iconBg: 'bg-green-100 dark:bg-green-900/30',
 			iconColor: 'text-green-600 dark:text-green-400',
-			iconPath: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
+			icon: UserCheck
 		},
 		{
 			label: 'Mesaje',
@@ -131,15 +157,15 @@
 			borderHover: 'border-purple-400 dark:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/10',
 			iconBg: 'bg-purple-100 dark:bg-purple-900/30',
 			iconColor: 'text-purple-600 dark:text-purple-400',
-			iconPath: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z'
+			icon: MessageSquare
 		}
 	]);
 
 	const adminCards = $derived(adminOverview ? [
 		{
 			title: 'Utilizatori Total',
-			value: adminOverview.users.active + adminOverview.users.inactive,
-			sub: `Activi ${adminOverview.users.active} · Inactivi ${adminOverview.users.inactive}`,
+			value: (adminOverview.users.active ?? 0) + (adminOverview.users.inactive ?? 0),
+			sub: `Activi ${adminOverview.users.active ?? 0} · Inactivi ${adminOverview.users.inactive ?? 0}`,
 			accent: 'text-blue-600 dark:text-blue-400'
 		},
 		{
@@ -150,8 +176,8 @@
 		},
 		{
 			title: 'Tratamente Active',
-			value: adminOverview.treatments.active,
-			sub: `Total ${adminOverview.treatments.total}`,
+			value: adminOverview.treatments.active ?? 0,
+			sub: `Total ${adminOverview.treatments.total ?? 0}`,
 			accent: 'text-purple-600 dark:text-purple-400'
 		},
 		{
@@ -169,12 +195,17 @@
 	let weeklyChart: Chart | null = null;
 	let medicationsChartCanvas = $state<HTMLCanvasElement | null>(null);
 	let medicationsChart: Chart | null = null;
-	const chartTheme = $derived({
-		text: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
-			|| document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#1f2937',
-		grid: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
-			|| document.documentElement.classList.contains('dark') ? '#4b5563' : '#d1d5db'
+
+	// Detect dark mode and get theme colors
+	const isDarkMode = $derived.by(() => {
+		if (typeof window !== 'undefined') {
+			return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+				|| document.documentElement.classList.contains('dark');
+		}
+		return false;
 	});
+
+	const chartTheme: ChartTheme = $derived(getChartTheme(isDarkMode));
 
 	const isAdmin = $derived($authStore.user?.role === 'admin');
 
@@ -182,108 +213,28 @@
 		if (!adminOverview || !adherence7Canvas || !adherence30Canvas) return;
 		const seven = adminOverview.adherence.last7Days;
 		const thirty = adminOverview.adherence.last30Days;
-		
-		// Detect dark mode more reliably
-		const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
-			|| document.documentElement.classList.contains('dark');
-		const textColor = isDark ? '#e5e7eb' : '#1f2937';
-		const gridColor = isDark ? '#4b5563' : '#d1d5db';
-		const tooltipBg = isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(249, 250, 251, 0.95)';
-		const tooltipText = isDark ? '#e5e7eb' : '#1f2937';
 
 		// Destroy existing charts if any
 		if (adherence7Chart) adherence7Chart.destroy();
 		if (adherence30Chart) adherence30Chart.destroy();
 
-		adherence7Chart = new Chart(adherence7Canvas, {
-			type: 'doughnut',
-			data: {
-				labels: ['Confirmate', 'Rămase'],
-				datasets: [{
-					data: [seven.confirmed, Math.max(seven.scheduled - seven.confirmed, 0)],
-					backgroundColor: ['#22c55e', '#f87171'],
-					borderWidth: 0
-				}]
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: true,
-				plugins: {
-					legend: {
-						position: 'bottom',
-						labels: { 
-							boxWidth: 12, 
-							padding: 8,
-							font: { size: 10, weight: 500 },
-							color: textColor 
-						}
-					},
-					tooltip: {
-						backgroundColor: tooltipBg,
-						titleColor: tooltipText,
-						bodyColor: tooltipText,
-						borderColor: isDark ? '#4b5563' : '#e5e7eb',
-						borderWidth: 1,
-						padding: 10,
-						displayColors: true,
-						titleFont: { size: 12, weight: 'bold' },
-						bodyFont: { size: 11 }
-					}
-				},
-				cutout: '70%'
-			}
-		});
+		// 7-day adherence as percentage (doughnut)
+		adherence7Chart = createPercentageChart(
+			adherence7Canvas.getContext('2d')!,
+			seven.confirmed,
+			seven.scheduled,
+			['Confirmate', 'Rămase'],
+			chartTheme
+		);
 
-		adherence30Chart = new Chart(adherence30Canvas, {
-			type: 'bar',
-			data: {
-				labels: ['Programate', 'Confirmate'],
-				datasets: [{
-					data: [thirty.scheduled, thirty.confirmed],
-					backgroundColor: ['#60a5fa', '#34d399'],
-					borderRadius: 4,
-					borderSkipped: false
-				}]
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: true,
-				plugins: { 
-					legend: { display: false },
-					tooltip: {
-						backgroundColor: tooltipBg,
-						titleColor: tooltipText,
-						bodyColor: tooltipText,
-						borderColor: isDark ? '#4b5563' : '#e5e7eb',
-						borderWidth: 1,
-						padding: 10,
-						titleFont: { size: 12, weight: 'bold' },
-						bodyFont: { size: 11 }
-					}
-				},
-				scales: {
-					y: { 
-						beginAtZero: true, 
-						ticks: { 
-							font: { size: 11, weight: 500 },
-							color: textColor,
-							stepSize: Math.ceil(Math.max(thirty.scheduled, thirty.confirmed) / 5)
-						}, 
-						grid: { 
-							color: gridColor,
-							drawTicks: true
-						} 
-					},
-					x: { 
-						ticks: { 
-							font: { size: 11, weight: 500 },
-							color: textColor 
-						}, 
-						grid: { display: false } 
-					}
-				}
-			}
-		});
+		// 30-day comparison bar chart
+		adherence30Chart = createComparisonBarChart(
+			adherence30Canvas.getContext('2d')!,
+			['Programate', 'Confirmate'],
+			[{ label: 'Programate', data: [thirty.scheduled] }, { label: 'Confirmate', data: [thirty.confirmed] }],
+			chartTheme,
+			Math.max(thirty.scheduled, thirty.confirmed)
+		);
 	}
 
 	async function loadAdminOverview() {
@@ -486,6 +437,7 @@
 		}).length;
 		
 		const snoozed = todayMedications.filter((m) => isMedicationSnoozed(m, now)).length;
+		streakBroken = overdue > 0;
 
 		// Find next upcoming medication considering snoozedUntil; if none, fallback to most recent overdue
 		const enriched = todayMedications
@@ -504,8 +456,21 @@
 			latestOverdueEntry = past[0] || null;
 		}
 
+		allDoneToday = total > 0 && taken === total;
+
 		// store next dose for countdown updates
-		nextDose = (upcomingEntry?.med || latestOverdueEntry?.med) || null;
+		nextDose = allDoneToday ? null : (upcomingEntry?.med || latestOverdueEntry?.med) || null;
+		const scheduledTime = nextDose ? getMedicationScheduledTime(nextDose, now) : null;
+		if (scheduledTime) {
+			const targetMs = scheduledTime.getTime();
+			if (countdownTargetMs !== targetMs) {
+				countdownTargetMs = targetMs;
+				countdownTotalSeconds = Math.max(1, Math.floor((targetMs - now.getTime()) / 1000));
+			}
+		} else {
+			countdownTargetMs = null;
+			countdownTotalSeconds = 0;
+		}
 		updateCountdown();
 
 		stats = {
@@ -521,23 +486,48 @@
 	// Countdown state and helpers
 	let nextDose = $state<any | null>(null);
 	let countdownLabel = $state('Nicio doză programată');
+	let countdownText = $state('--:--:--');
+	let countdownTotalSeconds = $state(0);
+	let countdownProgress = $state(0);
+	let countdownTargetMs = $state<number | null>(null);
+	let countdownStatus = $state<'none' | 'normal' | 'warning' | 'critical' | 'done'>('none');
+	let allDoneToday = $state(false);
+	let streakBroken = $state(false);
+	const displayStreak = $derived(streakBroken ? 0 : ($authStore.user?.currentStreak || 0));
 	let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
 	function updateCountdown() {
 		if (!nextDose) {
+			if (allDoneToday) {
+				countdownLabel = 'Ai terminat pentru astăzi';
+				countdownText = 'Bravo!';
+				countdownProgress = 1;
+				countdownStatus = 'done';
+				return;
+			}
 			countdownLabel = 'Nicio doză programată';
+			countdownText = '--:--:--';
+			countdownProgress = 0;
+			countdownStatus = 'none';
 			return;
 		}
 		const now = new Date();
 		const scheduledTime = getMedicationScheduledTime(nextDose, now);
 		if (!scheduledTime) {
 			countdownLabel = 'Nicio doză programată';
+			countdownText = '--:--:--';
+			countdownProgress = 0;
+			countdownStatus = 'none';
 			return;
 		}
 		const diffMs = scheduledTime.getTime() - now.getTime();
 		if (diffMs <= 0) {
 			const displayTime = nextDose.time || scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 			countdownLabel = `${displayTime} - ${nextDose.medicationName || 'Doză următoare'}`;
+			countdownText = '00:00:00';
+			countdownProgress = 1;
+			countdownStatus = 'critical';
+			streakBroken = true;
 			return;
 		}
 		const totalSeconds = Math.floor(diffMs / 1000);
@@ -550,6 +540,26 @@
 		const label = `${hh}:${mm}:${ss}`;
 		const displayTime = nextDose.time || scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 		countdownLabel = `${label} până la ${nextDose.medicationName || 'doza următoare'} (${displayTime})`;
+		countdownText = label;
+		if (totalSeconds <= 10 * 60) {
+			countdownStatus = 'critical';
+		} else if (totalSeconds <= 30 * 60) {
+			countdownStatus = 'warning';
+		} else {
+			countdownStatus = 'normal';
+		}
+		const maxWindowSeconds = 24 * 60 * 60;
+		const warningWindowSeconds = 30 * 60;
+		const clampedRemaining = Math.min(totalSeconds, maxWindowSeconds);
+		if (clampedRemaining <= warningWindowSeconds) {
+			const nearRatio = clampedRemaining / warningWindowSeconds;
+			countdownProgress = Math.max(0, Math.min(1, 0.7 + (1 - nearRatio) * 0.3));
+		} else {
+			const farRemaining = clampedRemaining - warningWindowSeconds;
+			const farWindow = maxWindowSeconds - warningWindowSeconds;
+			const farRatio = farRemaining / farWindow;
+			countdownProgress = Math.max(0, Math.min(1, 0.7 * (1 - farRatio)));
+		}
 	}
 
 	async function confirmMedication(medication: any) {
@@ -659,223 +669,54 @@
 	}
 
 	function initializeCharts() {
-		const { text: textColor, grid: gridColor } = chartTheme;
-		const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
-			|| document.documentElement.classList.contains('dark');
-		const tooltipBg = isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(249, 250, 251, 0.95)';
-
 		// Weekly Adherence Rate Chart (Doughnut) — using 7-day average percentage
 		if (adherenceChartCanvas) {
 			const weeklyRate = stats.weeklyAdherence;
-			// Show percentage directly: weeklyRate% completed, (100-weeklyRate)% remaining
 
-			adherenceChart = new Chart(adherenceChartCanvas, {
-				type: 'doughnut',
-				data: {
-					labels: ['Conformitate', 'Rămas'],
-					datasets: [{
-						data: [weeklyRate, 100 - weeklyRate],
-						backgroundColor: ['#10b981', '#e5e7eb'],
-						borderWidth: 0
-					}]
-				},
-				options: {
-					responsive: true,
-					maintainAspectRatio: false,
-					plugins: {
-						legend: {
-							position: 'bottom',
-							labels: { 
-								color: textColor,
-								font: { size: 11, weight: 500 }
-							}
-						},
-						title: {
-							display: true,
-							text: `Conformitate săptămânală: ${weeklyRate}%`,
-							color: textColor,
-							font: { size: 16, weight: 'bold' }
-						},
-						tooltip: {
-							backgroundColor: tooltipBg,
-							titleColor: textColor,
-							bodyColor: textColor,
-							borderColor: isDark ? '#4b5563' : '#e5e7eb',
-							borderWidth: 1,
-							padding: 10,
-							titleFont: { size: 12, weight: 'bold' },
-							bodyFont: { size: 11 }
-						}
-					}
-				}
-			});
+			if (adherenceChart) adherenceChart.destroy();
+			adherenceChart = createPercentageChart(
+				adherenceChartCanvas.getContext('2d')!,
+				weeklyRate,
+				100,
+				['Conformitate', 'Rămas'],
+				chartTheme
+			);
 		}
 
 		// 7-day timeline (Line)
 		if (weeklyChartCanvas) {
 			const timeline = buildTodayTimeline();
 
-			weeklyChart = new Chart(weeklyChartCanvas, {
-				type: 'line',
-				data: {
-					labels: timeline.labels,
-					datasets: [{
-						label: 'Conformitate zilnică (%)',
-						data: timeline.data,
-						borderColor: '#3b82f6',
-						backgroundColor: 'rgba(59, 130, 246, 0.1)',
-						tension: 0.35,
-						fill: true
-					}]
-				},
-				options: {
-					responsive: true,
-					maintainAspectRatio: false,
-					plugins: {
-						legend: {
-							labels: { 
-								color: textColor,
-								font: { size: 11, weight: 500 }
-							}
-						},
-						tooltip: {
-							backgroundColor: tooltipBg,
-							titleColor: textColor,
-							bodyColor: textColor,
-							borderColor: isDark ? '#4b5563' : '#e5e7eb',
-							borderWidth: 1,
-							padding: 10,
-							titleFont: { size: 12, weight: 'bold' },
-							bodyFont: { size: 11 }
-						}
-					},
-					scales: {
-						y: {
-							beginAtZero: true,
-							max: 100,
-							ticks: { 
-								color: textColor,
-								font: { size: 11, weight: 500 }
-							},
-							grid: { color: gridColor }
-						},
-						x: {
-							ticks: { 
-								color: textColor,
-								font: { size: 11, weight: 500 }
-							},
-							grid: { color: gridColor }
-						}
-					}
-				}
-			});
+			if (weeklyChart) weeklyChart.destroy();
+			weeklyChart = createTimeSeriesChart(
+				weeklyChartCanvas.getContext('2d')!,
+				timeline.labels,
+				timeline.data,
+				'#3b82f6',
+				'rgba(59, 130, 246, 0.1)',
+				chartTheme,
+				100
+			);
 		}
 
 		// 7-day Medications Distribution Chart (Bar)
 		if (medicationsChartCanvas) {
 			const distribution = getMedicationDistribution();
 
-			medicationsChart = new Chart(medicationsChartCanvas, {
-				type: 'bar',
-				data: {
-					labels: distribution.labels,
-					datasets: [{
-						label: 'Medicamente săptămânal',
-						data: distribution.data,
-						backgroundColor: '#8b5cf6',
-						borderRadius: 8
-					}]
-				},
-				options: {
-					responsive: true,
-					maintainAspectRatio: false,
-					plugins: {
-						legend: {
-							display: false
-						},
-						tooltip: {
-							backgroundColor: tooltipBg,
-							titleColor: textColor,
-							bodyColor: textColor,
-							borderColor: isDark ? '#4b5563' : '#e5e7eb',
-							borderWidth: 1,
-							padding: 10,
-							titleFont: { size: 12, weight: 'bold' },
-							bodyFont: { size: 11 }
-						}
-					},
-					scales: {
-						y: {
-							beginAtZero: true,
-							ticks: { 
-								stepSize: 1,
-								color: textColor,
-								font: { size: 11, weight: 500 }
-							},
-							grid: { color: gridColor }
-						},
-						x: {
-							ticks: { 
-								color: textColor,
-								font: { size: 11, weight: 500 }
-							},
-							grid: { display: false }
-						}
-					}
-				}
-			});
+			if (medicationsChart) medicationsChart.destroy();
+			medicationsChart = createDistributionChart(
+				medicationsChartCanvas.getContext('2d')!,
+				distribution.labels,
+				distribution.data,
+				'#8b5cf6',
+				chartTheme
+			);
 		}
 	}
 
 	function updateCharts() {
-		const { text: textColor, grid: gridColor } = chartTheme;
-		
-		if (adherenceChart) {
-			const weeklyRate = stats.weeklyAdherence;
-			// Update with correct percentage data
-			adherenceChart.data.datasets[0].data = [weeklyRate, 100 - weeklyRate];
-			if (adherenceChart.options.plugins?.title) {
-				adherenceChart.options.plugins.title.text = `Conformitate săptămânală: ${weeklyRate}%`;
-				adherenceChart.options.plugins.title.color = textColor;
-			}
-			if (adherenceChart.options.plugins?.legend?.labels) {
-				adherenceChart.options.plugins.legend.labels.color = textColor;
-			}
-			adherenceChart.update();
-		}
-		
-		if (weeklyChart) {
-			const timeline = buildTodayTimeline();
-			weeklyChart.data.labels = timeline.labels;
-			weeklyChart.data.datasets[0].data = timeline.data;
-			if (weeklyChart.options.plugins?.legend?.labels) {
-				weeklyChart.options.plugins.legend.labels.color = textColor;
-			}
-			if (weeklyChart.options.scales?.y) {
-				weeklyChart.options.scales.y.ticks = { color: textColor };
-				weeklyChart.options.scales.y.grid = { color: gridColor };
-			}
-			if (weeklyChart.options.scales?.x) {
-				weeklyChart.options.scales.x.ticks = { color: textColor };
-				weeklyChart.options.scales.x.grid = { color: gridColor };
-			}
-			weeklyChart.update();
-		}
-		
-		if (medicationsChart) {
-			const distribution = getMedicationDistribution();
-			medicationsChart.data.labels = distribution.labels;
-			medicationsChart.data.datasets[0].data = distribution.data;
-			if (medicationsChart.options.scales?.y) {
-				medicationsChart.options.scales.y.ticks = { stepSize: 1, color: textColor };
-				medicationsChart.options.scales.y.grid = { color: gridColor };
-			}
-			if (medicationsChart.options.scales?.x) {
-				medicationsChart.options.scales.x.ticks = { color: textColor };
-				medicationsChart.options.scales.x.grid = { display: false };
-			}
-			medicationsChart.update();
-		}
+		// On theme change, reinitialize all charts to apply new theme colors
+		initializeCharts();
 	}
 </script>
 
@@ -888,14 +729,14 @@
 		<!-- Quick Stats -->
 		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
 			{#each medicCards as card}
-				<Card title={card.title} value={card.value} sub="" accent="text-gray-900 dark:text-gray-100" iconPath={card.iconPath} iconColor={card.iconColor} iconBg={card.iconBg} />
+				<Card title={card.title} value={card.value} sub="" accent="text-gray-900 dark:text-slate-100" icon={card.icon} iconColor={card.iconColor} iconBg={card.iconBg} />
 			{/each}
 		</div>
 
 		<!-- Quick Actions -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 			{#each medicActions as action}
-				<ActionButton href={action.href} label={action.label} description={action.description} iconPath={action.iconPath} iconBg={action.iconBg} iconColor={action.iconColor} borderHover={action.borderHover} />
+				<ActionButton href={action.href} label={action.label} description={action.description} icon={action.icon} iconBg={action.iconBg} iconColor={action.iconColor} borderHover={action.borderHover} />
 			{/each}
 		</div>
 
@@ -914,46 +755,56 @@
 	<div class="space-y-4 md:space-y-6">
 		<!-- Header -->
 		<div class="space-y-1">
-			<h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Admin Dashboard</h1>
-			<p class="text-sm text-gray-600 dark:text-gray-300">Prezentare generală a sistemului, activitate și conformitate</p>
+			<h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-slate-100">Admin Dashboard</h1>
+			<p class="text-sm text-gray-700 dark:text-slate-300 font-medium">Prezentare generală a sistemului, activitate și conformitate</p>
 		</div>
 
 		{#if adminLoading}
-			<div class="p-6 text-gray-900 dark:text-gray-100">Se încarcă rapoarte…</div>
+			<div class="p-6 text-gray-900 dark:text-slate-100">Se încarcă rapoarte…</div>
 		{:else if adminError}
 			<div class="p-6 text-red-600 dark:text-red-400">{adminError}</div>
 		{:else if adminOverview}
 			<div class="space-y-4 md:space-y-6">
-				<!-- KPI Cards + Action Button Row -->
-				<div class="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-5">
-					<!-- Cards Section (4 columns) -->
-					<div class="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
-						{#each adminCards as card}
-							<Card title={card.title} value={card.value} sub={card.sub} accent={card.accent} />
-						{/each}
-					</div>
-					
-					<!-- Action Buttons (1 column, stacked) -->
-					<div class="lg:col-span-1 flex flex-col gap-4">
-						<ActionButton 
-							label="Gestionează Utilizatori"
-							description="Vizualizează, editează și monitorizează"
-							href="/admin/users"
-							borderHover="border-blue-400 dark:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10"
-							iconBg="bg-blue-100 dark:bg-blue-900/30"
-							iconColor="text-blue-600 dark:text-blue-400"
-							iconPath="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-						/>
-						<ActionButton 
-							label="Rapoarte"
-							description="Overview și rapoarte detaliate"
-							href="/admin/reports"
-							borderHover="border-emerald-400 dark:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10"
-							iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-							iconColor="text-emerald-600 dark:text-emerald-400"
-							iconPath="M9 17v-6a2 2 0 012-2h8m-4-4l4 4-4 4"
-						/>
-					</div>
+				<!-- KPI Cards Grid -->
+				<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+					{#each adminCards as card}
+						<article class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 border-l-4 {card.accent === 'text-blue-600 dark:text-blue-400' ? 'border-l-blue-500' : card.accent === 'text-green-600 dark:text-green-400' ? 'border-l-green-500' : card.accent === 'text-purple-600 dark:text-purple-400' ? 'border-l-purple-500' : 'border-l-orange-500'} rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl transition-all">
+							<div class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2 truncate">{card.title}</div>
+							<div class="text-xl sm:text-2xl md:text-3xl font-bold {card.accent} mb-1">{card.value}</div>
+							<p class="text-xs text-gray-600 dark:text-slate-400 line-clamp-2">{card.sub}</p>
+						</article>
+					{/each}
+				</div>
+
+				<!-- Admin Modules Quick Links -->
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+					<!-- Users Management Card -->
+					<a
+						href="/admin/users"
+						class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 border-l-4 border-l-blue-500 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+						aria-label="Gestionează Utilizatori: Vizualizează, editează și monitorizează"
+					>
+						<div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">
+							<Users class="w-16 h-16 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+							<ArrowRight class="w-5 h-5 text-blue-400 dark:text-blue-300 group-hover:translate-x-1 transition-transform flex-shrink-0" />
+						</div>
+						<h3 class="text-base sm:text-lg font-bold text-blue-800 dark:text-blue-200 mb-1">Utilizatori</h3>
+						<p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">Vizualizează, editează și monitorizează conturi</p>
+					</a>
+
+					<!-- Reports Card -->
+					<a
+						href="/admin/reports"
+						class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 border-l-4 border-l-emerald-500 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+						aria-label="Rapoarte: Overview și rapoarte detaliate"
+					>
+						<div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">
+							<BarChart3 class="w-16 h-16 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
+							<ArrowRight class="w-5 h-5 text-emerald-400 dark:text-emerald-300 group-hover:translate-x-1 transition-transform flex-shrink-0" />
+						</div>
+						<h3 class="text-base sm:text-lg font-bold text-emerald-800 dark:text-emerald-200 mb-1">Rapoarte</h3>
+						<p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">Overview și analize detaliate sistem</p>
+					</a>
 				</div>
 
 				<!-- 2-Column Layout for Content Sections -->
@@ -961,29 +812,56 @@
 					<!-- Left Column -->
 					<div class="space-y-6">
 						<!-- Users by Role -->
-						<section class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-							<div class="p-6 border-b border-gray-200 dark:border-gray-700">
-								<h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">👤 Utilizatori după Rol</h2>
+						<section class="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+							<div class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+								<div>
+									<h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2"><User class="w-5 h-5" /> Utilizatori după Rol</h2>
+									<p class="text-xs text-gray-600 dark:text-slate-400 mt-1">Distribuție pe roluri sistem</p>
+								</div>
+								<a href="/admin/users" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline w-fit">Gestionează →</a>
 							</div>
-							<div class="p-6 grid gap-3">
+							<div class="p-3 sm:p-4 md:p-6 space-y-3">
 								{#if adminOverview.users.byRole && adminOverview.users.byRole.length > 0}
 									{#each adminOverview.users.byRole as r}
-										<div class="rounded-lg bg-gray-50 dark:bg-gray-900 p-3 flex items-center justify-between hover:shadow-md transition-all">
-											<div class="font-medium capitalize text-gray-900 dark:text-gray-100">
-												{#if r.role === 'admin'}
-													👑 Administrator
-												{:else if r.role === 'medic'}
-													👨‍⚕️ Medic
-												{:else}
-													🧑 Pacient
-												{/if}
+										<div class="rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 p-3 sm:p-4 hover:shadow-md transition-all">
+											<div class="flex items-center justify-between mb-2">
+												<div class="flex items-center gap-2 font-medium text-gray-900 dark:text-slate-100">
+													{#if r.role === 'admin'}
+														<Crown class="w-6 h-6" />
+														<span class="text-sm sm:text-base">Administrator</span>
+													{:else if r.role === 'medic'}
+														<Stethoscope class="w-6 h-6" />
+														<span class="text-sm sm:text-base">Medic</span>
+													{:else}
+														<UserCircle class="w-6 h-6" />
+														<span class="text-sm sm:text-base">Pacient</span>
+													{/if}
+												</div>
+												<div class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100">{r.count}</div>
 											</div>
-											<div class="text-xl font-semibold text-gray-900 dark:text-gray-100">{r.count}</div>
+											<!-- Progress bar -->
+											<div class="w-full bg-slate-200/70 dark:bg-slate-700 rounded-full h-2 sm:h-2.5 overflow-hidden">
+												<div 
+													class="{r.role === 'admin' ? 'bg-gradient-to-r from-purple-500 to-purple-600' : r.role === 'medic' ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 'bg-gradient-to-r from-green-500 to-green-600'} h-full transition-all duration-500 rounded-full"
+													style="width: {adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0) > 0 ? (r.count / adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0)) * 100 : 0}%"
+												></div>
+											</div>
+											<div class="text-xs text-gray-600 dark:text-slate-300 mt-1.5">
+												{Math.round((r.count / adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0)) * 100)}% din total
+											</div>
 										</div>
 									{/each}
+
+									<!-- Summary -->
+									<div class="mt-4 pt-3 border-t border-slate-200/70 dark:border-slate-800/70">
+										<div class="flex items-center justify-between text-sm">
+											<span class="text-gray-700 dark:text-slate-100">Total utilizatori:</span>
+											<span class="font-bold text-gray-900 dark:text-slate-100">{adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0)}</span>
+										</div>
+									</div>
 								{:else}
-									<div class="py-8 text-center text-gray-500 dark:text-gray-400">
-										<div class="text-3xl mb-2">👥</div>
+									<div class="py-8 text-center text-gray-500 dark:text-slate-400">
+										<Users class="w-12 h-12 mx-auto mb-2" />
 										<p class="text-sm">Nu sunt utilizatori în sistem</p>
 									</div>
 								{/if}
@@ -991,41 +869,78 @@
 						</section>
 
 						<!-- Collaborations -->
-						<div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-							<div class="p-6 border-b border-gray-200 dark:border-gray-700">
-								<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">🤝 Status Colaborări</h2>
+						<div class="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+							<div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+								<div>
+									<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Users class="w-5 h-5" /> Status Colaborări</h2>
+									<p class="text-xs text-gray-600 dark:text-slate-400 mt-1">Relații medic-pacient și acceptare</p>
+								</div>
+								<a href="/collaborations" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">Vezi toți →</a>
 							</div>
-							<div class="p-4 space-y-2">
+							<div class="p-4 space-y-3">
 								{#if adminOverview.collaborations && adminOverview.collaborations.length > 0}
 									{#each adminOverview.collaborations as c}
-										<div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
-											<span class="capitalize text-gray-600 dark:text-gray-300 text-sm">
-												{#if c.status === 'pending'}
-													⏳ În așteptare
-												{:else if c.status === 'accepted'}
-													✅ Acceptate
-												{:else if c.status === 'rejected'}
-													❌ Respinse
+										<div class="space-y-1.5">
+											<div class="flex items-center justify-between">
+												<div class="flex items-center gap-2">
+													{#if c.status === 'pending'}
+														<Clock class="w-5 h-5" />
+														<span class="font-medium text-gray-900 dark:text-slate-100">În așteptare</span>
+													{:else if c.status === 'accepted'}
+														<CheckCircle2 class="w-5 h-5" />
+														<span class="font-medium text-green-900 dark:text-green-100">Acceptate</span>
+													{:else if c.status === 'rejected'}
+														<AlertCircle class="w-5 h-5" />
+														<span class="font-medium text-red-900 dark:text-red-100">Respinse</span>
+													{:else}
+														<span class="font-medium text-gray-900 dark:text-slate-100">{c.status}</span>
+													{/if}
+												</div>
+												<span class="text-lg font-bold text-gray-900 dark:text-slate-100">{c.count}</span>
+											</div>
+											<!-- Progress bar with percentage -->
+											<div class="w-full bg-slate-200/70 dark:bg-slate-800 rounded-full h-2 sm:h-2.5 overflow-hidden">
+												<div 
+													class="{c.status === 'accepted' ? 'bg-gradient-to-r from-green-500 to-green-600' : c.status === 'pending' ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' : 'bg-gradient-to-r from-red-500 to-red-600'} h-full transition-all duration-500 rounded-full"
+													style="width: {adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0 ? (c.count / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100 : 0}%"
+												></div>
+											</div>
+											<div class="text-xs text-gray-700 dark:text-slate-200">
+												{#if c.status === 'accepted'}
+													{Math.round((c.count / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}% dintre relații
+												{:else if c.status === 'pending'}
+													În curs de procesare
 												{:else}
-													{c.status}
+													Nefinalizate
 												{/if}
-											</span>
-											<span class="font-semibold text-gray-900 dark:text-gray-100">{c.count}</span>
+											</div>
 										</div>
 									{/each}
 								{:else}
-									<div class="py-6 text-center text-gray-500 dark:text-gray-400">
-										<div class="text-3xl mb-2">🤷</div>
+									<div class="py-6 text-center text-gray-500 dark:text-slate-400">
+										<HelpCircle class="w-12 h-12 mx-auto mb-2" />
 										<p class="text-sm">Nicio colaborare în sistem</p>
+									</div>
+								{/if}
+
+								{#if adminOverview.collaborations && adminOverview.collaborations.length > 0}
+									<div class="mt-4 pt-4 border-t border-slate-200/70 dark:border-slate-800/70 space-y-2 text-xs">
+										<div class="flex justify-between">
+											<span class="text-gray-700 dark:text-slate-300">Total colaborări:</span>
+											<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)}</span>
+										</div>
+										<div class="flex justify-between">
+											<span class="text-gray-700 dark:text-slate-300">Rata acceptare:</span>
+											<span class="font-semibold {(adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0.8 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">{Math.round(((adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}%</span>
+										</div>
 									</div>
 								{/if}
 							</div>
 						</div>
-
 						<!-- 7-Day Adherence Chart -->
-						<div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-							<div class="p-6 border-b border-gray-200 dark:border-gray-700">
-								<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">📅 Conformitate - 7 zile</h2>
+						<div class="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+							<div class="p-6 border-b border-slate-200 dark:border-slate-700">
+								<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Calendar class="w-5 h-5" /> Conformitate - 7 zile</h2>
 							</div>
 							<div class="p-6">
 								{#if adminOverview.adherence.last7Days.scheduled > 0}
@@ -1033,13 +948,13 @@
 										<canvas bind:this={adherence7Canvas}></canvas>
 									</div>
 									<div class="grid grid-cols-3 gap-2 text-xs text-center">
-										<div><div class="text-gray-500">Programate</div><div class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.adherence.last7Days.scheduled}</div></div>
-										<div><div class="text-gray-500">Confirmate</div><div class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.adherence.last7Days.confirmed}</div></div>
-										<div><div class="text-gray-500">Rată</div><div class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.adherence.last7Days.rate}</div></div>
+										<div><div class="text-gray-700 dark:text-slate-300">Programate</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last7Days.scheduled}</div></div>
+										<div><div class="text-gray-700 dark:text-slate-300">Confirmate</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last7Days.confirmed}</div></div>
+										<div><div class="text-gray-700 dark:text-slate-300">Rată</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last7Days.rate}</div></div>
 									</div>
 								{:else}
-									<div class="py-8 text-center text-gray-500 dark:text-gray-400">
-										<div class="text-3xl mb-2">📊</div>
+									<div class="py-8 text-center text-gray-500 dark:text-slate-400">
+										<BarChart3 class="w-12 h-12 mx-auto mb-2" />
 										<p class="text-sm">Nicio dată de conformitate în ultimele 7 zile</p>
 									</div>
 								{/if}
@@ -1050,28 +965,34 @@
 					<!-- Right Column -->
 					<div class="space-y-6">
 						<!-- Treatments -->
-						<div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-							<div class="p-6 border-b border-gray-200 dark:border-gray-700">
-								<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">💊 Tratamente</h2>
-								<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Status și numere</p>
+						<div class="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+							<div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+								<div>
+									<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Pill class="w-5 h-5" /> Tratamente</h2>
+									<p class="text-sm text-gray-600 dark:text-slate-400 mt-1">Status și numere</p>
+								</div>
+								<a href="/treatments" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline transition-colors flex items-center gap-1">
+									Vezi toți
+									<ChevronRight class="w-4 h-4" />
+								</a>
 							</div>
 							<div class="p-4 space-y-2">
 								{#if adminOverview.treatments.total > 0}
-									<div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
-										<span class="text-gray-600 dark:text-gray-300 text-sm">Activ</span>
-										<span class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.treatments.active}</span>
+									<div class="flex items-center justify-between p-3 rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+										<span class="text-gray-700 dark:text-slate-300 text-sm">Activ</span>
+										<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.treatments.active ?? 0}</span>
 									</div>
-									<div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
-										<span class="text-gray-600 dark:text-gray-300 text-sm">Inactiv</span>
-										<span class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.treatments.inactive}</span>
+									<div class="flex items-center justify-between p-3 rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+										<span class="text-gray-700 dark:text-slate-300 text-sm">Inactiv</span>
+										<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.treatments.inactive ?? 0}</span>
 									</div>
-									<div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
-										<span class="text-gray-600 dark:text-gray-300 text-sm">Total</span>
-										<span class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.treatments.total}</span>
+									<div class="flex items-center justify-between p-3 rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+										<span class="text-gray-700 dark:text-slate-300 text-sm">Total</span>
+										<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.treatments.total ?? 0}</span>
 									</div>
 								{:else}
-									<div class="py-6 text-center text-gray-500 dark:text-gray-400">
-										<div class="text-3xl mb-2">💊</div>
+									<div class="py-6 text-center text-gray-500 dark:text-slate-400">
+										<Pill class="w-12 h-12 mx-auto mb-2" />
 										<p class="text-sm">Niciun tratament în sistem</p>
 									</div>
 								{/if}
@@ -1079,9 +1000,9 @@
 						</div>
 
 						<!-- 30-Day Adherence Chart -->
-						<div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-							<div class="p-6 border-b border-gray-200 dark:border-gray-700">
-								<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">📈 Conformitate - 30 zile</h2>
+						<div class="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+							<div class="p-6 border-b border-slate-200 dark:border-slate-700">
+								<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><TrendingUp class="w-5 h-5" /> Conformitate - 30 zile</h2>
 							</div>
 							<div class="p-6">
 								{#if adminOverview.adherence.last30Days.scheduled > 0}
@@ -1089,13 +1010,13 @@
 										<canvas bind:this={adherence30Canvas}></canvas>
 									</div>
 									<div class="grid grid-cols-3 gap-2 text-xs text-center">
-										<div><div class="text-gray-500">Programate</div><div class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.adherence.last30Days.scheduled}</div></div>
-										<div><div class="text-gray-500">Confirmate</div><div class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.adherence.last30Days.confirmed}</div></div>
-										<div><div class="text-gray-500">Rată</div><div class="font-semibold text-gray-900 dark:text-gray-100">{adminOverview.adherence.last30Days.rate}</div></div>
+										<div><div class="text-gray-700 dark:text-slate-300">Programate</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last30Days.scheduled}</div></div>
+										<div><div class="text-gray-700 dark:text-slate-300">Confirmate</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last30Days.confirmed}</div></div>
+										<div><div class="text-gray-700 dark:text-slate-300">Rată</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last30Days.rate}</div></div>
 									</div>
 								{:else}
-									<div class="py-8 text-center text-gray-500 dark:text-gray-400">
-										<div class="text-3xl mb-2">📊</div>
+									<div class="py-8 text-center text-gray-500 dark:text-slate-400">
+										<BarChart3 class="w-12 h-12 mx-auto mb-2" />
 										<p class="text-sm">Nicio dată de conformitate în ultimele 30 zile</p>
 									</div>
 								{/if}
@@ -1108,19 +1029,72 @@
 	</div>
 {:else if $isPacient}
 	<!-- Patient Dashboard -->
-<div class="space-y-4 md:space-y-6">
+<div
+	class={`space-y-4 md:space-y-6 ${
+		streakBroken ? 'rounded-3xl bg-slate-100/70 dark:bg-slate-900/60 p-4 md:p-6' : ''
+	}`}
+>
 	<!-- Welcome Card (patient, same design) -->
-	<WelcomeCard name={$authStore.user?.fullName || ''} subtitle={`${$authStore.user?.totalXp || 0} XP • Streak: ${$authStore.user?.currentStreak || 0} zile`} />
+	<WelcomeCard
+		name={$authStore.user?.fullName || ''}
+		title={
+			allDoneToday
+				? `Bun venit, ${$authStore.user?.fullName || ''}!`
+				: streakBroken
+					? `${$authStore.user?.fullName || ''}, streak pierdut`
+					: countdownStatus === 'critical'
+					? `${$authStore.user?.fullName || ''}, Streak în pericol!`
+					: countdownStatus === 'warning'
+						? `Bun venit, ${$authStore.user?.fullName || ''}!`
+						: null
+		}
+		subtitle={
+			allDoneToday
+				? 'Ai îndeplinit toate misiunile!'
+				: streakBroken
+					? 'Timpul a trecut. Streak resetat la 0. Nu lăsa asta să devină un obicei...'
+					: countdownStatus === 'critical'
+						? `Nu strica progresul de ${displayStreak} zile!`
+						: countdownStatus === 'warning'
+							? 'Se apropie următoarea doză! Nu rata streakul!'
+							: `${$authStore.user?.totalXp || 0} XP • Streak: ${displayStreak} zile`
+		}
+		tone={
+			allDoneToday
+				? 'celebrate'
+				: streakBroken
+					? 'sad'
+					: countdownStatus === 'critical'
+						? 'critical'
+						: countdownStatus === 'warning'
+							? 'warning'
+							: 'default'
+		}
+	/>
+
+	<!-- Medications List -->
+	<MedicationsList
+		loading={loading}
+		medications={todayMedications}
+		isTakenFn={isMedicationTaken}
+		isSnoozedFn={(m: any) => isMedicationSnoozed(m)}
+		onConfirm={confirmMedication}
+		onSnooze={snoozeMedication}
+		celebrate={allDoneToday}
+		streak={displayStreak}
+		countdownText={countdownText}
+		countdownProgress={countdownProgress}
+		countdownStatus={countdownStatus}
+		nextDoseId={nextDose?.doseId ?? nextDose?.id ?? nextDose?.medicationId ?? null}
+		muted={streakBroken}
+	/>
 
 	<!-- Quick Stats -->
-	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
+	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
 		{#each patientCards as card}
 			<Card title={card.title} value={card.value} sub={card.sub} accent={card.accent} />
 		{/each}
 	</div>
-
-	<!-- Today's Medications -->
-	<MedicationsList loading={loading} medications={todayMedications} isTakenFn={isMedicationTaken} isSnoozedFn={(m: any) => isMedicationSnoozed(m)} onConfirm={confirmMedication} onSnooze={snoozeMedication} />
 
 	<!-- Charts Grid -->
 	<ChartsGroup bind:adherenceCanvas={adherenceChartCanvas} bind:weeklyCanvas={weeklyChartCanvas} bind:medicationsCanvas={medicationsChartCanvas} />

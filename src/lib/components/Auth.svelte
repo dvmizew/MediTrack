@@ -8,7 +8,8 @@
 	import { socketClient } from '$lib/api/socket';
 	import { themeStore } from '$lib/stores/theme';
 	import { goto } from '$app/navigation';
-	import { authLoginSchema, authRegisterSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
+	import { Sun, Moon, FileText } from '@lucide/svelte';
+	import { authRegisterSchema, authLoginSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
 
 	let email = $state('');
 	let password = $state('');
@@ -113,19 +114,15 @@
 	<!-- Theme Toggle Button (Top Right) -->
 	<button
 		onclick={themeStore.toggle}
-		class="absolute top-4 right-4 p-3 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white dark:hover:bg-gray-800 hover:shadow-lg hover:scale-110 transition-all duration-300 ease-in-out group"
+		class="absolute top-4 right-4 p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800 hover:shadow-lg hover:scale-110 transition-all duration-300 ease-in-out group"
 		aria-label={$themeStore === 'dark' ? 'Comută la modul luminos' : 'Comută la modul întunecat'}
 		aria-pressed={$themeStore === 'dark'}
 		type="button"
 	>
 		{#if $themeStore === 'dark'}
-			<svg class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-			</svg>
+			<Sun class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
 		{:else}
-			<svg class="w-5 h-5 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-			</svg>
+			<Moon class="w-5 h-5 transition-transform duration-500" />
 		{/if}
 	</button>
 
@@ -133,16 +130,14 @@
 		<!-- Logo & Title -->
 		<div class="text-center mb-6 md:mb-8" role="banner">
 			<div class="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-lg mb-3 md:mb-4 hover:scale-110 hover:shadow-xl hover:shadow-blue-600/50 transition-all duration-300 animate-bounce-gentle" aria-hidden="true">
-				<svg class="w-8 h-8 md:w-9 md:h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-				</svg>
+			<FileText class="w-8 h-8 md:w-9 md:h-9 text-white" />
 			</div>
-			<h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">MediTrack</h1>
+			<h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-slate-100 mb-2">MediTrack</h1>
 			{#key isRegister}
 				<p 
 					in:fly={{ y: -10, duration: 300, easing: quintOut }}
 					out:fly={{ y: 10, duration: 200, easing: quintOut }}
-					class="text-sm md:text-base text-gray-600 dark:text-gray-400"
+					class="text-sm md:text-base text-gray-600 dark:text-slate-400"
 					id="auth-subtitle"
 					aria-live="polite"
 				>
@@ -152,7 +147,7 @@
 		</div>
 
 		<!-- Card -->
-		<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-6 md:p-8 hover:shadow-2xl transition-shadow duration-300" role="main">
+		<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 p-6 md:p-8 hover:shadow-2xl transition-shadow duration-300" role="main">
 			{#if error}
 			<div 
 				class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm animate-shake"
@@ -166,17 +161,17 @@
 		{#if showMfaStep}
 			<form onsubmit={handleMfaVerify} id="auth-form" aria-labelledby="auth-subtitle" class="space-y-4">
 				<div class="mb-4">
-					<label for="mfaCode" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cod autentificator (6 cifre) sau backup (8 caractere)</label>
-					<input id="mfaCode" name="mfaCode" type="text" bind:value={mfaCode} maxlength={8} placeholder="000000 sau XXXXXXXX" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" autocomplete="off"/>
-					<div class="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-						<input id="rememberDevice" type="checkbox" bind:checked={rememberDevice} class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded"/>
+					<label for="mfaCode" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Cod autentificator (6 cifre) sau backup (8 caractere)</label>
+					<input id="mfaCode" name="mfaCode" type="text" bind:value={mfaCode} maxlength={8} placeholder="000000 sau XXXXXXXX" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" autocomplete="off"/>
+					<div class="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-slate-300">
+						<input id="rememberDevice" type="checkbox" bind:checked={rememberDevice} class="w-4 h-4 text-blue-600 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 rounded"/>
 						<label for="rememberDevice" class="select-none">Ține-mă minte pe acest dispozitiv (nu cere 2FA timp de 30 zile)</label>
 					</div>
 				</div>
 				<button type="submit" disabled={loading || !mfaCode.trim()} class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
 					{loading ? 'Se verifică...' : 'Verifică codul'}
 				</button>
-				<button type="button" class="w-full mt-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors" onclick={() => { showMfaStep = false; pendingUserId = null; mfaCode=''; error=''; }}>
+				<button type="button" class="w-full mt-2 text-sm text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-gray-200 transition-colors" onclick={() => { showMfaStep = false; pendingUserId = null; mfaCode=''; error=''; }}>
 					Înapoi la autentificare
 				</button>
 			</form>
@@ -184,7 +179,7 @@
 		<form onsubmit={handleSubmit} id="auth-form" aria-labelledby="auth-subtitle">
 			{#if isRegister}
 				<div transition:slide={{ duration: 500, easing: quintOut }} class="mb-4 md:mb-5">
-					<label for="fullName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+					<label for="fullName" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 						Nume complet
 						{#if (!fullName && (touchedFullName || error))}
 							<span aria-label="obligatoriu" class="text-red-500">*</span>
@@ -199,7 +194,7 @@
 						autocomplete="name"
 						aria-required="true"
 						aria-invalid={error && !fullName ? 'true' : 'false'}
-						class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
+						class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 						placeholder="Ion Popescu"
 						onblur={() => (touchedFullName = true)}
 					/>
@@ -207,7 +202,7 @@
 			{/if}
 
 			<div class="mb-4 md:mb-5">
-				<label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+				<label for="email" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 					Email
 					{#if (!email && (touchedEmail || error))}
 						<span aria-label="obligatoriu" class="text-red-500">*</span>
@@ -222,14 +217,14 @@
 					autocomplete="email"
 					aria-required="true"
 					aria-invalid={error && !email ? 'true' : 'false'}
-					class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
+					class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 					placeholder="email@example.com"
 					onblur={() => (touchedEmail = true)}
 				/>
 			</div>
 
 			<div class="mb-4 md:mb-5">
-				<label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+				<label for="password" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 					Parolă
 					{#if (!password && (touchedPassword || error))}
 						<span aria-label="obligatoriu" class="text-red-500">*</span>
@@ -246,7 +241,7 @@
 					aria-required="true"
 					aria-invalid={error && !password ? 'true' : 'false'}
 					aria-describedby="password-hint"
-					class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
+					class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition-all duration-200 text-base"
 					placeholder="••••••••"
 					onblur={() => (touchedPassword = true)}
 				/>
@@ -267,10 +262,10 @@
 		<div class="mt-5 md:mt-6">
 			<div class="relative" role="separator" aria-label="sau">
 				<div class="absolute inset-0 flex items-center">
-					<div class="w-full border-t border-gray-200 dark:border-gray-700"></div>
+					<div class="w-full border-t border-gray-200 dark:border-slate-700"></div>
 				</div>
 				<div class="relative flex justify-center text-sm">
-					<span class="px-3 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">sau</span>
+					<span class="px-3 bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400">sau</span>
 				</div>
 			</div>
 
@@ -278,7 +273,7 @@
 				type="button"
 				onclick={handleGoogleLogin}
 				aria-label="Continuă cu Google"
-				class="mt-4 w-full flex items-center justify-center gap-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 py-3 px-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-lg hover:scale-[1.02] focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 font-medium transition-all duration-200 touch-manipulation active:scale-95"
+				class="mt-4 w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-700 border-2 border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-200 py-3 px-4 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-600 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-lg hover:scale-[1.02] focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 font-medium transition-all duration-200 touch-manipulation active:scale-95"
 			>
 				<svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
 					<path

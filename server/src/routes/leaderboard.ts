@@ -7,22 +7,28 @@ import { redis } from '../config/redis.js';
 const router: Router = express.Router();
 const LEADERBOARD_CACHE_TTL = 300; // 5 minutes
 
+// Cache toggle - respects ENABLE_CACHE environment variable
+// Set to false during development to prevent Redis memory bloat
+const ENABLE_CACHE = process.env.ENABLE_CACHE === 'true';
+
 router.get('/', authenticate, async (req: Request, res: Response) => {
 	try {
 		const { filter = 'all' } = req.query as { filter?: 'all' | 'week' | 'month' };
 		const userId = (req as AuthRequest).user!.userId;
 		const cacheKey = `leaderboard:${filter}`;
 
-		// Try to get from cache
+		// Try to get from cache (only if enabled)
 		let leaderboard = null;
-		try {
-			const cached = await redis.get(cacheKey);
-			if (cached) {
-				leaderboard = JSON.parse(cached);
-				logger.debug('Leaderboard served from cache', { filter });
+		if (ENABLE_CACHE) {
+			try {
+				const cached = await redis.get(cacheKey);
+				if (cached) {
+					leaderboard = JSON.parse(cached);
+					logger.debug('Leaderboard served from cache', { filter });
+				}
+			} catch (cacheErr) {
+				logger.warn('Cache read error, proceeding without cache', { error: cacheErr });
 			}
-		} catch (cacheErr) {
-			logger.warn('Cache read error, proceeding without cache', { error: cacheErr });
 		}
 
 		// If not in cache, fetch from DB
@@ -92,11 +98,13 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
 				isCurrentUser: row.user_id === userId
 			}));
 
-			// Cache for 5 minutes
-			try {
-				await redis.setex(cacheKey, LEADERBOARD_CACHE_TTL, JSON.stringify(leaderboard));
-			} catch (cacheErr) {
-				logger.warn('Cache write error', { error: cacheErr });
+			// Cache for 5 minutes (only if enabled)
+			if (ENABLE_CACHE) {
+				try {
+					await redis.setex(cacheKey, LEADERBOARD_CACHE_TTL, JSON.stringify(leaderboard));
+				} catch (cacheErr) {
+					logger.warn('Cache write error', { error: cacheErr });
+				}
 			}
 		}
 

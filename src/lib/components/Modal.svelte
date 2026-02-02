@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { scale, fade } from 'svelte/transition';
+	import { Info, AlertCircle, XCircle, CheckCircle2, Loader, X } from '@lucide/svelte';
 
 	export interface Props {
 		isOpen: boolean;
@@ -53,10 +54,10 @@
 	};
 
 	const typeIcons = {
-		info: '🔵',
-		warning: '⚠️',
-		error: '❌',
-		success: '✓'
+		info: Info,
+		warning: AlertCircle,
+		error: XCircle,
+		success: CheckCircle2
 	};
 
 	function handleBackdropClick() {
@@ -103,7 +104,7 @@
 	>
 		<div
 			transition:scale={{ duration: 200, start: 0.95 }}
-			class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 {sizeClasses[size]} w-11/12 pointer-events-auto max-h-[90vh] flex flex-col overflow-hidden"
+			class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 p-4 sm:p-6 {sizeClasses[size]} w-11/12 pointer-events-auto max-h-[90vh] flex flex-col overflow-hidden"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 			role="dialog"
@@ -121,7 +122,7 @@
 							</span>
 						{/if}
 						{#if title}
-							<h2 id="modal-title" class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+							<h2 id="modal-title" class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100">
 								{title}
 							</h2>
 						{/if}
@@ -129,13 +130,11 @@
 					<button
 						onclick={onClose}
 						disabled={isProcessing}
-						class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition disabled:opacity-50"
+						class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition disabled:opacity-50"
 						aria-label="Închide"
 						type="button"
 					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-						</svg>
+						<X class="w-5 h-5" />
 					</button>
 				</div>
 			{/if}
@@ -143,7 +142,7 @@
 			<!-- Content -->
 			<div class="mb-6 overflow-y-auto flex-1 pr-2">
 				{#if content}
-					<p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+					<p class="text-sm sm:text-base text-gray-600 dark:text-slate-400">
 						{content}
 					</p>
 				{/if}
@@ -162,7 +161,7 @@
 							type="button"
 							onclick={handleCancel}
 							disabled={isProcessing}
-							class="px-4 py-2 text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+							class="px-4 py-2 text-sm sm:text-base font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							{cancelText}
 						</button>
@@ -180,7 +179,7 @@
 										: 'bg-blue-600 hover:bg-blue-700'}"
 						>
 							{#if isProcessing}
-								<span class="inline-block animate-spin mr-2">⏳</span>
+								<Loader class="w-4 h-4 animate-spin mr-2" />
 							{/if}
 							{confirmText}
 						</button>

@@ -107,9 +107,9 @@
 >
 	<div class="space-y-2">
 		{#each shortcuts as shortcut}
-			<div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-				<span class="text-sm text-gray-600 dark:text-gray-400">{shortcut.description}</span>
-				<kbd class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs font-mono font-semibold">
+			<div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-slate-700 last:border-0">
+				<span class="text-sm text-gray-600 dark:text-slate-400">{shortcut.description}</span>
+				<kbd class="px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 rounded text-xs font-mono font-semibold">
 					{shortcut.key.toUpperCase()}
 				</kbd>
 			</div>
@@ -118,7 +118,7 @@
 
 	<div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
 		<p class="text-xs text-blue-800 dark:text-blue-200">
-			<strong>Sfat:</strong> Apasă <kbd class="px-1.5 py-0.5 bg-white dark:bg-gray-800 rounded text-xs font-mono">ESC</kbd> pentru a închide modalele.
+			<strong>Sfat:</strong> Apasă <kbd class="px-1.5 py-0.5 bg-white dark:bg-slate-800 rounded text-xs font-mono">ESC</kbd> pentru a închide modalele.
 		</p>
 	</div>
 </Modal>

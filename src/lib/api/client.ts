@@ -6,6 +6,10 @@ interface RequestOptions extends RequestInit {
 	auth?: boolean;
 }
 
+// Cache toggle - respects VITE_ENABLE_CACHE environment variable
+// When disabled, adds cache-busting timestamp to all requests
+const ENABLE_CACHE = import.meta.env.VITE_ENABLE_CACHE !== 'false';
+
 async function request(endpoint: string, options: RequestOptions = {}) {
 	const { auth = true, ...fetchOptions } = options;
 
@@ -23,10 +27,10 @@ async function request(endpoint: string, options: RequestOptions = {}) {
 	}
 
 	try {
-		// Build URL and add cache-busting param for GET requests
+		// Build URL and add cache-busting param for GET requests when cache is disabled
 		const method = (fetchOptions.method || 'GET').toUpperCase();
 		let url = `${API_URL}${endpoint}`;
-		if (method === 'GET') {
+		if (method === 'GET' && !ENABLE_CACHE) {
 			const sep = url.includes('?') ? '&' : '?';
 			url = `${url}${sep}ts=${Date.now()}`;
 		}
@@ -117,6 +121,18 @@ export const api = {
 	// Users (admin)
 	getUsers: () => request('/users'),
 	getUserProfile: (userId: string) => request(`/users/${userId}`),
+	createUser: (data: { email: string; fullName: string; role: 'admin' | 'medic' | 'pacient'; password: string }) =>
+		request('/users', {
+			method: 'POST',
+			body: JSON.stringify(data)
+		}),
+	updateUser: (userId: number, data: { email?: string; fullName?: string; role?: string; password?: string }) =>
+		request(`/users/${userId}`, {
+			method: 'PATCH',
+			body: JSON.stringify(data)
+		}),
+	deleteUser: (userId: number) =>
+		request(`/users/${userId}`, { method: 'DELETE' }),
 	updateUserRole: (userId: number, role: string) =>
 		request(`/users/${userId}/role`, {
 			method: 'PATCH',
@@ -265,7 +281,88 @@ export const api = {
 export const adminReportsApi = {
 	getOverview: () => request('/admin/reports/overview'),
 	getUserReport: (userId: number | string) => request(`/admin/reports/user/${userId}`),
-	getMedicReport: (userId: number | string) => request(`/admin/reports/medic/${userId}`)
+	getMedicReport: (userId: number | string) => request(`/admin/reports/medic/${userId}`),
+
+	// CSV Exports
+	exportUsers: () => 
+		fetch(`${API_URL}/admin/reports/export/users`, {
+			headers: {
+				'Authorization': `Bearer ${get(authStore).token}`
+			}
+		}).then(r => {
+			if (!r.ok) throw new Error('Export failed');
+			return r.blob();
+		}),
+
+	exportTreatments: () => 
+		fetch(`${API_URL}/admin/reports/export/treatments`, {
+			headers: {
+				'Authorization': `Bearer ${get(authStore).token}`
+			}
+		}).then(r => {
+			if (!r.ok) throw new Error('Export failed');
+			return r.blob();
+		}),
+
+	exportCollaborations: () => 
+		fetch(`${API_URL}/admin/reports/export/collaborations`, {
+			headers: {
+				'Authorization': `Bearer ${get(authStore).token}`
+			}
+		}).then(r => {
+			if (!r.ok) throw new Error('Export failed');
+			return r.blob();
+		}),
+
+	// Async Report Jobs
+	createReportJob: (reportType: 'users' | 'treatments' | 'doses' | 'full_system') =>
+		request('/admin/reports/jobs/create', {
+			method: 'POST',
+			body: JSON.stringify({ reportType })
+		}),
+
+	getJobStatus: (jobId: number | string) =>
+		request(`/admin/reports/jobs/${jobId}/status`),
+
+	listJobs: (status?: string, limit?: number) => {
+		const params = new URLSearchParams();
+		if (status) params.append('status', status);
+		if (limit) params.append('limit', limit.toString());
+		const query = params.toString();
+		return request(`/admin/reports/jobs/list${query ? `?${query}` : ''}`);
+	},
+
+	downloadReport: (jobId: number | string) =>
+		fetch(`${API_URL}/admin/reports/jobs/${jobId}/download`, {
+			headers: {
+				'Authorization': `Bearer ${get(authStore).token}`
+			}
+		}).then(r => {
+			if (!r.ok) throw new Error('Download failed');
+			return r.blob();
+		}),
+
+	deleteJob: (jobId: number | string) =>
+		request(`/admin/reports/jobs/${jobId}`, {
+			method: 'DELETE'
+		}),
+
+	// GDPR
+	exportPersonalData: () =>
+		fetch(`${API_URL}/admin/reports/export/personal-data`, {
+			headers: {
+				'Authorization': `Bearer ${get(authStore).token}`
+			}
+		}).then(r => {
+			if (!r.ok) throw new Error('Export failed');
+			return r.blob();
+		}),
+
+	deleteAccount: (password: string) =>
+		request('/admin/reports/delete-account', {
+			method: 'POST',
+			body: JSON.stringify({ password })
+		})
 };
 
 // MFA API

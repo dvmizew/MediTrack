@@ -2,6 +2,7 @@
 -- This script drops all tables, types, and functions, then recreates everything
 
 -- Drop all tables (in reverse dependency order)
+DROP TABLE IF EXISTS report_jobs CASCADE;
 DROP TABLE IF EXISTS notifications CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS dose_confirmations CASCADE;
@@ -13,6 +14,8 @@ DROP TABLE IF EXISTS mfa_attempts CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
 -- Drop all ENUM types
+DROP TYPE IF EXISTS job_status CASCADE;
+DROP TYPE IF EXISTS report_type CASCADE;
 DROP TYPE IF EXISTS badge_type CASCADE;
 DROP TYPE IF EXISTS notification_status CASCADE;
 DROP TYPE IF EXISTS notification_type CASCADE;
