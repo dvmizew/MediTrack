@@ -5,19 +5,50 @@
 	import MedicationItem from '$lib/components/MedicationItem.svelte';
 	import StreakCircle from '$lib/components/StreakCircle.svelte';
 
-	export let loading: boolean = false;
-	export let medications: Array<any> = [];
-	export let isTakenFn: (m: any) => boolean;
-	export let isSnoozedFn: (m: any) => boolean;
-	export let onConfirm: (m: any) => void;
-	export let onSnooze: (m: any) => void;
-	export let countdownText: string = '--:--:--';
-	export let countdownProgress: number = 0;
-	export let countdownStatus: 'none' | 'normal' | 'warning' | 'critical' | 'done' = 'none';
-	export let nextDoseId: number | null = null;
-	export let streak: number = $authStore.user?.currentStreak || 0;
-	export let muted: boolean = false;
-	export let celebrate: boolean = false;
+	interface Props {
+		loading?: boolean;
+		medications?: Array<any>;
+		isTakenFn: (m: any) => boolean;
+		isSnoozedFn: (m: any) => boolean;
+		onConfirm: (m: any) => void;
+		onSnooze: (m: any) => void;
+		countdownText?: string;
+		countdownProgress?: number;
+		countdownStatus?: 'none' | 'normal' | 'warning' | 'critical' | 'done';
+		nextDoseId?: number | null;
+		streak?: number;
+		maxStreak?: number;
+		muted?: boolean;
+		celebrate?: boolean;
+	}
+
+	const {
+		loading = false,
+		medications = [],
+		isTakenFn,
+		isSnoozedFn,
+		onConfirm,
+		onSnooze,
+		countdownText = '--:--:--',
+		countdownProgress = 0,
+		countdownStatus = 'none',
+		nextDoseId = null,
+		streak = $authStore.user?.currentStreak || 0,
+		maxStreak = $authStore.user?.longestStreak || 0,
+		muted = false,
+		celebrate = false
+	}: Props = $props();
+
+	// Calculate milestone (7, 14, 30, 60, 100, etc.)
+	const calculateNextMilestone = (currentStreak: number) => {
+		if (currentStreak < 7) return 7;
+		if (currentStreak < 14) return 14;
+		if (currentStreak < 30) return 30;
+		if (currentStreak < 60) return 60;
+		if (currentStreak < 100) return 100;
+		return Math.ceil(currentStreak / 10) * 10;
+	};
+	const nextMilestone = $derived(calculateNextMilestone(streak));
 
 	const normalizeId = (value: unknown) => (value === null || value === undefined ? null : String(value));
 
@@ -25,9 +56,9 @@
 	const confettiCount = 120;
 	const confettiDurationMs = 3500;
 
-	let confettiActive = false;
-	let confettiKey = 0;
-	let confettiPieces: Array<{
+	let confettiActive = $state(false);
+	let confettiKey = $state(0);
+	let confettiPieces = $state<Array<{
 		id: number;
 		x: number;
 		y: number;
@@ -36,8 +67,8 @@
 		delay: number;
 		duration: number;
 		color: string;
-	}> = [];
-	let lastCelebrate = celebrate;
+	}>>([]);
+	let lastCelebrate = $state(false);
 	let confettiTimer: ReturnType<typeof setTimeout> | null = null;
 
 	function buildConfettiPieces() {
@@ -65,12 +96,14 @@
 		}, confettiDurationMs);
 	}
 
-	$: if (celebrate !== lastCelebrate) {
-		if (celebrate) {
-			triggerConfetti();
+	$effect(() => {
+		if (celebrate !== lastCelebrate) {
+			if (celebrate) {
+				triggerConfetti();
+			}
+			lastCelebrate = celebrate;
 		}
-		lastCelebrate = celebrate;
-	}
+	});
 
 	onDestroy(() => {
 		if (confettiTimer) {
@@ -104,8 +137,20 @@
 					<Trophy class="w-6 h-6" />
 				</span>
 				<div>
-					<h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-slate-100">Challenges</h3>
-					<p class="text-xs md:text-sm text-gray-800 dark:text-slate-300 font-medium">Medicamentele de astăzi</p>
+					<h3
+						class={`text-base md:text-lg font-semibold ${
+							muted ? 'text-slate-700 dark:text-slate-200' : 'text-gray-900 dark:text-slate-100'
+						}`}
+					>
+						Challenges
+					</h3>
+					<p
+						class={`text-xs md:text-sm font-medium ${
+						muted ? 'text-slate-600 dark:text-slate-200' : 'text-gray-800 dark:text-slate-200'
+						}`}
+					>
+						Medicamentele de astăzi
+					</p>
 				</div>
 			</div>
 		</div>
@@ -147,8 +192,8 @@
 		{/if}
 	</div>
 
-	<!-- Streak Widget (1 column on large screens) - Just the sphere at TOP -->
-	<div class="flex flex-col items-center justify-start pt-0 relative">
+	<!-- Streak Widget -->
+	<div class="relative flex flex-col items-center justify-center py-4 md:py-6">
 		{#if confettiActive}
 			<div class="confetti-layer" aria-hidden="true">
 				{#key confettiKey}
@@ -162,18 +207,16 @@
 			</div>
 		{/if}
 		<StreakCircle
-			streak={streak}
+			{streak}
 			countdownText={countdownText}
 			progress={countdownProgress}
 			status={countdownStatus}
-			muted={muted}
+			{muted}
+			{maxStreak}
+			{nextMilestone}
 		/>
-		<p
-			class={`text-sm mt-4 text-center font-medium ${
-				muted ? 'text-slate-600 dark:text-slate-300' : 'text-gray-700 dark:text-slate-300'
-			}`}
-		>
-			Zile consecutive
+		<p class="mt-3 text-center text-sm font-semibold text-gray-900 dark:text-slate-100">
+			Streak zilnic
 		</p>
 	</div>
 </div>

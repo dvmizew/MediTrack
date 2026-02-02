@@ -22,18 +22,19 @@
 		UserCircle,
 		Clock,
 		AlertCircle,
+		AlertTriangle,
 		HelpCircle,
 		Calendar,
 		TrendingUp,
 		ChevronRight,
-		ArrowRight
+		ArrowRight,
+		Star
 	} from '@lucide/svelte';
 	import {
 		getChartTheme,
 		createPercentageChart,
 		createComparisonBarChart,
 		createTimeSeriesChart,
-		createDistributionChart,
 		type ChartTheme
 	} from '$lib/utils/charts';
 	import Card from '$lib/components/Card.svelte';
@@ -50,6 +51,7 @@
 	let loading = $state(true);
 	let refreshInterval: ReturnType<typeof setInterval> | null = null;
 	let themeUnsubscribe: (() => void) | null = null;
+	let upcomingDoseShortLabel = $state('—');
 	let stats = $state<Stats>({
 		total: 0,
 		taken: 0,
@@ -78,28 +80,20 @@
 	let adherence7Chart: Chart | null = null;
 	let adherence30Chart: Chart | null = null;
 
-	// Derived UI data to avoid duplication
 	const patientCards = $derived([
 		{
 			title: 'Conformitate săptămânală',
 			value: `${stats?.weeklyAdherence ?? 0}%`,
-			sub: 'Media ultimelor 7 zile',
 			accent: 'text-gray-900 dark:text-slate-100',
 			ariaLabel: `Conformitate săptămânală: ${stats?.weeklyAdherence ?? 0}%, media ultimelor 7 zile`
 		},
 		{
-			title: 'Astăzi',
+			title: 'Progres Astăzi',
 			value: `${stats?.taken ?? 0}/${stats?.total ?? 0}`,
 			sub: `${stats?.snoozed ?? 0} amânate • ${stats?.overdue ?? 0} întârziate`,
+			nextDose: upcomingDoseShortLabel,
 			accent: 'text-gray-900 dark:text-slate-100',
-			ariaLabel: `Astăzi: ${stats?.taken ?? 0} din ${stats?.total ?? 0}, ${stats?.snoozed ?? 0} amânate, ${stats?.overdue ?? 0} întârziate`
-		},
-		{
-			title: 'Următoarea doză',
-			value: stats.upcomingLabel,
-			sub: `Actualizat la ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-			accent: 'text-gray-900 dark:text-slate-100',
-			ariaLabel: `Următoarea doză: ${stats.upcomingLabel}, actualizat la ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+			ariaLabel: `Astăzi: ${stats?.taken ?? 0} din ${stats?.total ?? 0}, ${stats?.snoozed ?? 0} amânate, ${stats?.overdue ?? 0} întârziate. Următoarea doză: ${upcomingDoseShortLabel}`
 		}
 	]);
 
@@ -196,12 +190,8 @@
 	] : []);
 	
 	// Chart references
-	let adherenceChartCanvas = $state<HTMLCanvasElement | null>(null);
-	let adherenceChart: Chart | null = null;
 	let weeklyChartCanvas = $state<HTMLCanvasElement | null>(null);
 	let weeklyChart: Chart | null = null;
-	let medicationsChartCanvas = $state<HTMLCanvasElement | null>(null);
-	let medicationsChart: Chart | null = null;
 
 	// Detect dark mode and get theme colors
 	const isDarkMode = $derived.by(() => {
@@ -297,9 +287,7 @@
 			// Listen for theme changes
 			themeUnsubscribe = themeStore.subscribe(() => {
 				// Recreate charts with new theme colors
-				if (adherenceChart) adherenceChart.destroy();
 				if (weeklyChart) weeklyChart.destroy();
-				if (medicationsChart) medicationsChart.destroy();
 				initializeCharts();
 			});
 		}
@@ -322,9 +310,7 @@
 		// Destroy all charts
 		if (adherence7Chart) adherence7Chart.destroy();
 		if (adherence30Chart) adherence30Chart.destroy();
-		if (adherenceChart) adherenceChart.destroy();
 		if (weeklyChart) weeklyChart.destroy();
-		if (medicationsChart) medicationsChart.destroy();
 		window.removeEventListener('notification', handleNotification as EventListener);
 		window.removeEventListener('new-message', handleNewMessage as EventListener);
 	});
@@ -507,12 +493,14 @@
 		if (!nextDose) {
 			if (allDoneToday) {
 				countdownLabel = 'Ai terminat pentru astăzi';
+				upcomingDoseShortLabel = '—';
 				countdownText = 'Bravo!';
 				countdownProgress = 1;
 				countdownStatus = 'done';
 				return;
 			}
 			countdownLabel = 'Nicio doză programată';
+			upcomingDoseShortLabel = '—';
 			countdownText = '--:--:--';
 			countdownProgress = 0;
 			countdownStatus = 'none';
@@ -522,6 +510,7 @@
 		const scheduledTime = getMedicationScheduledTime(nextDose, now);
 		if (!scheduledTime) {
 			countdownLabel = 'Nicio doză programată';
+			upcomingDoseShortLabel = '—';
 			countdownText = '--:--:--';
 			countdownProgress = 0;
 			countdownStatus = 'none';
@@ -531,6 +520,7 @@
 		if (diffMs <= 0) {
 			const displayTime = nextDose.time || scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 			countdownLabel = `${displayTime} - ${nextDose.medicationName || 'Doză următoare'}`;
+			upcomingDoseShortLabel = `${displayTime} - ${nextDose.medicationName || 'Doză următoare'}`;
 			countdownText = '00:00:00';
 			countdownProgress = 1;
 			countdownStatus = 'critical';
@@ -547,6 +537,7 @@
 		const label = `${hh}:${mm}:${ss}`;
 		const displayTime = nextDose.time || scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 		countdownLabel = `${label} până la ${nextDose.medicationName || 'doza următoare'} (${displayTime})`;
+		upcomingDoseShortLabel = `${displayTime} - ${nextDose.medicationName || 'doza următoare'}`;
 		countdownText = label;
 		if (totalSeconds <= 10 * 60) {
 			countdownStatus = 'critical';
@@ -676,20 +667,6 @@
 	}
 
 	function initializeCharts() {
-		// Weekly Adherence Rate Chart (Doughnut) — using 7-day average percentage
-		if (adherenceChartCanvas) {
-			const weeklyRate = stats.weeklyAdherence;
-
-			if (adherenceChart) adherenceChart.destroy();
-			adherenceChart = createPercentageChart(
-				adherenceChartCanvas.getContext('2d')!,
-				weeklyRate,
-				100,
-				['Conformitate', 'Rămas'],
-				chartTheme
-			);
-		}
-
 		// 7-day timeline (Line)
 		if (weeklyChartCanvas) {
 			const timeline = buildTodayTimeline();
@@ -703,20 +680,6 @@
 				'rgba(59, 130, 246, 0.1)',
 				chartTheme,
 				100
-			);
-		}
-
-		// 7-day Medications Distribution Chart (Bar)
-		if (medicationsChartCanvas) {
-			const distribution = getMedicationDistribution();
-
-			if (medicationsChart) medicationsChart.destroy();
-			medicationsChart = createDistributionChart(
-				medicationsChartCanvas.getContext('2d')!,
-				distribution.labels,
-				distribution.data,
-				'#8b5cf6',
-				chartTheme
 			);
 		}
 	}
@@ -1083,6 +1046,64 @@
 		}
 	/>
 
+	<!-- Daily XP Earned Showcase -->
+	{#if allDoneToday}
+		<div class="relative overflow-hidden bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 rounded-2xl shadow-lg p-8 border-2 border-yellow-200 dark:border-yellow-800">
+			<!-- Animated background -->
+			<div class="absolute inset-0 opacity-20">
+				<div class="absolute top-0 left-0 w-40 h-40 bg-yellow-400 rounded-full blur-3xl animate-pulse"></div>
+				<div class="absolute bottom-0 right-0 w-40 h-40 bg-amber-400 rounded-full blur-3xl animate-pulse"></div>
+			</div>
+			
+			<div class="relative flex items-center justify-between">
+				<div>
+					<p class="text-sm font-semibold text-gray-800 dark:text-yellow-300 mb-1 inline-flex items-center gap-2">
+						<Star class="w-5 h-5 animate-bounce" />
+						Recompensă de astazi
+					</p>
+					<p class="text-4xl font-black text-gray-900 dark:text-yellow-100">+50 XP</p>
+					<p class="text-sm text-gray-700 dark:text-yellow-300 mt-2">Felicitări! Ai îndeplinit toate misiunile!</p>
+				</div>
+				<div class="text-6xl drop-shadow-lg animate-bounce">🎉</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Streak Loss Penalty Alert -->
+	{#if streakBroken}
+		<div class="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-l-4 border-l-red-600 dark:border-l-red-400 border border-red-200 dark:border-red-800 rounded-lg p-4 md:p-5 animate-pulse-alert">
+			<div class="flex items-start gap-4">
+				<div class="flex-shrink-0 mt-0.5">
+					<div class="w-8 h-8 rounded-full bg-red-600 dark:bg-red-500 flex items-center justify-center text-white font-bold text-sm">−</div>
+				</div>
+				<div class="flex-1">
+					<h3 class="font-bold text-red-900 dark:text-red-200 mb-1">Streak pierdut!</h3>
+					<p class="text-sm text-red-800 dark:text-red-300 mb-2">
+						Ai pierdut streakul tău. Ca penalitate, o parte din XP-ul zilei a fost retras.
+					</p>
+					<div class="text-xs text-red-700 dark:text-red-400 bg-white/40 dark:bg-black/20 rounded px-2 py-1 inline-block">
+						−10% XP din doze completate astazi
+					</div>
+				</div>
+			</div>
+		</div>
+	{:else if countdownStatus === 'critical'}
+		<!-- Critical Warning -->
+		<div class="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-l-4 border-l-orange-600 dark:border-l-orange-400 border border-orange-200 dark:border-orange-800 rounded-lg p-4 md:p-5 animate-pulse">
+			<div class="flex items-start gap-3">
+				<div class="flex-shrink-0">
+					<AlertTriangle class="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5" />
+				</div>
+				<div class="flex-1">
+					<h3 class="font-semibold text-orange-900 dark:text-orange-200 mb-1">Streakul tău este în pericol!</h3>
+					<p class="text-sm text-orange-800 dark:text-orange-300">
+						Ai puțin timp pentru a confirma doza programată înainte să-ți pierzi streakul.
+					</p>
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Medications List -->
 	<MedicationsList
 		loading={loading}
@@ -1093,6 +1114,7 @@
 		onSnooze={snoozeMedication}
 		celebrate={allDoneToday}
 		streak={displayStreak}
+		maxStreak={$authStore.user?.longestStreak || 0}
 		countdownText={countdownText}
 		countdownProgress={countdownProgress}
 		countdownStatus={countdownStatus}
@@ -1102,12 +1124,87 @@
 
 	<!-- Quick Stats -->
 	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
-		{#each patientCards as card}
-			<Card title={card.title} value={card.value} sub={card.sub} accent={card.accent} ariaLabel={card.ariaLabel} />
+		{#each patientCards as card, idx}
+			{#if idx === 0}
+				<!-- Conformitate card -->
+				<div class="sm:col-span-2 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg p-6 flex flex-col h-full">
+					<div class="flex items-center justify-between mb-3">
+						<h3 class="font-semibold text-gray-700 dark:text-slate-300 text-sm">{card.title}</h3>
+						{#if adherenceHistory.length >= 2}
+							{@const trend = adherenceHistory[adherenceHistory.length - 1]?.adherenceRate - adherenceHistory[0]?.adherenceRate}
+							<span class="text-xs font-medium px-2 py-1 rounded-full {trend > 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : trend < 0 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'}">
+								{#if trend > 0}↗ +{trend.toFixed(0)}%{:else if trend < 0}↘ {trend.toFixed(0)}%{:else}→ Stabil{/if}
+							</span>
+						{/if}
+					</div>
+					<div class="flex items-end justify-between gap-4 flex-1">
+						<div class="flex-shrink-0">
+							<div class="text-4xl font-bold {card.accent}">{card.value}</div>
+							<p class="text-sm text-gray-600 dark:text-slate-400 mt-1">{card.sub}</p>
+							{#if adherenceHistory.length > 0}
+								<p class="text-xs text-gray-500 dark:text-slate-500 mt-2">
+									Ultimele {adherenceHistory.length} zile
+								</p>
+							{/if}
+						</div>
+						<div class="flex-1 flex flex-col gap-2">
+							<div class="h-24 bg-gradient-to-r from-blue-100/30 to-blue-200/30 dark:from-blue-950/30 dark:to-blue-900/30 rounded-lg flex items-end justify-center gap-1 px-3 pb-2 relative group">
+								{#each Array(7).fill(0).map((_, i) => adherenceHistory[i]) as dayData, i}
+									{@const rate = dayData?.adherenceRate || 0}
+									{@const height = Math.max(10, (rate / 100) * 70)}
+									{@const barColor = rate >= 80 ? 'bg-green-500 dark:bg-green-400' : rate >= 60 ? 'bg-blue-400 dark:bg-blue-500' : rate >= 40 ? 'bg-yellow-500 dark:bg-yellow-400' : 'bg-red-400 dark:bg-red-500'}
+									<div class="relative flex-1 flex flex-col items-center group/bar">
+										<div 
+											class={`w-full ${barColor} rounded-t transition-all duration-300 hover:brightness-110 cursor-pointer`}
+											style="height: {height}px;"
+											role="button"
+											tabindex="0"
+										></div>
+										<div class="absolute bottom-full mb-2 hidden group-hover/bar:block bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg">
+											<div class="font-semibold">{rate}%</div>
+											{#if dayData}
+												<div class="text-[10px] opacity-80">{dayData.confirmed}/{dayData.scheduled}</div>
+											{:else}
+												<div class="text-[10px] opacity-80">Fără date</div>
+											{/if}
+										</div>
+									</div>
+								{/each}
+							</div>
+							<div class="flex justify-between text-xs text-gray-500 dark:text-slate-400 px-1">
+								<span>L</span>
+								<span>M</span>
+								<span>M</span>
+								<span>J</span>
+								<span>V</span>
+								<span>S</span>
+								<span>D</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			{:else}
+				{#if card.nextDose}
+					<!-- Combined Today + Next Dose card -->
+					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl p-4 md:p-5 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl transition h-full flex flex-col justify-between">
+						<div>
+							<p class="text-sm text-gray-700 dark:text-slate-300 mb-1">{card.title}</p>
+							<p class={`text-2xl md:text-3xl font-bold ${card.accent}`}>{card.value}</p>
+							<p class="text-xs text-gray-600 dark:text-slate-400 mt-1">{card.sub}</p>
+						</div>
+						<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+							<p class="text-xs text-gray-500 dark:text-slate-400 mb-1">Următoarea doză</p>
+							<p class="text-sm font-semibold text-blue-600 dark:text-blue-400">{card.nextDose}</p>
+						</div>
+					</div>
+				{:else}
+					<Card title={card.title} value={card.value} sub={card.sub} accent={card.accent} ariaLabel={card.ariaLabel} />
+				{/if}
+			{/if}
 		{/each}
 	</div>
 
 	<!-- Charts Grid -->
-	<ChartsGroup bind:adherenceCanvas={adherenceChartCanvas} bind:weeklyCanvas={weeklyChartCanvas} bind:medicationsCanvas={medicationsChartCanvas} />
+	<ChartsGroup bind:weeklyCanvas={weeklyChartCanvas} />
 	</div>
 {/if}

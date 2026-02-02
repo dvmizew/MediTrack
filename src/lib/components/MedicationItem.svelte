@@ -26,19 +26,19 @@
 			? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200'
 			: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200';
 	$: statusBadge = muted
-		? 'bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-slate-100'
+		? 'bg-gray-200 text-gray-800 dark:bg-slate-700 dark:text-white'
 		: urgencyActive
 			? urgencyBadge
 			: isTaken
-				? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200'
+				? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-white'
 				: isSnoozed
-					? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200'
+					? 'bg-yellow-100 text-yellow-900 dark:bg-yellow-900/40 dark:text-white'
 					: isOverdue
-						? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200'
-						: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200';
+						? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-white'
+						: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-white';
 
 	$: timeBadgeClass = muted
-		? 'bg-gray-400 text-gray-700 dark:bg-slate-600 dark:text-slate-100'
+		? 'bg-gray-400 text-black dark:bg-slate-600 dark:text-white'
 		: urgencyActive
 			? countdownStatus === 'critical'
 				? 'bg-red-500 text-white'
@@ -46,12 +46,12 @@
 			: 'bg-blue-600 text-white';
 
 	$: missionBadgeClass = muted
-		? 'bg-gray-200/70 text-gray-700 dark:bg-slate-700/70 dark:text-slate-100'
+		? 'bg-gray-200/70 text-black dark:bg-slate-700/70 dark:text-white'
 		: urgencyActive
 			? countdownStatus === 'critical'
-				? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-200'
-				: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-200'
-			: 'bg-white/80 text-slate-700 dark:bg-slate-800/70 dark:text-slate-100';
+				? 'bg-red-50 text-red-900 dark:bg-red-900/30 dark:text-white'
+				: 'bg-yellow-50 text-yellow-900 dark:bg-yellow-900/30 dark:text-white'
+			: 'bg-white/80 text-black dark:bg-slate-800/70 dark:text-white';
 
 	$: baseGlow = isTaken
 		? 'from-green-100/80 via-white to-green-200/40'
@@ -114,9 +114,7 @@
 </script>
 
 <div
-	class={`group relative overflow-hidden rounded-3xl border border-white/70 dark:border-slate-800/70 bg-gradient-to-br ${cardGlow} shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${cardRing} ${
-		muted ? 'grayscale saturate-0 opacity-90' : ''
-	}`}
+	class={`group relative overflow-hidden rounded-3xl border border-white/70 dark:border-slate-800/70 bg-gradient-to-br ${cardGlow} shadow-sm transition-all duration-200 ${cardRing}`}
 >
 	<div class={`absolute inset-y-0 left-0 w-1.5 ${railColor}`}></div>
 	<div class={`absolute right-4 top-4 text-[11px] font-semibold tracking-wide uppercase px-3 py-1 rounded-full shadow-sm ${statusBadge}`}>
@@ -139,42 +137,42 @@
 						{medication.time}
 					</span>
 					</div>
-					<h4 class="mt-2 text-base md:text-lg font-semibold text-slate-900 dark:text-slate-100 truncate drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]">
+					<h4 class={`mt-2 text-base md:text-lg font-semibold truncate drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] ${muted ? 'text-white' : 'text-black'}`}>
 						{medication.medicationName}
 					</h4>
 					<div class="mt-3 space-y-2 text-xs md:text-sm">
-						<div class="flex items-center gap-2 text-slate-700 dark:text-slate-200">
-							<Beaker class="w-6 h-6 text-slate-600 dark:text-slate-100" />
-							<span class="text-slate-600 dark:text-slate-300">Doza</span>
-							<span class="font-semibold text-slate-900 dark:text-slate-100">{medication.quantity}</span>
-						</div>
-						<div class="flex items-center gap-2 text-slate-700 dark:text-slate-200">
-							<RotateCcw class="w-6 h-6 text-slate-600 dark:text-slate-100" />
-							<span class="text-slate-600 dark:text-slate-300">Frecvență</span>
-							<span class="font-semibold text-slate-900 dark:text-slate-100">{medication.frequency}</span>
-						</div>
-						{#if medication.instructions}
-							<div class="flex items-start gap-2 text-slate-700 dark:text-slate-200">
-								<FileText class="w-6 h-6 text-slate-600 dark:text-slate-100" />
-								<p class="text-slate-600 dark:text-slate-300 italic line-clamp-2">{medication.instructions}</p>
+			<div class={`flex items-center gap-2 ${muted ? 'text-white' : 'text-black'}`}>
+			<Beaker class={`w-6 h-6 ${muted ? 'text-white' : 'text-black'}`} />
+			<span class={muted ? 'text-white' : 'text-black'}>Doza</span>
+				<span class={`font-semibold ${muted ? 'text-white' : 'text-black'}`}>{medication.quantity}</span>
+					</div>
+			<div class={`flex items-center gap-2 ${muted ? 'text-white' : 'text-black'}`}>
+			<RotateCcw class={`w-6 h-6 ${muted ? 'text-white' : 'text-black'}`} />
+			<span class={muted ? 'text-white' : 'text-black'}>Frecvență</span>
+				<span class={`font-semibold ${muted ? 'text-white' : 'text-black'}`}>{medication.frequency}</span>
+					</div>
+					{#if medication.instructions}
+				<div class={`flex items-start gap-2 ${muted ? 'text-white' : 'text-black'}`}>
+					<FileText class={`w-6 h-6 ${muted ? 'text-white' : 'text-black'}`} />
+					<p class={`italic line-clamp-2 ${muted ? 'text-white' : 'text-black'}`}>{medication.instructions}</p>
 							</div>
 						{/if}
 					</div>
 				</div>
 			</div>
 
-			<div class="flex flex-row lg:flex-col gap-2 w-full lg:w-auto">
+			<div class="flex flex-col gap-2 w-full lg:w-auto">
 				{#if isTaken}
 					<span class="px-3 py-2 md:px-4 md:py-2 bg-green-500 text-white rounded-2xl text-xs md:text-sm font-semibold shadow-sm flex items-center justify-center gap-2 whitespace-nowrap">
 						<Check class="w-4 h-4 flex-shrink-0" />
 						Finalizat
 					</span>
 				{:else if isSnoozed}
-					<div class="flex items-center gap-2 w-full lg:w-auto">
-						<span class="px-3 py-2 md:px-4 md:py-2 bg-yellow-100 text-yellow-800 rounded-2xl text-xs md:text-sm font-semibold flex items-center justify-center gap-2 whitespace-nowrap dark:bg-yellow-900/40 dark:text-yellow-200">
-							<Clock class="w-4 h-4 flex-shrink-0" />
-							Amânat
-						</span>
+				<div class="flex gap-2 w-full lg:w-auto">
+					<span class="px-3 py-2 md:px-4 md:py-2 bg-yellow-100 text-yellow-900 rounded-2xl text-xs md:text-sm font-semibold flex items-center justify-center gap-2 whitespace-nowrap dark:bg-yellow-900/40 dark:text-yellow-200">
+						<Clock class="w-4 h-4 flex-shrink-0" />
+						Amânat
+					</span>
 					<button onclick={() => onConfirm(medication)} class="flex-1 lg:flex-none px-3 py-2 md:px-4 md:py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl hover:from-blue-700 hover:to-indigo-700 active:from-blue-800 active:to-indigo-800 text-xs md:text-sm font-semibold shadow-sm transition touch-manipulation flex items-center justify-center gap-1">
 						<Check class="w-4 h-4" />
 						Confirmă

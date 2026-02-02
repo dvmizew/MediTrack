@@ -26,6 +26,7 @@ import notificationRoutes from './routes/notifications.js';
 import pushRoutes from './routes/push.js';
 import reportsRoutes from './routes/reports.js';
 import leaderboardRoutes from './routes/leaderboard.js';
+import performanceRoutes from './routes/performance.js';
 import { setupSocketHandlers } from './socket/handlers.js';
 import { startReminderCron } from './cron/reminders.js';
 import { startStreakCheckCron } from './cron/streaks.js';
@@ -115,6 +116,7 @@ app.use('/notifications', notificationRoutes);
 app.use('/push', pushRoutes);
 app.use('/admin/reports', reportsRoutes);
 app.use('/leaderboard', leaderboardRoutes);
+app.use('/admin', performanceRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

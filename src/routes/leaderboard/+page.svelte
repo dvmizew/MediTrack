@@ -117,6 +117,14 @@
 		const progress = (xp / current.xp) * 100;
 		return { progress: Math.min(progress, 100), next: current.next, target: current.xp };
 	}
+
+	const badgeShowcase = [
+		{ key: 'bronze', label: 'Bronze', xp: '0 XP', hint: 'Start' },
+		{ key: 'silver', label: 'Silver', xp: '500 XP', hint: 'Primul prag' },
+		{ key: 'gold', label: 'Gold', xp: '1500 XP', hint: 'Progres stabil' },
+		{ key: 'platinum', label: 'Platinum', xp: '3000 XP', hint: 'Nivel avansat' },
+		{ key: 'diamond', label: 'Diamond', xp: '5000+ XP', hint: 'Maxim' }
+	];
 </script>
 
 <div class="min-h-screen bg-transparent p-4 sm:p-6 page-transition">
@@ -229,6 +237,36 @@
 			</div>
 		{/if}
 
+		<!-- Badge thresholds overview -->
+		<div class="bg-gradient-to-r from-purple-50 via-blue-50 to-indigo-50 dark:from-purple-950 dark:via-blue-950 dark:to-indigo-950 rounded-2xl shadow-lg p-8 mb-8 border-2 border-purple-200 dark:border-purple-800">
+			<div class="flex flex-col gap-2 mb-6">
+				<div class="flex items-center gap-2">
+					<Sparkles class="w-6 h-6 text-purple-600 dark:text-purple-400" />
+					<h2 class="text-2xl font-black text-purple-900 dark:text-purple-100">Badge-uri & praguri XP</h2>
+				</div>
+				<p class="text-sm text-purple-800 dark:text-purple-200">
+					Acesta este ghidul de niveluri: fiecare badge se deblochează la un prag de XP.
+				</p>
+			</div>
+			<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+				{#each badgeShowcase as badge}
+					{@const badgeIcon = getBadgeIconComponent(badge.key)}
+					{@const badgeColor = getBadgeColor(badge.key)}
+					{@const Icon = badgeIcon}
+					<div class="text-center p-4 bg-white/70 dark:bg-slate-800/70 rounded-xl backdrop-blur border-2 border-transparent hover:border-purple-400 transition-transform duration-300 hover:scale-105">
+						<div class="flex justify-center mb-2">
+							<div class={`p-3 rounded-full ${badgeColor}`}>
+								<Icon class="w-6 h-6 text-white" />
+							</div>
+						</div>
+						<p class="text-sm font-bold text-gray-900 dark:text-slate-100">{badge.label}</p>
+						<p class="text-xs text-gray-600 dark:text-slate-300 mt-1">{badge.xp}</p>
+						<p class="text-[11px] text-gray-500 dark:text-slate-400 mt-1">{badge.hint}</p>
+					</div>
+				{/each}
+			</div>
+		</div>
+
 		<!-- Leaderboard Cards -->
 		<div class="space-y-4 mb-8">
 			{#if loading && !refreshing}
@@ -316,20 +354,27 @@
 							<div class="flex items-center gap-4 sm:gap-6 flex-shrink-0">
 								<!-- Streak -->
 								<div class="text-center">
-									<div class="inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-400 to-red-500 text-white px-4 py-2 rounded-xl font-bold shadow-lg">
-										<Flame class="w-5 h-5" />
+									<div class="inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-400 to-red-500 text-white px-4 py-2 rounded-xl font-bold shadow-lg hover:scale-105 transition-transform duration-300 animate-pulse">
+										<Flame class="w-5 h-5 {isTop3 ? 'animate-bounce' : ''}" />
 										<span class="text-xl">{user.streak || 0}</span>
 									</div>
 											<p class="text-xs text-gray-700 dark:text-slate-300 mt-1 font-medium">Streak</p>
 								</div>
 
 								<!-- XP -->
-								<div class="text-center">
-									<div class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-xl font-bold shadow-lg">
+								<div class="text-center relative">
+									<div class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-xl font-bold shadow-lg hover:scale-105 transition-transform duration-300">
 										<Star class="w-5 h-5" />
-										<span class="text-xl">{user.xp || 0}</span>
+										<span class="text-xl font-black">{user.xp || 0}</span>
 									</div>
 											<p class="text-xs text-gray-700 dark:text-slate-300 mt-1 font-medium">XP</p>
+									{#if isTop3}
+										<div class="absolute -top-3 -right-3 animate-pulse">
+											<div class="w-8 h-8 bg-gradient-to-r from-yellow-400 to-amber-400 rounded-full flex items-center justify-center shadow-lg">
+												<Star class="w-4 h-4 text-white" />
+											</div>
+										</div>
+									{/if}
 								</div>
 
 								<!-- Expand Icon -->
@@ -347,49 +392,59 @@
 										<div class="flex items-center justify-between mb-2">
 												<span class="text-sm font-semibold text-gray-700 dark:text-slate-300 inline-flex items-center gap-2">
 													<ProgressIcon class="w-4 h-4" />
-													Progres către {progress.next}
+													Progres către <span class="capitalize font-bold text-blue-600 dark:text-blue-400">{progress.next}</span>
 												</span>
 											<span class="text-sm font-bold text-blue-600 dark:text-blue-400">
 												{user.xp} / {progress.target} XP
 											</span>
 										</div>
-												<div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+												<div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-4 overflow-hidden border-2 border-gray-300 dark:border-slate-600">
 											<div 
-												class="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-500"
+												class="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-purple-600 rounded-full transition-all duration-700 relative shadow-lg"
 												style={`width: ${progress.progress}%`}
-											></div>
+											>
+												{#if progress.progress > 20}
+													<div class="absolute inset-0 opacity-40 bg-gradient-to-r from-white to-transparent animate-pulse rounded-full"></div>
+												{/if}
+											</div>
 										</div>
+										<p class="text-xs text-gray-600 dark:text-slate-400 mt-1">
+											<strong>{Math.round(progress.progress)}%</strong> complet - {Math.max(0, (progress.target || 0) - (user.xp || 0))} XP rămase
+										</p>
 									</div>
 								{:else}
-									<div class="text-center py-2">
-										<Trophy class="w-8 h-8 mx-auto text-yellow-500" />
-										<p class="text-sm font-bold text-purple-600 dark:text-purple-400 mt-1">
-											Ai atins nivelul maxim!
+									<div class="text-center py-4 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950 dark:to-amber-950 rounded-xl">
+										<Trophy class="w-12 h-12 mx-auto text-yellow-500 animate-bounce mb-2" />
+										<p class="text-sm font-bold text-yellow-600 dark:text-yellow-400">
+											🎉 Ai atins nivel MAXIM! 🎉
+										</p>
+										<p class="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+											Diamond - Nivelul cel mai înalt!
 										</p>
 									</div>
 								{/if}
 
 								<!-- Achievement Stats Grid -->
-								<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-											<div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 rounded-xl p-4 text-center">
+								<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+											<div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 rounded-xl p-4 text-center hover:scale-105 transition-transform duration-300">
 												<Target class="w-6 h-6 mx-auto mb-1 text-blue-700 dark:text-blue-200" />
 												<p class="text-xs text-blue-700 dark:text-blue-300 font-medium">Poziție</p>
-												<p class="text-xl font-black text-blue-900 dark:text-blue-100">#{index + 1}</p>
+												<p class="text-2xl font-black text-blue-900 dark:text-blue-100">#{index + 1}</p>
 										</div>
-											<div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 rounded-xl p-4 text-center">
+											<div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 rounded-xl p-4 text-center hover:scale-105 transition-transform duration-300 {progress ? '' : 'animate-badge-glow'}">
 												<BadgeIcon class="w-6 h-6 mx-auto mb-1 text-purple-700 dark:text-purple-200" />
 												<p class="text-xs text-purple-700 dark:text-purple-300 font-medium">Badge</p>
 												<p class="text-sm font-black text-purple-900 dark:text-purple-100 capitalize">{user.badge}</p>
 										</div>
-											<div class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950 dark:to-red-950 rounded-xl p-4 text-center">
-												<Flame class="w-6 h-6 mx-auto mb-1 text-orange-700 dark:text-orange-200" />
+											<div class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950 dark:to-red-950 rounded-xl p-4 text-center hover:scale-105 transition-transform duration-300">
+												<Flame class="w-6 h-6 mx-auto mb-1 text-orange-700 dark:text-orange-200 {(user.streak || 0) > 0 ? 'animate-pulse' : ''}" />
 												<p class="text-xs text-orange-700 dark:text-orange-300 font-medium">Streak</p>
-												<p class="text-xl font-black text-orange-900 dark:text-orange-100">{user.streak}</p>
+												<p class="text-2xl font-black text-orange-900 dark:text-orange-100">{user.streak || 0}</p>
 										</div>
-											<div class="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950 dark:to-amber-950 rounded-xl p-4 text-center">
+											<div class="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950 dark:to-amber-950 rounded-xl p-4 text-center hover:scale-105 transition-transform duration-300">
 												<Star class="w-6 h-6 mx-auto mb-1 text-yellow-700 dark:text-yellow-200" />
 												<p class="text-xs text-yellow-700 dark:text-yellow-300 font-medium">Total XP</p>
-												<p class="text-xl font-black text-yellow-900 dark:text-yellow-100">{user.xp}</p>
+												<p class="text-2xl font-black text-yellow-900 dark:text-yellow-100">{user.xp}</p>
 										</div>
 								</div>
 							</div>

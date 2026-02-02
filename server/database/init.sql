@@ -137,51 +137,7 @@ CREATE TABLE push_subscriptions (
     UNIQUE(user_id, endpoint)
 );
 
--- Indexes for Performance
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_google_id ON users(google_id);
-CREATE INDEX idx_users_role ON users(role);
-CREATE INDEX idx_users_mfa_enabled ON users(mfa_enabled);
-
-CREATE INDEX idx_doctor_patient_doctor ON doctor_patient(doctor_id);
-CREATE INDEX idx_doctor_patient_patient ON doctor_patient(patient_id);
-CREATE INDEX idx_doctor_patient_status ON doctor_patient(status_invitatie);
-
-CREATE INDEX idx_treatment_plans_patient ON treatment_plans(patient_id);
-CREATE INDEX idx_treatment_plans_doctor ON treatment_plans(doctor_id);
-CREATE INDEX idx_treatment_plans_active ON treatment_plans(activ);
-CREATE INDEX idx_treatment_plans_deleted ON treatment_plans(is_deleted);
-
-CREATE INDEX idx_treatment_doses_plan ON treatment_doses(plan_id);
-CREATE INDEX idx_treatment_doses_status ON treatment_doses(status);
-CREATE INDEX idx_treatment_doses_deleted ON treatment_doses(is_deleted);
-
-CREATE INDEX idx_dose_confirmations_dose ON dose_confirmations(dose_id);
-CREATE INDEX idx_dose_confirmations_scheduled ON dose_confirmations(scheduled_for);
-
-CREATE INDEX idx_messages_sender ON messages(sender_id);
-CREATE INDEX idx_messages_receiver ON messages(receiver_id);
-CREATE INDEX idx_messages_timestamp ON messages(timestamp_mesaj);
-
-CREATE INDEX idx_notifications_user ON notifications(user_id);
-CREATE INDEX idx_notifications_status ON notifications(status_notif);
-
-CREATE INDEX idx_push_subscriptions_user ON push_subscriptions(user_id);
-CREATE INDEX idx_push_subscriptions_endpoint ON push_subscriptions(endpoint);
-CREATE INDEX idx_notifications_type ON notifications(tip);
-
--- MFA attempts logging
-CREATE TABLE IF NOT EXISTS mfa_attempts (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    ip_address VARCHAR(45),
-    success BOOLEAN DEFAULT false,
-    attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    code_length INTEGER
-);
-
-CREATE INDEX IF NOT EXISTS idx_mfa_attempts_user ON mfa_attempts(user_id);
-CREATE INDEX IF NOT EXISTS idx_mfa_attempts_timestamp ON mfa_attempts(attempted_at);
+-- ==================== TRIGGERS & FUNCTIONS ====================
 
 -- Trigger to auto-update updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -222,10 +178,6 @@ CREATE TABLE report_jobs (
     completed_at TIMESTAMP,
     expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '24 hours'
 );
-
-CREATE INDEX idx_report_jobs_status ON report_jobs(status);
-CREATE INDEX idx_report_jobs_requested_by ON report_jobs(requested_by);
-CREATE INDEX idx_report_jobs_expires ON report_jobs(expires_at);
 
 -- ==================== SEED DATA ====================
 

@@ -1,6 +1,7 @@
 import pg from 'pg';
 import dotenv from 'dotenv';
 import { logger } from './logger.js';
+import { queryProfiler } from '../utils/query-profiler.js';
 
 dotenv.config();
 
@@ -22,8 +23,14 @@ export const query = async (text: string, params?: any[]) => {
   try {
     const res = await pool.query(text, params);
     const duration = Date.now() - start;
+    
+    // Profile query performance
+    queryProfiler.profileQuery(text, duration);
+    
     return res;
   } catch (error) {
+    const duration = Date.now() - start;
+    queryProfiler.profileQuery(text, duration, error as Error);
     logger.error('Database query error:', error);
     throw error;
   }
