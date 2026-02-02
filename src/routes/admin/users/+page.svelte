@@ -345,7 +345,7 @@
 	<div class="flex items-center justify-between mb-8">
 		<div>
 			<h1 class="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-				<Users class="w-7 h-7 text-gray-900 dark:text-white" />
+				<Users class="w-7 h-7 text-gray-900 dark:text-slate-100" />
 				Gestionare Utilizatori
 			</h1>
 			<p class="text-sm text-gray-800 font-medium">Administrează rolurile și statusul utilizatorilor</p>
@@ -380,14 +380,14 @@
 		</div>
 	{:else}
 		<!-- Filters -->
-		<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-md p-6 mb-6">
+		<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl shadow-md p-6 mb-6">
 			<div class="flex items-center gap-2 mb-4">
-				<Search class="w-5 h-5 text-gray-700 dark:text-gray-300" />
-				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Filtrare și Căutare</h2>
+				<Search class="w-5 h-5 text-gray-700 dark:text-slate-300" />
+				<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Filtrare și Căutare</h2>
 			</div>
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 				<div>
-					<label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+					<label for="search" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 						Caută utilizator
 					</label>
 					<input
@@ -395,17 +395,17 @@
 						type="text"
 						bind:value={searchQuery}
 						placeholder="Nume sau email..."
-						class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 transition"
+						class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 transition"
 					/>
 				</div>
 				<div>
-					<label for="roleFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+					<label for="roleFilter" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 						Filtrează după rol
 					</label>
 					<select
 						id="roleFilter"
 						bind:value={roleFilter}
-						class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 transition"
+						class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 transition"
 					>
 						<option value="all">Toți utilizatorii</option>
 						<option value="admin">Administratori</option>
@@ -425,44 +425,44 @@
 
 		<!-- Users List -->
 		{#if filteredUsers.length === 0}
-			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-md p-16 text-center">
-				<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
-					<Users class="h-8 w-8 text-gray-400 dark:text-gray-500" />
+			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl shadow-md p-16 text-center">
+				<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-slate-700 mb-4">
+					<Users class="h-8 w-8 text-gray-400 dark:text-slate-500" />
 				</div>
-				<p class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Niciun utilizator găsit</p>
-				<p class="text-gray-500 dark:text-gray-400">Încearcă să schimbi criteriile de căutare</p>
+				<p class="text-lg font-medium text-gray-900 dark:text-slate-100 mb-2">Niciun utilizator găsit</p>
+				<p class="text-gray-500 dark:text-slate-400">Încearcă să schimbi criteriile de căutare</p>
 			</div>
 		{:else}
-			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-md overflow-hidden">
+			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl shadow-md overflow-hidden">
 				<div class="hidden md:block overflow-x-auto">
 					<table class="w-full">
-						<thead class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+						<thead class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50 border-b border-gray-200 dark:border-slate-700">
 							<tr>
-								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider">
 									<span class="inline-flex items-center gap-2">
 										<User class="w-4 h-4" />
 										Utilizator
 									</span>
 								</th>
-								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider">
 									<span class="inline-flex items-center gap-2">
 										<Target class="w-4 h-4" />
 										Rol
 									</span>
 								</th>
-								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider">
 									<span class="inline-flex items-center gap-2">
 										<Zap class="w-4 h-4" />
 										Status
 									</span>
 								</th>
-								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider">
 									<span class="inline-flex items-center gap-2">
 										<CalendarDays class="w-4 h-4" />
 										Data Creării
 									</span>
 								</th>
-								<th class="px-6 py-4 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+								<th class="px-6 py-4 text-right text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider">
 									<span class="inline-flex items-center gap-2">
 										<Settings class="w-4 h-4" />
 										Acțiuni
@@ -472,15 +472,15 @@
 						</thead>
 						<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
 							{#each filteredUsers as u}
-								<tr class="hover:bg-blue-50/50 dark:hover:bg-gray-700/30 transition duration-150">
+								<tr class="hover:bg-blue-50/50 dark:hover:bg-slate-700/30 transition duration-150">
 									<td class="px-6 py-4">
 										<div class="flex items-center gap-3">
 											<div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-md">
 												{(u.fullName || 'U').charAt(0).toUpperCase()}
 											</div>
 											<div class="min-w-0">
-												<p class="font-semibold text-gray-900 dark:text-gray-100 truncate">{u.fullName || 'Unknown'}</p>
-												<p class="text-xs text-gray-500 dark:text-gray-400 truncate">{u.email || 'N/A'}</p>
+												<p class="font-semibold text-gray-900 dark:text-slate-100 truncate">{u.fullName || 'Unknown'}</p>
+												<p class="text-xs text-gray-500 dark:text-slate-400 truncate">{u.email || 'N/A'}</p>
 											</div>
 										</div>
 									</td>
@@ -497,7 +497,7 @@
 										</span>
 									</td>
 									<td class="px-6 py-4">
-										<p class="text-sm text-gray-600 dark:text-gray-400">
+										<p class="text-sm text-gray-600 dark:text-slate-400">
 											{formatDate(u.createdAt)}
 										</p>
 									</td>
@@ -549,7 +549,7 @@
 				<!-- Mobile Card Layout -->
 				<div class="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
 					{#each filteredUsers as u}
-						<div class="p-5 space-y-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition">
+						<div class="p-5 space-y-4 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition">
 							<!-- Header with name and status -->
 							<div class="flex items-start justify-between gap-3">
 								<div class="flex items-center gap-3 flex-1 min-w-0">
@@ -557,8 +557,8 @@
 										{(u.fullName || 'U').charAt(0).toUpperCase()}
 									</div>
 									<div class="flex-1 min-w-0">
-										<p class="font-semibold text-gray-900 dark:text-gray-100 truncate text-sm">{u.fullName || 'Unknown'}</p>
-										<p class="text-xs text-gray-500 dark:text-gray-400 truncate">{u.email || 'N/A'}</p>
+										<p class="font-semibold text-gray-900 dark:text-slate-100 truncate text-sm">{u.fullName || 'Unknown'}</p>
+										<p class="text-xs text-gray-500 dark:text-slate-400 truncate">{u.email || 'N/A'}</p>
 									</div>
 								</div>
 								<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold flex-shrink-0 {u.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'}">
@@ -570,15 +570,15 @@
 							<!-- Role and Date -->
 							<div class="grid grid-cols-2 gap-3">
 								<div>
-									<p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Rol</p>
+									<p class="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">Rol</p>
 									<span class="px-2.5 py-1 rounded-full text-xs font-semibold {getRoleBadgeColor(u.role)} inline-flex items-center gap-2">
 										<svelte:component this={getRoleIconComponent(u.role)} class="w-3.5 h-3.5" />
 										{u.role.charAt(0).toUpperCase() + u.role.slice(1)}
 									</span>
 								</div>
 								<div>
-									<p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Creat</p>
-									<p class="text-xs text-gray-700 dark:text-gray-300">
+									<p class="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">Creat</p>
+									<p class="text-xs text-gray-700 dark:text-slate-300">
 										{formatDate(u.createdAt, 'short')}
 									</p>
 								</div>
@@ -646,7 +646,7 @@
 		<div class="space-y-4">
 			<!-- Email -->
 			<div>
-				<label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+				<label for="email" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
 					Email
 				</label>
 				<input
@@ -658,7 +658,7 @@
 						if (formErrors.email) delete formErrors.email;
 					}}
 					placeholder="utilizator@email.com"
-					class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					disabled={formLoading}
 				/>
 				{#if formErrors.email}
@@ -668,7 +668,7 @@
 
 			<!-- Full Name -->
 			<div>
-				<label for="fullName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+				<label for="fullName" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
 					Nume Complet
 				</label>
 				<input
@@ -679,7 +679,7 @@
 						if (formErrors.fullName) delete formErrors.fullName;
 					}}
 					placeholder="Nume Prenume"
-					class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					disabled={formLoading}
 				/>
 				{#if formErrors.fullName}
@@ -689,13 +689,13 @@
 
 			<!-- Role -->
 			<div>
-				<label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+				<label for="role" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
 					Rol
 				</label>
 				<select
 					id="role"
 					bind:value={formData.role}
-					class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					disabled={formLoading}
 				>
 				<option value="pacient">Pacient</option>
@@ -706,7 +706,7 @@
 
 			<!-- Password -->
 			<div>
-				<label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+				<label for="password" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
 					Parola {formMode === 'edit' ? '(opțional)' : ''}
 				</label>
 				<input
@@ -717,7 +717,7 @@
 						if (formErrors.password) delete formErrors.password;
 					}}
 					placeholder={formMode === 'edit' ? 'Lăsați gol pentru a păstra parola actuală' : 'Minim 8 chars: UPPERCASE, cifră, simbol (@$!%*?&)'}
-					class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 					disabled={formLoading}
 				/>
 				{#if formErrors.password}

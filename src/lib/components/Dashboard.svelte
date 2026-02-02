@@ -83,19 +83,19 @@
 			title: 'Conformitate săptămânală',
 			value: `${stats.weeklyAdherence}%`,
 			sub: 'Media ultimelor 7 zile',
-			accent: 'text-gray-900 dark:text-gray-100'
+			accent: 'text-gray-900 dark:text-slate-100'
 		},
 		{
 			title: 'Astăzi',
 			value: `${stats.taken}/${stats.total}`,
 			sub: `${stats.snoozed} amânate • ${stats.overdue} întârziate`,
-			accent: 'text-gray-900 dark:text-gray-100'
+			accent: 'text-gray-900 dark:text-slate-100'
 		},
 		{
 			title: 'Următoarea doză',
 			value: stats.upcomingLabel,
 			sub: `Actualizat la ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-			accent: 'text-gray-900 dark:text-gray-100'
+			accent: 'text-gray-900 dark:text-slate-100'
 		}
 	]);
 
@@ -728,7 +728,7 @@
 		<!-- Quick Stats -->
 		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
 			{#each medicCards as card}
-				<Card title={card.title} value={card.value} sub="" accent="text-gray-900 dark:text-gray-100" icon={card.icon} iconColor={card.iconColor} iconBg={card.iconBg} />
+				<Card title={card.title} value={card.value} sub="" accent="text-gray-900 dark:text-slate-100" icon={card.icon} iconColor={card.iconColor} iconBg={card.iconBg} />
 			{/each}
 		</div>
 
@@ -759,7 +759,7 @@
 		</div>
 
 		{#if adminLoading}
-			<div class="p-6 text-gray-900 dark:text-gray-100">Se încarcă rapoarte…</div>
+			<div class="p-6 text-gray-900 dark:text-slate-100">Se încarcă rapoarte…</div>
 		{:else if adminError}
 			<div class="p-6 text-red-600 dark:text-red-400">{adminError}</div>
 		{:else if adminOverview}
@@ -852,14 +852,14 @@
 									{/each}
 
 									<!-- Summary -->
-									<div class="mt-4 pt-3 border-t border-slate-200/70 dark:border-gray-800/70">
+									<div class="mt-4 pt-3 border-t border-slate-200/70 dark:border-slate-800/70">
 										<div class="flex items-center justify-between text-sm">
-											<span class="text-gray-700 dark:text-gray-100">Total utilizatori:</span>
-											<span class="font-bold text-gray-900 dark:text-white">{adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0)}</span>
+											<span class="text-gray-700 dark:text-slate-100">Total utilizatori:</span>
+											<span class="font-bold text-gray-900 dark:text-slate-100">{adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0)}</span>
 										</div>
 									</div>
 								{:else}
-									<div class="py-8 text-center text-gray-500 dark:text-gray-400">
+									<div class="py-8 text-center text-gray-500 dark:text-slate-400">
 										<Users class="w-12 h-12 mx-auto mb-2" />
 										<p class="text-sm">Nu sunt utilizatori în sistem</p>
 									</div>
@@ -884,7 +884,7 @@
 												<div class="flex items-center gap-2">
 													{#if c.status === 'pending'}
 														<Clock class="w-5 h-5" />
-														<span class="font-medium text-gray-900 dark:text-white">În așteptare</span>
+														<span class="font-medium text-gray-900 dark:text-slate-100">În așteptare</span>
 													{:else if c.status === 'accepted'}
 														<CheckCircle2 class="w-5 h-5" />
 														<span class="font-medium text-green-900 dark:text-green-100">Acceptate</span>
@@ -892,19 +892,19 @@
 														<AlertCircle class="w-5 h-5" />
 														<span class="font-medium text-red-900 dark:text-red-100">Respinse</span>
 													{:else}
-														<span class="font-medium text-gray-900 dark:text-white">{c.status}</span>
+														<span class="font-medium text-gray-900 dark:text-slate-100">{c.status}</span>
 													{/if}
 												</div>
-												<span class="text-lg font-bold text-gray-900 dark:text-white">{c.count}</span>
+												<span class="text-lg font-bold text-gray-900 dark:text-slate-100">{c.count}</span>
 											</div>
 											<!-- Progress bar with percentage -->
-											<div class="w-full bg-slate-200/70 dark:bg-gray-800 rounded-full h-2 sm:h-2.5 overflow-hidden">
+											<div class="w-full bg-slate-200/70 dark:bg-slate-800 rounded-full h-2 sm:h-2.5 overflow-hidden">
 												<div 
 													class="{c.status === 'accepted' ? 'bg-gradient-to-r from-green-500 to-green-600' : c.status === 'pending' ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' : 'bg-gradient-to-r from-red-500 to-red-600'} h-full transition-all duration-500 rounded-full"
 													style="width: {adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0 ? (c.count / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100 : 0}%"
 												></div>
 											</div>
-											<div class="text-xs text-gray-700 dark:text-gray-200">
+											<div class="text-xs text-gray-700 dark:text-slate-200">
 												{#if c.status === 'accepted'}
 													{Math.round((c.count / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}% dintre relații
 												{:else if c.status === 'pending'}
@@ -916,20 +916,20 @@
 										</div>
 									{/each}
 								{:else}
-									<div class="py-6 text-center text-gray-500 dark:text-gray-400">
+									<div class="py-6 text-center text-gray-500 dark:text-slate-400">
 										<HelpCircle class="w-12 h-12 mx-auto mb-2" />
 										<p class="text-sm">Nicio colaborare în sistem</p>
 									</div>
 								{/if}
 
 								{#if adminOverview.collaborations && adminOverview.collaborations.length > 0}
-									<div class="mt-4 pt-4 border-t border-slate-200/70 dark:border-gray-800/70 space-y-2 text-xs">
+									<div class="mt-4 pt-4 border-t border-slate-200/70 dark:border-slate-800/70 space-y-2 text-xs">
 										<div class="flex justify-between">
 											<span class="text-gray-700 dark:text-slate-300">Total colaborări:</span>
 											<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)}</span>
 										</div>
 										<div class="flex justify-between">
-											<span class="text-gray-700 dark:text-gray-100">Rata acceptare:</span>
+											<span class="text-gray-700 dark:text-slate-300">Rata acceptare:</span>
 											<span class="font-semibold {(adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0.8 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">{Math.round(((adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}%</span>
 										</div>
 									</div>
@@ -952,7 +952,7 @@
 										<div><div class="text-gray-700 dark:text-slate-300">Rată</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last7Days.rate}</div></div>
 									</div>
 								{:else}
-									<div class="py-8 text-center text-gray-500 dark:text-gray-400">
+									<div class="py-8 text-center text-gray-500 dark:text-slate-400">
 										<BarChart3 class="w-12 h-12 mx-auto mb-2" />
 										<p class="text-sm">Nicio dată de conformitate în ultimele 7 zile</p>
 									</div>
@@ -990,7 +990,7 @@
 										<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.treatments.total}</span>
 									</div>
 								{:else}
-									<div class="py-6 text-center text-gray-500 dark:text-gray-400">
+									<div class="py-6 text-center text-gray-500 dark:text-slate-400">
 										<Pill class="w-12 h-12 mx-auto mb-2" />
 										<p class="text-sm">Niciun tratament în sistem</p>
 									</div>
@@ -1014,7 +1014,7 @@
 										<div><div class="text-gray-700 dark:text-slate-300">Rată</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last30Days.rate}</div></div>
 									</div>
 								{:else}
-									<div class="py-8 text-center text-gray-500 dark:text-gray-400">
+									<div class="py-8 text-center text-gray-500 dark:text-slate-400">
 										<BarChart3 class="w-12 h-12 mx-auto mb-2" />
 										<p class="text-sm">Nicio dată de conformitate în ultimele 30 zile</p>
 									</div>
@@ -1030,7 +1030,7 @@
 	<!-- Patient Dashboard -->
 <div
 	class={`space-y-4 md:space-y-6 ${
-		streakBroken ? 'rounded-3xl bg-slate-100/70 dark:bg-gray-900/60 p-4 md:p-6' : ''
+		streakBroken ? 'rounded-3xl bg-slate-100/70 dark:bg-slate-900/60 p-4 md:p-6' : ''
 	}`}
 >
 	<!-- Welcome Card (patient, same design) -->

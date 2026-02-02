@@ -84,15 +84,15 @@
 	<div
 		class={`lg:col-span-2 rounded-2xl shadow-sm border overflow-hidden backdrop-blur ${
 			muted
-				? 'bg-slate-100/80 dark:bg-gray-900/70 border-slate-200/70 dark:border-gray-800/80'
-				: 'bg-white/90 dark:bg-gray-900/80 border-white/70 dark:border-gray-800/70'
+				? 'bg-slate-100/80 dark:bg-slate-900/70 border-slate-200/70 dark:border-slate-800/80'
+				: 'bg-white/90 dark:bg-slate-900/80 border-white/70 dark:border-slate-800/70'
 		}`}
 	>
 		<div
 			class={`p-4 md:p-6 border-b ${
 				muted
-					? 'border-slate-200/70 dark:border-gray-800/80 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900'
-					: 'border-white/70 dark:border-gray-800/70 bg-gradient-to-r from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900'
+					? 'border-slate-200/70 dark:border-slate-800/80 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900'
+					: 'border-white/70 dark:border-slate-800/70 bg-gradient-to-r from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900'
 			}`}
 		>
 			<div class="flex items-center gap-3">
@@ -104,8 +104,8 @@
 					<Trophy class="w-6 h-6" />
 				</span>
 				<div>
-					<h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">Challenges</h3>
-					<p class="text-xs md:text-sm text-gray-800 dark:text-gray-300 font-medium">Medicamentele de astăzi</p>
+					<h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-slate-100">Challenges</h3>
+					<p class="text-xs md:text-sm text-gray-800 dark:text-slate-300 font-medium">Medicamentele de astăzi</p>
 				</div>
 			</div>
 		</div>
@@ -116,8 +116,8 @@
 			</div>
 		{:else if medications.length === 0}
 			<div class="p-8 md:p-12 text-center">
-				<CheckCircle2 class="w-12 h-12 md:w-16 md:h-16 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-				<p class="text-sm md:text-base text-gray-500 dark:text-gray-400">Nu ai medicamente programate astăzi</p>
+				<CheckCircle2 class="w-12 h-12 md:w-16 md:h-16 mx-auto text-gray-300 dark:text-slate-600 mb-3" />
+				<p class="text-sm md:text-base text-gray-500 dark:text-slate-400">Nu ai medicamente programate astăzi</p>
 			</div>
 		{:else}
 			<div
@@ -170,7 +170,7 @@
 		/>
 		<p
 			class={`text-sm mt-4 text-center font-medium ${
-				muted ? 'text-slate-600 dark:text-slate-300' : 'text-gray-700 dark:text-gray-300'
+				muted ? 'text-slate-600 dark:text-slate-300' : 'text-gray-700 dark:text-slate-300'
 			}`}
 		>
 			Zile consecutive

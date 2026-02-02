@@ -117,8 +117,8 @@
 				<div class="flex items-start gap-3">
 					<Zap class="w-6 h-6" />
 					<div>
-						<h3 class="font-semibold text-gray-900 dark:text-gray-100">Rapoarte Asincrone</h3>
-						<p class="text-xs sm:text-sm text-gray-700 dark:text-gray-300 mt-0.5">
+						<h3 class="font-semibold text-gray-900 dark:text-slate-100">Rapoarte Asincrone</h3>
+						<p class="text-xs sm:text-sm text-gray-700 dark:text-slate-300 mt-0.5">
 							Generează rapoarte mari în background. Recomandă pentru volume mari de date.
 						</p>
 					</div>
@@ -145,74 +145,74 @@
 	{:else if overview}
 		<!-- Charts Row -->
 		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-6 shadow-md">
-				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2"><Users class="w-5 h-5" /> Utilizatori după Rol</h2>
+			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
+				<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2"><Users class="w-5 h-5" /> Utilizatori după Rol</h2>
 				<canvas id="usersPieChart"></canvas>
 			</div>
 
-			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-6 shadow-md">
-				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2"><FileText class="w-5 h-5" /> Planuri Tratament</h2>
+			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
+				<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2"><FileText class="w-5 h-5" /> Planuri Tratament</h2>
 				<canvas id="treatmentsBarChart"></canvas>
 			</div>
 
-			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-6 shadow-md">
-			<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2"><BarChart3 class="w-5 h-5" /> Aderență</h2>
+			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
+			<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2"><BarChart3 class="w-5 h-5" /> Aderență</h2>
 				<canvas id="adherenceLineChart"></canvas>
 			</div>
 		</div>
 
 		<!-- Stats Cards -->
 		<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
+			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
 				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
 					<Users class="w-5 h-5" />
-					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">Utilizatori</h3>
+					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-300 truncate">Utilizatori</h3>
 				</div>
-				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{overview.users.active + overview.users.inactive}</p>
+				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-1">{overview.users.active + overview.users.inactive}</p>
 				<p class="text-xs text-green-600 dark:text-green-400 truncate flex items-center gap-1">
 					<Check class="w-3 h-3" />
 					{overview.users.active} activi
 				</p>
 			</div>
 
-			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
+			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
 				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
 					<FileText class="w-5 h-5" />
-					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">Tratamente</h3>
+					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-300 truncate">Tratamente</h3>
 				</div>
-				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{overview.treatments.total}</p>
+				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-1">{overview.treatments.total}</p>
 				<p class="text-xs text-blue-600 dark:text-blue-400 truncate flex items-center gap-1">
 					<Check class="w-3 h-3" />
 					{overview.treatments.active} active
 				</p>
 			</div>
 
-			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
+			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
 				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
 					<Pill class="w-5 h-5" />
-					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">Doze</h3>
+					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-300 truncate">Doze</h3>
 				</div>
-				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{overview.doses.total}</p>
-				<p class="text-xs text-gray-700 dark:text-gray-300 truncate">Total sistem</p>
+				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-1">{overview.doses.total}</p>
+				<p class="text-xs text-gray-700 dark:text-slate-300 truncate">Total sistem</p>
 			</div>
 
-			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
+			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
 				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
 					<CheckCircle2 class="w-5 h-5" />
-					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 truncate">Aderență</h3>
+					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-300 truncate">Aderență</h3>
 				</div>
-				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{formatPercent(overview.adherence.last30Days.rate)}</p>
-				<p class="text-xs text-gray-700 dark:text-gray-300 truncate">{overview.adherence.last30Days.confirmed}/{overview.adherence.last30Days.scheduled} doze</p>
+				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-1">{formatPercent(overview.adherence.last30Days.rate)}</p>
+				<p class="text-xs text-gray-700 dark:text-slate-300 truncate">{overview.adherence.last30Days.confirmed}/{overview.adherence.last30Days.scheduled} doze</p>
 			</div>
 		</div>
 
 		<!-- Detailed Tables -->
 		<div class="grid gap-6 md:grid-cols-2">
-			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-6 shadow-md">
-				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2"><Users class="w-5 h-5" /> Utilizatori după Rol</h2>
-				<div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
+				<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2"><Users class="w-5 h-5" /> Utilizatori după Rol</h2>
+				<div class="overflow-hidden rounded-lg border border-gray-200 dark:border-slate-700">
 					<table class="min-w-full text-sm">
-						<thead class="bg-slate-50/80 dark:bg-gray-900/50 text-gray-700 dark:text-gray-300 uppercase tracking-wide text-xs">
+						<thead class="bg-slate-50/80 dark:bg-slate-900/50 text-gray-700 dark:text-slate-300 uppercase tracking-wide text-xs">
 							<tr>
 								<th class="px-4 py-3 text-left">Rol</th>
 								<th class="px-4 py-3 text-right">Număr</th>
@@ -220,7 +220,7 @@
 						</thead>
 						<tbody class="divide-y divide-gray-200 dark:divide-slate-700 text-gray-900 dark:text-slate-100">
 							{#each overview.users.byRole as row}
-								<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+								<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/30">
 									<td class="px-4 py-3 capitalize font-medium">{row.role}</td>
 									<td class="px-4 py-3 text-right font-semibold">{row.count}</td>
 								</tr>
@@ -230,11 +230,11 @@
 				</div>
 			</div>
 
-			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-6 shadow-md">
-				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2"><Users class="w-5 h-5" /> Colaborări după Status</h2>
-				<div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
+				<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2"><Users class="w-5 h-5" /> Colaborări după Status</h2>
+				<div class="overflow-hidden rounded-lg border border-gray-200 dark:border-slate-700">
 					<table class="min-w-full text-sm">
-						<thead class="bg-slate-50/80 dark:bg-gray-900/50 text-gray-700 dark:text-gray-300 uppercase tracking-wide text-xs">
+						<thead class="bg-slate-50/80 dark:bg-slate-900/50 text-gray-700 dark:text-slate-300 uppercase tracking-wide text-xs">
 							<tr>
 								<th class="px-4 py-3 text-left">Status</th>
 								<th class="px-4 py-3 text-right">Număr</th>
@@ -242,7 +242,7 @@
 						</thead>
 						<tbody class="divide-y divide-gray-200 dark:divide-slate-700 text-gray-900 dark:text-slate-100">
 							{#each overview.collaborations as row}
-								<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+								<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/30">
 									<td class="px-4 py-3 capitalize font-medium">{row.status}</td>
 									<td class="px-4 py-3 text-right font-semibold">{row.count}</td>
 								</tr>
@@ -254,8 +254,8 @@
 		</div>
 
 		<!-- Adherence Details -->
-		<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-6 shadow-md">
-			<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2"><BarChart3 class="w-5 h-5" /> Detalii Aderență</h2>
+		<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
+			<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2"><BarChart3 class="w-5 h-5" /> Detalii Aderență</h2>
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
 					<p class="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">Ultima 7 zile</p>

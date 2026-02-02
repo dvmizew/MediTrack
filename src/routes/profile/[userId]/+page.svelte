@@ -100,8 +100,8 @@
 				<div class="w-16 h-16 mx-auto mb-4 text-red-500">
 					<AlertCircle class="w-full h-full" />
 				</div>
-				<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Profil indisponibil</h2>
-				<p class="text-gray-700 dark:text-gray-300 mb-4">{error}</p>
+				<h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">Profil indisponibil</h2>
+				<p class="text-gray-700 dark:text-slate-300 mb-4">{error}</p>
 				<button 
 					onclick={() => goto('/chat')}
 					class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -114,7 +114,7 @@
 		<!-- Back Button -->
 		<button 
 			onclick={() => window.history.back()}
-			class="mb-6 flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+			class="mb-6 flex items-center gap-2 text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100 transition-colors"
 		>
 			<ArrowLeft class="w-5 h-5" />
 			Înapoi
@@ -132,8 +132,8 @@
 						{/if}
 					</div>
 					<div>
-						<h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100">{user.fullName}</h1>
-							<p class="text-lg text-gray-700 dark:text-gray-300 capitalize mt-1">{user.role}</p>
+						<h1 class="text-4xl font-bold text-gray-900 dark:text-slate-100">{user.fullName}</h1>
+							<p class="text-lg text-gray-700 dark:text-slate-300 capitalize mt-1">{user.role}</p>
 						{#if user.role === 'pacient'}
 							<div class="flex items-center gap-4 mt-2">
 								<span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-full">
@@ -160,26 +160,26 @@
 
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 			<!-- Account Information -->
-			<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+			<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
 						<Info class="w-6 h-6 text-blue-600 dark:text-blue-400" />
 					</div>
-					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Informații</h2>
+					<h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">Informații</h2>
 				</div>
 				<div class="space-y-4">
 					<div>
-							<p class="text-sm text-gray-700 dark:text-gray-300 mb-1">Email</p>
-						<p class="text-gray-900 dark:text-gray-100 font-medium">{user.email}</p>
+							<p class="text-sm text-gray-700 dark:text-slate-300 mb-1">Email</p>
+						<p class="text-gray-900 dark:text-slate-100 font-medium">{user.email}</p>
 					</div>
 					<div>
-						<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Rol</p>
-						<p class="text-gray-900 dark:text-gray-100 font-medium capitalize">{user.role}</p>
+						<p class="text-sm text-gray-600 dark:text-slate-400 mb-1">Rol</p>
+						<p class="text-gray-900 dark:text-slate-100 font-medium capitalize">{user.role}</p>
 					</div>
 					{#if user.specialization}
 						<div>
-								<p class="text-sm text-gray-700 dark:text-gray-300 mb-1">Specializare</p>
-							<p class="text-gray-900 dark:text-gray-100 font-medium">{user.specialization}</p>
+								<p class="text-sm text-gray-700 dark:text-slate-300 mb-1">Specializare</p>
+							<p class="text-gray-900 dark:text-slate-100 font-medium">{user.specialization}</p>
 						</div>
 					{/if}
 				</div>
@@ -187,24 +187,24 @@
 
 			{#if user.role === 'pacient'}
 				<!-- Patient Stats Card -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+				<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
 							<Star class="w-6 h-6 text-purple-600 dark:text-purple-400" />
 						</div>
-						<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Realizări</h2>
+						<h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">Realizări</h2>
 					</div>
 					<div class="space-y-4">
 						<div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
 							<div>
-								<p class="text-sm text-gray-700 dark:text-gray-300">Zile consecutive</p>
+								<p class="text-sm text-gray-700 dark:text-slate-300">Zile consecutive</p>
 								<p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.currentStreak}</p>
 							</div>
 							<TrendingUp class="w-8 h-8 text-blue-600 dark:text-blue-400" />
 						</div>
 						<div class="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
 							<div>
-								<p class="text-sm text-gray-700 dark:text-gray-300">Record streak</p>
+								<p class="text-sm text-gray-700 dark:text-slate-300">Record streak</p>
 								<p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.longestStreak}</p>
 							</div>
 							<Award class="w-8 h-8 text-purple-600 dark:text-purple-400" />
@@ -213,38 +213,38 @@
 				</div>
 
 				<!-- Badge Display -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+				<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-gradient-to-br {getBadgeColor(stats.currentBadge)} rounded-lg flex items-center justify-center">
 							<Star class="w-6 h-6 text-white" />
 						</div>
-						<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Badge curent</h2>
+						<h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">Badge curent</h2>
 					</div>
 					<div class="text-center py-4">
 						<div class="w-24 h-24 mx-auto bg-gradient-to-br {getBadgeColor(stats.currentBadge)} rounded-full flex items-center justify-center mb-3 shadow-lg">
 							<Star class="w-12 h-12 text-white" fill="currentColor" />
 						</div>
-						<p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{getBadgeName(stats.currentBadge)}</p>
-							<p class="text-gray-700 dark:text-gray-300 mt-1">{stats.totalXp} XP</p>
+						<p class="text-2xl font-bold text-gray-900 dark:text-slate-100">{getBadgeName(stats.currentBadge)}</p>
+							<p class="text-gray-700 dark:text-slate-300 mt-1">{stats.totalXp} XP</p>
 					</div>
 				</div>
 			{:else}
 				<!-- For Medics/Admins - Professional Info -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 md:col-span-2">
+				<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:col-span-2">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
 							<CheckCircle2 class="w-6 h-6 text-green-600 dark:text-green-400" />
 						</div>
-						<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Informații profesionale</h2>
+						<h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">Informații profesionale</h2>
 					</div>
 					<div class="grid grid-cols-2 gap-4">
-						<div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-							<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Specializare</p>
-							<p class="text-lg font-semibold text-gray-900 dark:text-gray-100">{user.specialization || 'Generalist'}</p>
+						<div class="p-4 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+							<p class="text-sm text-gray-600 dark:text-slate-400 mb-1">Specializare</p>
+							<p class="text-lg font-semibold text-gray-900 dark:text-slate-100">{user.specialization || 'Generalist'}</p>
 						</div>
-						<div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-							<p class="text-sm text-gray-700 dark:text-gray-300 mb-1">Rol</p>
-							<p class="text-lg font-semibold text-gray-900 dark:text-gray-100 capitalize">{user.role}</p>
+						<div class="p-4 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+							<p class="text-sm text-gray-700 dark:text-slate-300 mb-1">Rol</p>
+							<p class="text-lg font-semibold text-gray-900 dark:text-slate-100 capitalize">{user.role}</p>
 						</div>
 					</div>
 				</div>

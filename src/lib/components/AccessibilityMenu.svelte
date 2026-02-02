@@ -15,7 +15,7 @@
 	<!-- Accessibility Toggle Button -->
 	<button
 		onclick={() => (isOpen = !isOpen)}
-		class="p-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+		class="p-2.5 rounded-lg bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 transition border border-slate-300 dark:border-slate-600 text-gray-700 dark:text-slate-300"
 		title="Setări de accesibilitate"
 		aria-label="Deschide meniu de accesibilitate"
 	>
@@ -24,18 +24,18 @@
 
 	<!-- Dropdown Menu -->
 	{#if isOpen}
-		<div class="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
+		<div class="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg z-50">
 			<!-- Header -->
-			<div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+			<div class="px-4 py-3 border-b border-gray-200 dark:border-slate-700 flex items-center gap-2">
 				<Accessibility class="w-4 h-4" />
-				<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Setări Accesibilitate</h3>
+				<h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100">Setări Accesibilitate</h3>
 			</div>
 
 			<!-- Content -->
 			<div class="px-4 py-4 space-y-4">
 				<!-- Text Size Controls -->
 				<div>
-					<p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">Dimensiune Text</p>
+					<p class="text-xs font-semibold text-gray-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Dimensiune Text</p>
 					<div class="space-y-2">
 						{#each textSizeOptions as option}
 							<button
@@ -45,7 +45,7 @@
 								}}
 								class="w-full text-left px-3 py-2 rounded-lg border-2 transition {$accessibility.textSize === option.value
 									? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100'
-									: 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'}"
+									: 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-slate-300'}"
 								aria-label={option.label}
 							>
 								<span class="font-bold mr-2">{option.icon}</span>
@@ -57,7 +57,7 @@
 
 				<!-- High Contrast Toggle -->
 				<div>
-					<label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition">
+					<label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-slate-700/50 rounded-lg transition">
 						<input
 							type="checkbox"
 							checked={$accessibility.highContrast}
@@ -65,14 +65,14 @@
 							class="w-5 h-5 rounded border-gray-300 accent-blue-600"
 							aria-label="Contrast crescut"
 						/>
-						<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Contrast Crescut</span>
+						<span class="text-sm font-medium text-gray-700 dark:text-slate-300">Contrast Crescut</span>
 					</label>
-					<p class="text-xs text-gray-500 dark:text-gray-400 px-2 mt-1">Îmbunătățește vizibilitatea textului și a elementelor</p>
+					<p class="text-xs text-gray-500 dark:text-slate-400 px-2 mt-1">Îmbunătățește vizibilitatea textului și a elementelor</p>
 				</div>
 
 				<!-- Reduce Motion Toggle -->
 				<div>
-					<label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition">
+					<label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-slate-700/50 rounded-lg transition">
 						<input
 							type="checkbox"
 							checked={$accessibility.reduceMotion}
@@ -80,9 +80,9 @@
 							class="w-5 h-5 rounded border-gray-300 accent-blue-600"
 							aria-label="Reducere mișcare"
 						/>
-						<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Reducere Mișcare</span>
+						<span class="text-sm font-medium text-gray-700 dark:text-slate-300">Reducere Mișcare</span>
 					</label>
-					<p class="text-xs text-gray-500 dark:text-gray-400 px-2 mt-1">Dezactivează animații și tranzițiile</p>
+					<p class="text-xs text-gray-500 dark:text-slate-400 px-2 mt-1">Dezactivează animații și tranzițiile</p>
 				</div>
 
 			<!-- Reset Button -->
@@ -91,7 +91,7 @@
 					accessibility.reset();
 					isOpen = false;
 				}}
-				class="w-full px-3 py-2 mt-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition border border-gray-300 dark:border-gray-600 flex items-center justify-center gap-2"
+				class="w-full px-3 py-2 mt-2 text-sm font-medium text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg transition border border-slate-300 dark:border-slate-600 flex items-center justify-center gap-2"
 			>
 				<RotateCcw class="w-4 h-4" />
 				Resetează la Setări Implicite
@@ -99,8 +99,8 @@
 			</div>
 
 			<!-- Footer Info -->
-			<div class="px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 rounded-b-lg">
-				<p class="text-xs text-gray-600 dark:text-gray-400">
+			<div class="px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border-t border-gray-200 dark:border-slate-700 rounded-b-lg">
+				<p class="text-xs text-gray-600 dark:text-slate-400">
 					Setările tale sunt salvate automat și vor fi reamintite la vizita următoare.
 				</p>
 			</div>

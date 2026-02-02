@@ -46,7 +46,7 @@
 			class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
 		>
 			<div
-				class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 max-w-sm w-11/12 pointer-events-auto"
+				class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 p-4 sm:p-6 max-w-sm w-11/12 pointer-events-auto"
 				onclick={(e) => e.stopPropagation()}
 				onkeydown={(e) => e.stopPropagation()}
 				role="dialog"
@@ -55,12 +55,12 @@
 				tabindex="-1"
 			>
 				<!-- Title -->
-				<h3 id="confirm-title" class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+				<h3 id="confirm-title" class="text-lg sm:text-xl font-bold text-gray-900 dark:text-slate-100 mb-2">
 					{title}
 				</h3>
 
 				<!-- Message -->
-				<p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6">
+				<p class="text-sm sm:text-base text-gray-600 dark:text-slate-400 mb-6">
 					{message}
 				</p>
 
@@ -69,7 +69,7 @@
 					<button
 						type="button"
 						onclick={onCancel}
-						class="px-4 py-2 text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition active:scale-95"
+						class="px-4 py-2 text-sm sm:text-base font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition active:scale-95"
 					>
 						{cancelText}
 					</button>

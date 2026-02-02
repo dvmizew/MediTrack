@@ -227,7 +227,7 @@
 						<div class="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700 space-y-2">
 								<div class="flex justify-between text-sm">
 								<span class="text-gray-700 dark:text-slate-300">Total colaborări:</span>
-								<span class="font-bold text-gray-900 dark:text-gray-100">
+								<span class="font-bold text-gray-900 dark:text-slate-100">
 									{adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)}
 								</span>
 							</div>
@@ -309,7 +309,7 @@
 							type="email"
 							bind:value={medicEmail}
 							placeholder="Email medic (ex: medic@test.com)"
-							class="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.01] transition-all duration-200"
+							class="flex-1 px-4 py-3 border-2 border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.01] transition-all duration-200"
 							required
 						/>
 						<button

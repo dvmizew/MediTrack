@@ -11,7 +11,7 @@
 		iconBg?: string;
 	}
 
-	let { title, value, sub = '', accent = 'text-gray-900 dark:text-white', icon: Icon, iconColor = 'text-gray-500 dark:text-gray-300', iconBg = 'bg-gray-100 dark:bg-gray-800/40' }: Props = $props();
+	let { title, value, sub = '', accent = 'text-gray-900 dark:text-slate-100', icon: Icon, iconColor = 'text-gray-500 dark:text-slate-300', iconBg = 'bg-gray-100 dark:bg-slate-800/40' }: Props = $props();
 </script>
 
 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl p-4 md:p-5 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl transition">

@@ -227,14 +227,14 @@
 		<!-- Leaderboard Cards -->
 		<div class="space-y-4 mb-8">
 			{#if loading && !refreshing}
-			<div class="p-12 text-center bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl shadow-lg">
+			<div class="p-12 text-center bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-2xl shadow-lg">
 				<div class="inline-block animate-spin">
 					<LoaderCircle class="w-16 h-16 text-blue-600" />
 				</div>
 					<p class="mt-4 text-gray-900 dark:text-slate-100 font-medium">Se încarcă leaderboard-ul...</p>
 				</div>
 			{:else if leaderboard.length === 0}
-			<div class="p-12 text-center bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl shadow-lg">
+			<div class="p-12 text-center bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-2xl shadow-lg">
 				<Trophy class="w-14 h-14 mx-auto mb-4 text-yellow-500" />
 					<p class="text-xl text-gray-900 dark:text-slate-100 font-medium">
 						Nu au fost găsiți pacienți pe leaderboard
@@ -291,7 +291,7 @@
 								<!-- Name + Badge -->
 								<div class="min-w-0 flex-1">
 									<div class="flex items-center gap-2 mb-1">
-										<p class="font-bold text-lg text-gray-900 dark:text-white truncate">
+										<p class="font-bold text-lg text-gray-900 dark:text-slate-100 truncate">
 											{user.name || 'User'}
 										</p>
 										{#if isCurrentUser}

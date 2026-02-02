@@ -235,16 +235,16 @@
 										<CheckCircle2 class="w-4 h-4 sm:w-5 sm:h-5 text-green-700 dark:text-green-200" />
 										<span class="text-sm sm:text-base font-medium text-green-900 dark:text-green-100">Active</span>
 									</div>
-									<span class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">{adminOverview.treatments.active}</span>
+									<span class="text-lg sm:text-xl font-bold text-gray-900 dark:text-slate-100">{adminOverview.treatments.active}</span>
 								</div>
 								<!-- Progress bar -->
-								<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 sm:h-2.5 overflow-hidden">
+								<div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 sm:h-2.5 overflow-hidden">
 									<div 
 										class="bg-gradient-to-r from-green-500 to-green-600 h-full transition-all duration-500 rounded-full"
 										style="width: {adminOverview.treatments.total > 0 ? (adminOverview.treatments.active / adminOverview.treatments.total) * 100 : 0}%"
 									></div>
 								</div>
-							<div class="text-xs text-gray-700 dark:text-gray-200">
+							<div class="text-xs text-gray-700 dark:text-slate-200">
 									{adminOverview.treatments.total > 0 ? Math.round((adminOverview.treatments.active / adminOverview.treatments.total) * 100) : 0}% din total
 								</div>
 							</div>
@@ -253,32 +253,32 @@
 								<div class="flex items-center justify-between">
 									<div class="flex items-center gap-2">
 										<PauseCircle class="w-4 h-4 sm:w-5 sm:h-5 text-slate-700 dark:text-slate-200" />
-										<span class="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">Inactive</span>
+										<span class="text-sm sm:text-base font-medium text-gray-900 dark:text-slate-100">Inactive</span>
 									</div>
-									<span class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">{adminOverview.treatments.inactive}</span>
+									<span class="text-lg sm:text-xl font-bold text-gray-900 dark:text-slate-100">{adminOverview.treatments.inactive}</span>
 								</div>
 								<!-- Progress bar -->
-								<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 sm:h-2.5 overflow-hidden">
+								<div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 sm:h-2.5 overflow-hidden">
 									<div 
 										class="bg-gradient-to-r from-gray-500 to-gray-600 h-full transition-all duration-500 rounded-full"
 										style="width: {adminOverview.treatments.total > 0 ? (adminOverview.treatments.inactive / adminOverview.treatments.total) * 100 : 0}%"
 									></div>
 								</div>
-							<div class="text-xs text-gray-700 dark:text-gray-200">
+							<div class="text-xs text-gray-700 dark:text-slate-200">
 									{adminOverview.treatments.total > 0 ? Math.round((adminOverview.treatments.inactive / adminOverview.treatments.total) * 100) : 0}% din total
 								</div>
 							</div>
 							
 							<!-- Summary -->
-							<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+							<div class="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700 space-y-2">
 								<div class="flex justify-between text-sm">
-								<span class="text-gray-700 dark:text-gray-200">Total tratamente:</span>
-								<span class="font-bold text-gray-900 dark:text-gray-100">
+								<span class="text-gray-700 dark:text-slate-200">Total tratamente:</span>
+								<span class="font-bold text-gray-900 dark:text-slate-100">
 									{adminOverview.treatments.total}
 								</span>
 							</div>
 							<div class="flex justify-between text-sm">
-								<span class="text-gray-700 dark:text-gray-200">Rata activare:</span>
+								<span class="text-gray-700 dark:text-slate-200">Rata activare:</span>
 									<span class="font-bold {adminOverview.treatments.total > 0 && (adminOverview.treatments.active / adminOverview.treatments.total) > 0.7 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">
 										{adminOverview.treatments.total > 0 ? Math.round((adminOverview.treatments.active / adminOverview.treatments.total) * 100) : 0}%
 									</span>
@@ -354,11 +354,11 @@
 					<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
 				</div>
 			{:else if treatments.length === 0}
-			<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl shadow-sm p-16 text-center animate-scale-in">
+			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-2xl shadow-sm p-16 text-center animate-scale-in">
 				<div class="max-w-sm mx-auto">
-					<ClipboardList class="mx-auto h-20 w-20 text-gray-300 dark:text-gray-600 mb-4" />
-					<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Niciun tratament încă</h3>
-				<p class="text-gray-700 dark:text-gray-200">
+					<ClipboardList class="mx-auto h-20 w-20 text-gray-300 dark:text-slate-600 mb-4" />
+					<h3 class="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">Niciun tratament încă</h3>
+				<p class="text-gray-700 dark:text-slate-200">
 						{#if $isMedic}
 							Începe prin a crea un plan de tratament pentru unul dintre pacienții tăi
 						{:else}
@@ -372,12 +372,12 @@
 				{#each treatments as treatment}
 				<button
 					type="button"
-					class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6 hover:shadow-lg hover:border-blue-400 dark:hover:border-blue-600 transition cursor-pointer group text-left w-full"
+					class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl shadow-sm p-6 hover:shadow-lg hover:border-blue-400 dark:hover:border-blue-600 transition cursor-pointer group text-left w-full"
 					onclick={() => viewDetails(treatment.planId)}
 					aria-label="Vezi detalii pentru {treatment.diagnosis}"
 				>
 					<div class="flex justify-between items-start mb-4">
-						<h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+						<h3 class="text-lg font-bold text-gray-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
 							{treatment.diagnosis}
 						</h3>
 						<span
@@ -397,29 +397,29 @@
 					</div>
 
 					{#if treatment.description}
-						<p class="text-gray-700 dark:text-gray-200 text-sm mb-4 line-clamp-2">{treatment.description}</p>
+						<p class="text-gray-700 dark:text-slate-200 text-sm mb-4 line-clamp-2">{treatment.description}</p>
 					{/if}
 
 					<div class="space-y-2 text-sm mb-4">
 						{#if $isMedic}
-							<div class="flex items-center text-gray-700 dark:text-gray-200">
+							<div class="flex items-center text-gray-700 dark:text-slate-200">
 								<User class="w-4 h-4 mr-2" />
 								<span>{treatment.patientName}</span>
 							</div>
 						{:else}
-							<div class="flex items-center text-gray-700 dark:text-gray-200">
+							<div class="flex items-center text-gray-700 dark:text-slate-200">
 								<User class="w-4 h-4 mr-2" />
 								<span>Dr. {treatment.doctorName}</span>
 							</div>
 						{/if}
 
-					<div class="flex items-center text-gray-700 dark:text-gray-200">
+					<div class="flex items-center text-gray-700 dark:text-slate-200">
 						<CalendarDays class="w-4 h-4 mr-2" />
 						<span>{new Date(treatment.createdAt).toLocaleDateString('ro-RO')}</span>
 					</div>
 					</div>
 
-					<div class="flex items-center justify-end pt-3 border-t border-gray-100 dark:border-gray-700">
+					<div class="flex items-center justify-end pt-3 border-t border-gray-100 dark:border-slate-700">
 						<span class="text-sm text-blue-600 dark:text-blue-400 font-medium group-hover:underline">Vezi detalii →</span>
 					</div>
 				</button>
@@ -448,14 +448,14 @@
 				</div>
 			{:else}
 				<div>
-					<label for="patient" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+					<label for="patient" class="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
 						Pacient *
 					</label>
 					<select
 						id="patient"
 						bind:value={formData.patientId}
 						required
-						class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 truncate"
+						class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 truncate"
 					>
 						<option value="">Selectează pacient</option>
 						{#each collaborations as collab}
@@ -469,7 +469,7 @@
 				</div>
 
 				<div>
-					<label for="diagnostic" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+					<label for="diagnostic" class="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
 						Diagnostic *
 					</label>
 					<input
@@ -478,12 +478,12 @@
 						bind:value={formData.diagnostic}
 						required
 						placeholder="ex: Hipertensiune arterială"
-						class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
+						class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
 					/>
 				</div>
 
 				<div>
-					<label for="descriere" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+					<label for="descriere" class="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">
 						Descriere
 					</label>
 					<textarea
@@ -491,7 +491,7 @@
 						bind:value={formData.descriere}
 						rows="3"
 						placeholder="Descrierea completă a tratamentului..."
-						class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 resize-none"
+						class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100 resize-none"
 					></textarea>
 				</div>
 			{/if}

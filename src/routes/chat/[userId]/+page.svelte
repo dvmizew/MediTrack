@@ -490,35 +490,35 @@
 								{#if showOptionsMenu}
 									<div 
 										transition:fly={{ y: -10, duration: 200, easing: quintOut }}
-										class="absolute right-0 mt-2 w-56 bg-white/95 dark:bg-gray-900/80 rounded-xl shadow-2xl border border-slate-200/70 dark:border-gray-800/70 overflow-hidden z-50"
+										class="absolute right-0 mt-2 w-56 bg-white/95 dark:bg-slate-900/80 rounded-xl shadow-2xl border border-slate-200/70 dark:border-slate-800/70 overflow-hidden z-50"
 									>
 										<div class="py-2">
 											{#if $isMedic}
 												<!-- Medic Options -->
 												<button
 													onclick={createTreatment}
-													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-slate-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-slate-300"
 												>
 													<Plus class="w-5 h-5 text-green-600 dark:text-green-400" />
 													<span>Adaugă Tratament</span>
 												</button>
 												<button
 													onclick={viewTreatments}
-													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-slate-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-slate-300"
 												>
 													<FileText class="w-5 h-5 text-blue-600 dark:text-blue-400" />
 													<span>Tratamente Active</span>
 												</button>
 												<button
 													onclick={sendReminder}
-													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-slate-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-slate-300"
 												>
 													<Bell class="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
 													<span>Trimite Reminder</span>
 												</button>
 												<button
 													onclick={viewReports}
-													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-slate-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-slate-300"
 												>
 													<BarChart3 class="w-5 h-5 text-purple-600 dark:text-purple-400" />
 													<span>Rapoarte Pacient</span>
@@ -527,14 +527,14 @@
 												<!-- Pacient Options -->
 												<button
 													onclick={viewTreatments}
-													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-slate-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-slate-300"
 												>
 														<FileText class="w-5 h-5 text-blue-600 dark:text-blue-400" />
 													<span>Tratamentele Mele</span>
 												</button>
 												<button
 													onclick={viewReports}
-													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-gray-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300"
+													class="w-full px-4 py-2.5 text-left hover:bg-slate-50/80 dark:hover:bg-slate-800 transition flex items-center gap-3 text-sm text-gray-700 dark:text-slate-300"
 												>
 														<BarChart3 class="w-5 h-5 text-green-600 dark:text-green-400" />
 												<span>Progresul Meu</span>
@@ -577,8 +577,8 @@
 			>
 				{#if messages.length === 0}
 					<div class="text-center py-8 sm:py-12 px-4">
-						<MessageCircle class="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 dark:text-gray-600 mx-auto mb-3 sm:mb-4" />
-						<p class="text-sm sm:text-base text-gray-500 dark:text-gray-400">Niciun mesaj încă</p>
+						<MessageCircle class="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 dark:text-slate-600 mx-auto mb-3 sm:mb-4" />
+						<p class="text-sm sm:text-base text-gray-500 dark:text-slate-400">Niciun mesaj încă</p>
 					</div>
 				{:else}
 					{#each messages as message (message.message_id)}
@@ -589,16 +589,16 @@
 											? message._pending 
 												? 'bg-blue-500 text-white rounded-br-none opacity-70' 
 												: 'bg-blue-600 text-white rounded-br-none'
-											: 'bg-white/90 dark:bg-gray-900/70 text-gray-900 dark:text-gray-100 border border-slate-200/70 dark:border-gray-800/70 rounded-bl-none'
+											: 'bg-white/90 dark:bg-slate-900/70 text-gray-900 dark:text-slate-100 border border-slate-200/70 dark:border-slate-800/70 rounded-bl-none'
 									}`}>
 										<p class="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.continut}</p>
 										{#if message._pending}
-											<span class="absolute -bottom-1 -right-1 w-4 h-4 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center">
+											<span class="absolute -bottom-1 -right-1 w-4 h-4 bg-white dark:bg-slate-700 rounded-full flex items-center justify-center">
 													<Loader class="animate-spin h-3 w-3 text-blue-600" />
 											</span>
 										{/if}
 									</div>
-									<p class={`text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1 px-1 flex items-center gap-1 ${isMyMessage(message) ? 'justify-end' : 'justify-start'}`}>
+									<p class={`text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 mt-1 px-1 flex items-center gap-1 ${isMyMessage(message) ? 'justify-end' : 'justify-start'}`}>
 										{#if message._pending}
 											<span class="italic">Se trimite...</span>
 										{:else}
@@ -612,7 +612,7 @@
 			</div>
 
 			<!-- Message Input -->
-			<div class="bg-white/90 dark:bg-gray-900/70 border-t border-slate-200/70 dark:border-gray-800/70 flex-shrink-0 safe-area-bottom overflow-hidden">
+			<div class="bg-white/90 dark:bg-slate-900/70 border-t border-slate-200/70 dark:border-slate-800/70 flex-shrink-0 safe-area-bottom overflow-hidden">
 				<div class="w-full px-2 xs:px-3 sm:px-4 py-2 sm:py-3">
 					<form onsubmit={(e) => { e.preventDefault(); sendMessage(); }} class="flex gap-1.5 sm:gap-2 items-end w-full min-w-0">
 						<textarea
@@ -622,7 +622,7 @@
 							onkeypress={handleKeyPress}
 							placeholder="Mesaj..."
 							rows="1"
-							class="flex-1 min-w-0 resize-none rounded-xl border-2 border-slate-200/70 dark:border-gray-700 bg-slate-50/80 dark:bg-gray-800 px-2 py-2 sm:px-3 sm:py-2 text-xs sm:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-0 focus:outline-none transition"
+							class="flex-1 min-w-0 resize-none rounded-xl border-2 border-slate-200/70 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800 px-2 py-2 sm:px-3 sm:py-2 text-xs sm:text-sm text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-0 focus:outline-none transition"
 							style="max-height: 100px; min-height: 36px;"
 						></textarea>
 						<button

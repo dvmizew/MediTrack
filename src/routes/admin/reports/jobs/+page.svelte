@@ -135,11 +135,11 @@
 	<!-- Header -->
 	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 		<div>
-			<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-				<Zap class="w-6 h-6 text-gray-900 dark:text-gray-100" />
+			<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
+				<Zap class="w-6 h-6 text-gray-900 dark:text-slate-100" />
 				Job-uri Rapoarte
 			</h1>
-			<p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+			<p class="text-sm sm:text-base text-gray-600 dark:text-slate-400 mt-1">
 				Monitorizare și gestionare rapoarte asincrone, export date și statistici sistem
 			</p>
 		</div>
@@ -153,8 +153,8 @@
 	</div>
 
 	<!-- Create New Job Section -->
-	<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl p-6">
-		<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Creează Raport Nou</h2>
+	<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6">
+		<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Creează Raport Nou</h2>
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 			<button
 				onclick={() => createJob('users')}
@@ -162,8 +162,8 @@
 				class="p-4 border-2 border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition disabled:opacity-50"
 			>
 				<Users class="w-8 h-8 mb-2 text-blue-600 dark:text-blue-300" />
-				<div class="font-semibold text-gray-900 dark:text-gray-100">Utilizatori</div>
-				<div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Export complet utilizatori</div>
+				<div class="font-semibold text-gray-900 dark:text-slate-100">Utilizatori</div>
+				<div class="text-xs text-gray-600 dark:text-slate-400 mt-1">Export complet utilizatori</div>
 			</button>
 
 			<button
@@ -172,8 +172,8 @@
 				class="p-4 border-2 border-green-200 dark:border-green-800 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition disabled:opacity-50"
 			>
 				<Pill class="w-8 h-8 mb-2 text-green-600 dark:text-green-300" />
-				<div class="font-semibold text-gray-900 dark:text-gray-100">Tratamente</div>
-				<div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Export toate tratamentele</div>
+				<div class="font-semibold text-gray-900 dark:text-slate-100">Tratamente</div>
+				<div class="text-xs text-gray-600 dark:text-slate-400 mt-1">Export toate tratamentele</div>
 			</button>
 
 			<button
@@ -182,8 +182,8 @@
 				class="p-4 border-2 border-purple-200 dark:border-purple-800 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition disabled:opacity-50"
 			>
 				<Syringe class="w-8 h-8 mb-2 text-purple-600 dark:text-purple-300" />
-				<div class="font-semibold text-gray-900 dark:text-gray-100">Doze</div>
-				<div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Export istoric doze</div>
+				<div class="font-semibold text-gray-900 dark:text-slate-100">Doze</div>
+				<div class="text-xs text-gray-600 dark:text-slate-400 mt-1">Export istoric doze</div>
 			</button>
 
 			<button
@@ -192,8 +192,8 @@
 				class="p-4 border-2 border-orange-200 dark:border-orange-800 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition disabled:opacity-50"
 			>
 				<Package class="w-8 h-8 mb-2 text-orange-600 dark:text-orange-300" />
-				<div class="font-semibold text-gray-900 dark:text-gray-100">Sistem Complet</div>
-				<div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Export toate datele</div>
+				<div class="font-semibold text-gray-900 dark:text-slate-100">Sistem Complet</div>
+				<div class="text-xs text-gray-600 dark:text-slate-400 mt-1">Export toate datele</div>
 			</button>
 		</div>
 	</div>
@@ -208,44 +208,44 @@
 			<p class="text-red-800 dark:text-red-400">{error}</p>
 		</div>
 	{:else if jobs.length === 0}
-		<div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-12 text-center">
-			<ClipboardList class="w-12 h-12 mx-auto mb-4 text-gray-500 dark:text-gray-400" />
-			<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Niciun job încă</h3>
-			<p class="text-gray-600 dark:text-gray-400">Creează primul tău raport asincrondeasupra</p>
+		<div class="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-12 text-center">
+			<ClipboardList class="w-12 h-12 mx-auto mb-4 text-gray-500 dark:text-slate-400" />
+			<h3 class="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">Niciun job încă</h3>
+			<p class="text-gray-600 dark:text-slate-400">Creează primul tău raport asincrondeasupra</p>
 		</div>
 	{:else}
-		<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl overflow-hidden">
+		<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl overflow-hidden">
 			<div class="overflow-x-auto">
 				<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-					<thead class="bg-slate-50/80 dark:bg-gray-900/50">
+					<thead class="bg-slate-50/80 dark:bg-slate-900/50">
 						<tr>
-							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tip Raport</th>
-							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Creat</th>
-							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Finalizat</th>
-							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Mărime</th>
-							<th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acțiuni</th>
+							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Tip Raport</th>
+							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Creat</th>
+							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Finalizat</th>
+							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Mărime</th>
+							<th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Acțiuni</th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
 						{#each jobs as job}
-							<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+							<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
 								<td class="px-4 py-3">
 									<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium {getStatusColor(job.status)}">
 										<svelte:component this={getStatusIconComponent(job.status)} class="w-3.5 h-3.5" />
 										<span class="capitalize">{job.status}</span>
 									</span>
 								</td>
-								<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100 capitalize">
+								<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-slate-100 capitalize">
 									{job.report_type}
 								</td>
-								<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+								<td class="px-4 py-3 text-sm text-gray-600 dark:text-slate-400">
 									{formatDate(job.created_at)}
 								</td>
-								<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+								<td class="px-4 py-3 text-sm text-gray-600 dark:text-slate-400">
 									{job.completed_at ? formatDate(job.completed_at) : '-'}
 								</td>
-								<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+								<td class="px-4 py-3 text-sm text-gray-600 dark:text-slate-400">
 									{formatBytes(job.file_size)}
 								</td>
 								<td class="px-4 py-3 text-right">
@@ -282,7 +282,7 @@
 		<div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
 			<div class="flex items-start gap-3">
 				<HelpCircle class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-				<div class="text-sm text-gray-700 dark:text-gray-300">
+				<div class="text-sm text-gray-700 dark:text-slate-300">
 					<p class="font-semibold mb-1">Informații importante:</p>
 					<ul class="list-disc list-inside space-y-1 text-xs">
 						<li>Rapoartele sunt generate în background și nu blochează interfața</li>

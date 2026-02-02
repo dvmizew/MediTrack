@@ -30,7 +30,7 @@
 {#if showBanner}
 	<!-- Cookie Consent Banner - GDPR Compliant -->
 	<div 
-		class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t-4 border-blue-600 dark:border-blue-500 shadow-2xl z-[9999] animate-slide-up"
+		class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t-4 border-blue-600 dark:border-blue-500 shadow-2xl z-[9999] animate-slide-up"
 		role="dialog"
 		aria-labelledby="cookie-consent-title"
 		aria-describedby="cookie-consent-description"
@@ -44,18 +44,18 @@
 						<div>
 							<h2 
 								id="cookie-consent-title"
-								class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1"
+								class="text-lg font-bold text-gray-900 dark:text-slate-100 mb-1"
 							>
 								Folosim cookies
 							</h2>
 							<p 
 								id="cookie-consent-description"
-								class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed"
+								class="text-sm text-gray-700 dark:text-slate-300 leading-relaxed"
 							>
 								MediTrack folosește cookies strict necesare pentru autentificare și salvarea preferințelor tale (tema dark/light). 
 								<strong>Datele tale medicale sunt protejate conform GDPR</strong> și nu sunt partajate cu terțe părți.
 							</p>
-							<p class="text-xs text-gray-600 dark:text-gray-400 mt-2">
+							<p class="text-xs text-gray-600 dark:text-slate-400 mt-2">
 								Cookie-urile esențiale: autentificare JWT, preferințe UI. 
 								<a href="/privacy" class="underline hover:text-blue-600 dark:hover:text-blue-400">
 									Politica de confidențialitate
@@ -69,8 +69,8 @@
 				<div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
 					<button 
 						onclick={rejectCookies}
-						class="min-h-[48px] px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 
-						       text-gray-900 dark:text-gray-100 rounded-xl font-semibold transition-all duration-200 
+						class="min-h-[48px] px-6 py-3 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 
+						       text-gray-900 dark:text-slate-100 rounded-xl font-semibold transition-all duration-200 
 						       focus:outline-none focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
 						aria-label="Refuză cookies ne-esențiale"
 					>

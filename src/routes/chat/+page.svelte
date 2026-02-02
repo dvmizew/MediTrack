@@ -137,7 +137,7 @@
 											{collab.name?.charAt(0).toUpperCase() || '?'}
 										</div>
 										<!-- Online status indicator -->
-										<div class="absolute bottom-0 right-0 w-3 h-3 sm:w-3.5 sm:h-3.5 {userStatuses.get(collab.user_id)?.online ? 'bg-green-500' : 'bg-gray-400'} border-2 border-white dark:border-gray-800 rounded-full"></div>
+										<div class="absolute bottom-0 right-0 w-3 h-3 sm:w-3.5 sm:h-3.5 {userStatuses.get(collab.user_id)?.online ? 'bg-green-500' : 'bg-gray-400'} border-2 border-white dark:border-slate-800 rounded-full"></div>
 									</div>
 									
 									<div class="min-w-0 flex-1">

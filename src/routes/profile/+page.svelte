@@ -151,15 +151,15 @@
 				</div>
 				<div class="space-y-4">
 					<div>
-							<p class="text-sm text-gray-700 dark:text-gray-300 mb-1">Email</p>
+							<p class="text-sm text-gray-700 dark:text-slate-300 mb-1">Email</p>
 						<p class="text-gray-900 dark:text-slate-100 font-medium">{user.email}</p>
 					</div>
 					<div>
-							<p class="text-sm text-gray-700 dark:text-gray-300 mb-1">Rol</p>
+							<p class="text-sm text-gray-700 dark:text-slate-300 mb-1">Rol</p>
 						<p class="text-gray-900 dark:text-slate-100 font-medium capitalize">{user.role}</p>
 					</div>
 					<div>
-						<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Membru din</p>
+						<p class="text-sm text-gray-600 dark:text-slate-400 mb-1">Membru din</p>
 						<p class="text-gray-900 dark:text-slate-100 font-medium">
 							{new Date().toLocaleDateString('ro-RO', { year: 'numeric', month: 'long' })}
 						</p>
@@ -179,14 +179,14 @@
 					<div class="space-y-4">
 						<div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
 							<div>
-								<p class="text-sm text-gray-600 dark:text-gray-400">Zile consecutive</p>
+								<p class="text-sm text-gray-600 dark:text-slate-400">Zile consecutive</p>
 								<p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.currentStreak}</p>
 							</div>
 							<BarChart3 class="w-8 h-8 text-blue-600 dark:text-blue-400" />
 						</div>
 						<div class="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
 							<div>
-								<p class="text-sm text-gray-600 dark:text-gray-400">Record streak</p>
+								<p class="text-sm text-gray-600 dark:text-slate-400">Record streak</p>
 								<p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.longestStreak}</p>
 							</div>
 							<Award class="w-8 h-8 text-purple-600 dark:text-purple-400" />
@@ -207,7 +207,7 @@
 							<Award class="w-12 h-12 text-white" />
 						</div>
 						<p class="text-2xl font-bold text-gray-900 dark:text-slate-100">{getBadgeName(stats.currentBadge)}</p>
-						<p class="text-gray-600 dark:text-gray-400 mt-1">{stats.totalXp} XP</p>
+						<p class="text-gray-600 dark:text-slate-400 mt-1">{stats.totalXp} XP</p>
 					</div>
 				</div>
 			{:else}
@@ -220,12 +220,12 @@
 						<h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">Activitate</h2>
 					</div>
 					<div class="grid grid-cols-2 gap-4">
-						<div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-							<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Pacienți activi</p>
+						<div class="p-4 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+							<p class="text-sm text-gray-600 dark:text-slate-400 mb-1">Pacienți activi</p>
 							<p class="text-3xl font-bold text-gray-900 dark:text-slate-100">-</p>
 						</div>
-						<div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-							<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Tratamente active</p>
+						<div class="p-4 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+							<p class="text-sm text-gray-600 dark:text-slate-400 mb-1">Tratamente active</p>
 							<p class="text-3xl font-bold text-gray-900 dark:text-slate-100">-</p>
 						</div>
 					</div>
@@ -244,7 +244,7 @@
 						</div>
 						<div>
 							<p class="font-semibold text-gray-900 dark:text-slate-100">Setări</p>
-							<p class="text-sm text-gray-600 dark:text-gray-400">Configurează contul</p>
+							<p class="text-sm text-gray-600 dark:text-slate-400">Configurează contul</p>
 						</div>
 					</div>
 				</a>
@@ -256,7 +256,7 @@
 						</div>
 						<div>
 							<p class="font-semibold text-gray-900 dark:text-slate-100">Dashboard</p>
-							<p class="text-sm text-gray-600 dark:text-gray-400">Vezi statistici</p>
+							<p class="text-sm text-gray-600 dark:text-slate-400">Vezi statistici</p>
 						</div>
 					</div>
 				</a>
@@ -268,7 +268,7 @@
 						</div>
 						<div>
 							<p class="font-semibold text-gray-900 dark:text-slate-100">Tratamente</p>
-							<p class="text-sm text-gray-600 dark:text-gray-400">Gestionează tratamentele</p>
+							<p class="text-sm text-gray-600 dark:text-slate-400">Gestionează tratamentele</p>
 						</div>
 					</div>
 				</a>
