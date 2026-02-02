@@ -97,6 +97,50 @@ html.dark::before {
 	background: rgba(0, 0, 0, 0.3);
 }
 
+/* ============================================
+   ACCESSIBILITY - Screen Reader Only Utility
+   ============================================ */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border-width: 0;
+}
+
+.focus\:not-sr-only:focus {
+	position: static;
+	width: auto;
+	height: auto;
+	padding: inherit;
+	margin: inherit;
+	overflow: visible;
+	clip: auto;
+	white-space: normal;
+}
+
+/* ============================================
+   ACCESSIBILITY - Focus Visible Styles
+   ============================================ */
+*:focus-visible {
+	outline: 3px solid #3b82f6;
+	outline-offset: 2px;
+	border-radius: 0.25rem;
+}
+
+.dark *:focus-visible {
+	outline-color: #60a5fa;
+}
+
+/* Remove outline for mouse users, keep for keyboard */
+*:focus:not(:focus-visible) {
+	outline: none;
+}
+
 body {
 	background-color: transparent;
 	/* Improved font size for elderly users */
