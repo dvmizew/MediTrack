@@ -67,6 +67,13 @@
 		success: CheckCircle2
 	};
 
+	const typeIconColors = {
+		info: 'text-blue-600 dark:text-blue-400',
+		warning: 'text-yellow-600 dark:text-yellow-400',
+		error: 'text-red-600 dark:text-red-400',
+		success: 'text-green-600 dark:text-green-400'
+	};
+
 	function handleBackdropClick() {
 		if (closeOnBackdrop && !isProcessing) {
 			onClose();
@@ -172,8 +179,9 @@
 				<div class="flex justify-between items-start mb-4">
 					<div class="flex items-start gap-3 flex-1">
 						{#if type && type !== 'info'}
-							<span class="text-2xl flex-shrink-0 pt-1" aria-hidden="true">
-								{typeIcons[type]}
+							{@const IconComponent = typeIcons[type]}
+							<span class="flex-shrink-0 pt-1" aria-hidden="true">
+								<IconComponent class="w-6 h-6 {typeIconColors[type]}" />
 							</span>
 						{/if}
 						{#if title}

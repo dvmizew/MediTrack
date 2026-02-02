@@ -5,6 +5,7 @@
 	import { authStore } from '$lib/stores/auth';
 	import { toast } from '$lib/utils/toast';
 	import { downloadBlobAsFile } from '$lib/utils/charts';
+	import Modal from '$lib/components/Modal.svelte';
 	import {
 		CheckCircle2,
 		ClipboardList,
@@ -18,8 +19,7 @@
 		XCircle,
 		Zap,
 		Shield,
-		Eye,
-		X
+		Eye
 	} from '@lucide/svelte';
 
 	let isAdmin = $derived($authStore.user?.role === 'admin');
@@ -384,28 +384,25 @@
 	{/if}
 
 	<!-- Anonymous Export Confirmation Modal -->
-	{#if showAnonModal && selectedAnonType}
-		<div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-			<div class="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full p-6" role="dialog" aria-modal="true" aria-labelledby="anon-modal-title">
-				<div class="flex items-start justify-between mb-4">
-					<div class="flex items-start gap-3">
-						<Shield class="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-						<div>
-							<h3 id="anon-modal-title" class="font-semibold text-gray-900 dark:text-slate-100">Export Anonimizat</h3>
-							<p class="text-sm text-gray-600 dark:text-slate-400 mt-1">
-								Confirmă crearea raportului cu date anonimizate
-							</p>
-						</div>
-					</div>
-					<button
-						onclick={closeAnonModal}
-						class="text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200"
-						aria-label="Închide modal"
-					>
-						<X class="w-5 h-5" />
-					</button>
-				</div>
-
+	<Modal
+		isOpen={showAnonModal && selectedAnonType !== null}
+		title="Export Anonimizat"
+		size="md"
+		type="success"
+		showCancel={true}
+		confirmText={creatingJob ? 'Se procesează...' : 'Confirmă'}
+		cancelText="Anulează"
+		onConfirm={() => {
+			if (selectedAnonType) {
+				return createJob(selectedAnonType, true);
+			}
+		}}
+		onCancel={closeAnonModal}
+		onClose={closeAnonModal}
+		isLoading={creatingJob}
+	>
+		{#snippet children()}
+			{#if selectedAnonType}
 				<div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
 					<div class="flex gap-3">
 						<Eye class="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
@@ -429,26 +426,10 @@
 					</div>
 				</div>
 
-				<p class="text-xs text-gray-600 dark:text-slate-400 mb-6">
+				<p class="text-xs text-gray-600 dark:text-slate-400">
 					Raportul va fi generat în background. Vei putea descărca fișierul după finalizare.
 				</p>
-
-				<div class="flex gap-3">
-					<button
-						onclick={closeAnonModal}
-						class="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-slate-100 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition"
-					>
-						Anulează
-					</button>
-					<button
-						onclick={() => selectedAnonType && createJob(selectedAnonType, true)}
-						disabled={creatingJob}
-						class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 font-medium"
-					>
-						{creatingJob ? 'Se procesează...' : 'Confirmă'}
-					</button>
-				</div>
-			</div>
-		</div>
-	{/if}
+			{/if}
+		{/snippet}
+	</Modal>
 </main>
