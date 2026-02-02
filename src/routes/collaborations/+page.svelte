@@ -4,6 +4,7 @@
 	import { authStore, isMedic, isPacient } from '$lib/stores/auth';
 	import { api, adminReportsApi } from '$lib/api/client';
 	import { toast } from '$lib/utils/toast';
+	import type { Collaboration, AdminOverview } from '$lib/types/api';
 	import {
 		AlertCircle,
 		BarChart3,
@@ -25,9 +26,9 @@
 		Zap
 	} from '@lucide/svelte';
 
-	let collaborations = $state<any[]>([]);
-	let pendingInvites = $state<any[]>([]);
-	let overview = $state<any>(null);
+	let collaborations = $state<Collaboration[]>([]);
+	let pendingInvites = $state<Collaboration[]>([]);
+	let overview = $state<AdminOverview | null>(null);
 	let loading = $state(true);
 	let error = $state('');
 	let medicEmail = $state('');
@@ -351,11 +352,11 @@
 									</div>
 								<div>
 										<p class="font-semibold text-gray-900 dark:text-slate-100">{$isMedic ? invite.pacientName : invite.medicName}</p>
-														<p class="text-sm text-gray-700 dark:text-slate-300">{$isMedic ? invite.pacientEmail : invite.medicEmail}</p>
-														<p class="text-xs text-gray-600 dark:text-slate-400 mt-1 flex items-center gap-1">
-															<CalendarDays class="w-3 h-3" />
-															{new Date(invite.created_at).toLocaleDateString('ro-RO')}
-														</p>
+										<p class="text-sm text-gray-700 dark:text-slate-300">{$isMedic ? invite.pacientEmail : invite.medicEmail}</p>
+										<p class="text-xs text-gray-600 dark:text-slate-400 mt-1 flex items-center gap-1">
+											<CalendarDays class="w-3 h-3" />
+											{new Date(invite.created_at ?? invite.createdAt).toLocaleDateString('ro-RO')}
+										</p>
 									</div>
 								</div>
 							{#if $isMedic}
@@ -436,7 +437,7 @@
 														<p class="text-sm text-gray-700 dark:text-slate-300">{$isMedic ? collab.pacientEmail : collab.medicEmail}</p>
 														<p class="text-xs text-gray-600 dark:text-slate-400 mt-1 flex items-center gap-1">
 															<CalendarDays class="w-3 h-3" />
-															Din {new Date(collab.created_at).toLocaleDateString('ro-RO')}
+														Din {new Date(collab.created_at ?? collab.createdAt).toLocaleDateString('ro-RO')}
 														</p>
 									</div>
 								</div>

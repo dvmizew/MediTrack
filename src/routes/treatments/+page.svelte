@@ -5,6 +5,7 @@
 	import { authStore, isMedic } from '$lib/stores/auth';
 	import { api, adminReportsApi } from '$lib/api/client';
 	import Modal from '$lib/components/Modal.svelte';
+	import type { Treatment, Collaboration, AdminOverview } from '$lib/types/api';
 	import {
 		AlertCircle,
 		BarChart3,
@@ -22,13 +23,13 @@
 	import { loadCollaborations as loadCollabs } from '$lib/utils/loaders';
 	import { treatmentSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
 
-	let treatments = $state<any[]>([]);
-	let overview = $state<any>(null);
+	let treatments = $state<Treatment[]>([]);
+	let overview = $state<AdminOverview | null>(null);
 	let loading = $state(true);
 	let error = $state('');
 	let showNewTreatmentModal = $state(false);
 	let isSubmitting = $state(false);
-	let collaborations = $state<any[]>([]);
+	let collaborations = $state<Collaboration[]>([]);
 	let loadingCollabs = $state(false);
 
 	let isAdmin = $derived($authStore.user?.role === 'admin');
@@ -415,7 +416,7 @@
 
 					<div class="flex items-center text-gray-700 dark:text-slate-200">
 						<CalendarDays class="w-4 h-4 mr-2" />
-						<span>{new Date(treatment.createdAt).toLocaleDateString('ro-RO')}</span>
+						<span>{treatment.createdAt ? new Date(treatment.createdAt).toLocaleDateString('ro-RO') : new Date(treatment.startDate).toLocaleDateString('ro-RO')}</span>
 					</div>
 					</div>
 

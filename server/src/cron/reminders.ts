@@ -85,7 +85,7 @@ export const startReminderCron = () => {
       }
 
     } catch (error) {
-      console.error('Reminder cron error:', error);
+      logger.error('Reminder cron error:', error);
     }
   });
 

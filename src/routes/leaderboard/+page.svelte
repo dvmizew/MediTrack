@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { authStore, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
+	import type { LeaderboardEntry } from '$lib/types/api';
 	import {
 		Calendar,
 		CalendarDays,
@@ -18,7 +19,7 @@
 	} from '@lucide/svelte';
 
 	let loading = $state(true);
-	let leaderboard = $state<any[]>([]);
+	let leaderboard = $state<LeaderboardEntry[]>([]);
 	let timeFilter = $state<'all' | 'month' | 'week'>('all');
 	let currentUserPosition = $state(0);
 	let expandedUserId = $state<number | null>(null);
@@ -249,7 +250,7 @@
 					{@const isCurrentUser = $authStore.user?.id === user.userId}
 					{@const isTop3 = index < 3}
 					{@const BadgeIcon = getBadgeIconComponent(user.badge)}
-					{@const progress = getProgressToNextBadge(user.xp, user.badge)}
+					{@const progress = getProgressToNextBadge(user.xp ?? user.totalXp, user.badge)}
 					
 					<button
 						onclick={() => toggleUserDetails(user.userId)}

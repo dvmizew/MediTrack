@@ -43,13 +43,14 @@
 	import MedicationsList from '$lib/components/MedicationsList.svelte';
 	import ChartsGroup from '$lib/components/ChartsGroup.svelte';
 	import WelcomeCard from '$lib/components/WelcomeCard.svelte';
+	import type { Medication, Treatment, Collaboration, AdminOverview, Stats, MedicStats } from '$lib/types/api';
 
-	let todayMedications = $state<any[]>([]);
+	let todayMedications = $state<Medication[]>([]);
 	let adherenceHistory = $state<any[]>([]);
 	let loading = $state(true);
 	let refreshInterval: ReturnType<typeof setInterval> | null = null;
 	let themeUnsubscribe: (() => void) | null = null;
-	let stats = $state({
+	let stats = $state<Stats>({
 		total: 0,
 		taken: 0,
 		overdue: 0,
@@ -59,17 +60,17 @@
 	});
 
 	// Medic-specific state
-	let patients = $state<any[]>([]);
-	let treatments = $state<any[]>([]);
+	let patients = $state<Collaboration[]>([]);
+	let treatments = $state<Treatment[]>([]);
 	let messagesCount = $state(0);
-	let medicStats = $state({
+	let medicStats = $state<MedicStats>({
 		totalPatients: 0,
 		activeTreatments: 0,
 		pendingInvites: 0
 	});
 
 	// Admin-specific state
-	let adminOverview = $state<any>(null);
+	let adminOverview = $state<AdminOverview | null>(null);
 	let adminLoading = $state(false);
 	let adminError = $state<string | null>(null);
 	let adherence7Canvas = $state<HTMLCanvasElement | null>(null);

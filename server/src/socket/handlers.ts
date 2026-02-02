@@ -3,6 +3,7 @@ import { verifyToken, JWTPayload } from '../middleware/auth.js';
 import { query } from '../config/database.js';
 import { redis } from '../config/redis.js';
 import { sendPushToUser } from '../routes/push.js';
+import { logger } from '../config/logger.js';
 
 interface AuthSocket extends Socket {
   user?: JWTPayload;
@@ -47,7 +48,7 @@ export const setupSocketHandlers = (io: Server) => {
           await redis.set(`socket:${userId}`, socket.id, 'EX', 120);
         }
       } catch (error) {
-        console.error('Heartbeat error:', error);
+        logger.error('Heartbeat error:', error);
       }
     }, 50000);
 
@@ -69,7 +70,7 @@ export const setupSocketHandlers = (io: Server) => {
           socket.emit('joined-conversation', { otherUserId, room: roomName });
         }
       } catch (error) {
-        console.error('Join conversation error:', error);
+        logger.error('Join conversation error:', error);
       }
     });
 
@@ -153,7 +154,7 @@ export const setupSocketHandlers = (io: Server) => {
         }
 
       } catch (error) {
-        console.error('Send message error:', error);
+        logger.error('Send message error:', error);
         socket.emit('error', { message: 'Failed to send message' });
       }
     });
