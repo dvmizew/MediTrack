@@ -105,13 +105,13 @@
 					<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
 				</div>
 			{:else if collaborations.length === 0}
-				<div class="bg-white/90 dark:bg-gray-900/70 rounded-xl sm:rounded-2xl shadow-sm border border-slate-200/70 dark:border-gray-800/70 p-8 sm:p-12 md:p-16 text-center animate-scale-in">
+				<div class="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 dark:shadow-lg p-8 sm:p-12 md:p-16 text-center animate-scale-in">
 					<div class="max-w-sm mx-auto">
 						<MessageCircle
-							class="mx-auto h-16 w-16 sm:h-20 sm:w-20 text-gray-300 dark:text-gray-600 mb-3 sm:mb-4"
+							class="mx-auto h-16 w-16 sm:h-20 sm:w-20 text-slate-300 dark:text-slate-600 mb-3 sm:mb-4"
 						/>
-						<h3 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Nicio colaborare activă</h3>
-						<p class="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-4 sm:mb-6 px-4">
+						<h3 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">Nicio colaborare activă</h3>
+						<p class="text-sm sm:text-base text-gray-500 dark:text-slate-400 mb-4 sm:mb-6 px-4">
 							Pentru a trimite mesaje, trebuie să ai cel puțin o colaborare acceptată
 						</p>
 						<button
@@ -127,7 +127,7 @@
 					{#each collaborations as collab}
 						<button
 							onclick={() => openChat(collab.user_id)}
-							class="bg-white/90 dark:bg-gray-900/70 rounded-xl shadow-sm border-2 border-slate-200/70 dark:border-gray-800/70 p-4 sm:p-5 md:p-6 hover:shadow-xl hover:shadow-blue-500/10 active:border-blue-300 dark:active:border-blue-600 sm:hover:border-blue-300 sm:dark:hover:border-blue-600 sm:hover:-translate-y-1 transition-all duration-300 text-left group animate-scale-in touch-manipulation {selectedUserId === collab.user_id ? 'scale-95 opacity-50' : ''}"
+								class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/50 dark:shadow-lg p-4 sm:p-5 md:p-6 hover:shadow-md dark:hover:shadow-xl hover:shadow-blue-500/10 active:border-blue-300 dark:active:border-blue-500 sm:hover:border-blue-300 sm:dark:hover:border-blue-500 sm:hover:-translate-y-1 transition-all duration-300 text-left group animate-scale-in touch-manipulation {selectedUserId === collab.user_id ? 'scale-95 opacity-50' : ''}"
 						>
 							<div class="flex items-center justify-between gap-2 sm:gap-4">
 								<div class="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
@@ -143,10 +143,10 @@
 									<div class="min-w-0 flex-1">
 										<!-- Name with role badge -->
 										<div class="flex items-center gap-2 mb-0.5">
-											<h3 class="font-semibold text-gray-900 dark:text-gray-100 text-base sm:text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate">
+												<h3 class="font-semibold text-gray-900 dark:text-slate-100 text-base sm:text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate">
 												{collab.name}
 											</h3>
-										<span class="px-1.5 py-0.5 text-[10px] font-medium rounded flex-shrink-0 flex items-center gap-1 {collab.role === 'medic' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}">
+											<span class="px-1.5 py-0.5 text-[10px] font-medium rounded flex-shrink-0 flex items-center gap-1 {collab.role === 'medic' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'}">
 										{#if collab.role === 'medic'}
 											<Stethoscope class="w-3 h-3" />
 										{:else}
@@ -156,18 +156,18 @@
 											</span>
 										</div>
 										<!-- Status text -->
-										<p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
+										<p class="text-xs sm:text-sm text-gray-500 dark:text-slate-400 truncate">
 											{#if userStatuses.get(collab.user_id)?.online}
-												<span class="text-green-600 dark:text-green-500 font-medium">● Active now</span>
+												<span class="text-green-600 dark:text-green-400 font-medium">● Active now</span>
 											{:else}
-												<span class="text-gray-400 dark:text-gray-500">{formatLastSeen(userStatuses.get(collab.user_id)?.lastSeen || null)}</span>
+												<span class="text-gray-400 dark:text-slate-500">{formatLastSeen(userStatuses.get(collab.user_id)?.lastSeen || null)}</span>
 											{/if}
 										</p>
 									</div>
 								</div>
 								
 								<!-- Arrow icon -->
-								<ChevronRight class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 sm:group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" />
+										<ChevronRight class="w-5 h-5 sm:w-6 sm:h-6 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 sm:group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" />
 							</div>
 						</button>
 					{/each}

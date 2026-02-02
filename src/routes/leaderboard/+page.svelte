@@ -138,7 +138,7 @@
 				class={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform ${
 					timeFilter === 'all'
 						? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xl scale-105 ring-4 ring-blue-200 dark:ring-blue-900'
-						: 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-2 border-gray-200 dark:border-gray-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
+						: 'bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
 				}`}
 			>
 				<span class="inline-flex items-center gap-2">
@@ -151,7 +151,7 @@
 				class={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform ${
 					timeFilter === 'week'
 						? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xl scale-105 ring-4 ring-blue-200 dark:ring-blue-900'
-						: 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-2 border-gray-200 dark:border-gray-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
+						: 'bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
 				}`}
 			>
 				<span class="inline-flex items-center gap-2">
@@ -164,7 +164,7 @@
 				class={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform ${
 					timeFilter === 'month'
 						? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xl scale-105 ring-4 ring-blue-200 dark:ring-blue-900'
-						: 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-2 border-gray-200 dark:border-gray-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
+						: 'bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 hover:border-blue-300'
 				}`}
 			>
 				<span class="inline-flex items-center gap-2">
@@ -179,7 +179,7 @@
 			<button
 				onclick={() => loadLeaderboard()}
 				disabled={refreshing}
-				class="px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 border-2 border-gray-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 hover:border-green-300 disabled:opacity-50"
+				class="px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 hover:border-green-300 disabled:opacity-50"
 			>
 				{#if refreshing}
 					<RefreshCw class="w-4 h-4 animate-spin" />
@@ -393,38 +393,38 @@
 
 		<!-- Info Section -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-		<div class="group bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:border-blue-400">
+		<div class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm dark:shadow-lg">
 				<div class="flex items-center gap-3 mb-4">
-					<div class="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform">
+					<div class="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center text-3xl shadow-lg">
 						<Star class="w-7 h-7 text-white" />
 					</div>
-					<h3 class="font-black text-xl text-gray-900 dark:text-white">Cum se câștigă XP?</h3>
+					<h3 class="font-black text-xl text-gray-900 dark:text-slate-100">Cum se câștigă XP?</h3>
 				</div>
-							<p class="text-sm text-black dark:text-white leading-relaxed">
+								<p class="text-sm text-gray-700 dark:text-slate-300 leading-relaxed">
 					Primești XP prin confirmarea dozelor de medicament la timp și prin respectarea planului de tratament. Cu cât ești mai constant, cu atât câștigi mai mult XP!
 				</p>
 			</div>
 
-		<div class="group bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:border-orange-400">
+		<div class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm dark:shadow-lg">
 				<div class="flex items-center gap-3 mb-4">
-					<div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform">
+					<div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center text-3xl shadow-lg">
 						<Flame class="w-7 h-7 text-white" />
 					</div>
-					<h3 class="font-black text-xl text-gray-900 dark:text-white">Ce este Streak-ul?</h3>
+					<h3 class="font-black text-xl text-gray-900 dark:text-slate-100">Ce este Streak-ul?</h3>
 				</div>
-				<p class="text-sm text-gray-800 dark:text-slate-300 leading-relaxed">
+				<p class="text-sm text-gray-700 dark:text-slate-300 leading-relaxed">
 					Streak-ul măsoară numărul de zile consecutive în care ai confirmat toate dozele. Dacă sari o zi, streak-ul se resetează la 0. Continuitate = Succes!
 				</p>
 			</div>
 
-		<div class="group bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:border-purple-400">
+		<div class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm dark:shadow-lg">
 				<div class="flex items-center gap-3 mb-4">
-					<div class="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform">
+					<div class="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center text-3xl shadow-lg">
 						<Trophy class="w-7 h-7 text-white" />
 					</div>
-					<h3 class="font-black text-xl text-gray-900 dark:text-white">Badge-uri</h3>
+					<h3 class="font-black text-xl text-gray-900 dark:text-slate-100">Badge-uri</h3>
 				</div>
-			<p class="text-sm text-gray-800 dark:text-slate-300 leading-relaxed">
+			<p class="text-sm text-gray-700 dark:text-slate-300 leading-relaxed">
 				Deblochează badge-uri pe măsură ce avansezi: Bronze (0 XP), Silver (500 XP), Gold (1500 XP), Platinum (3000 XP), Diamond (5000 XP).
 			</p>
 			</div>

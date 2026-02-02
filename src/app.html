@@ -27,8 +27,8 @@
 				if (theme === 'dark') {
 					document.documentElement.classList.add('dark');
 				}
-				// Set background immediately to prevent flash
-				document.documentElement.style.backgroundColor = theme === 'dark' ? '#111827' : '#ffffff';
+				// Set background immediately to prevent flash - use the primary dark color from gradient
+				document.documentElement.style.backgroundColor = theme === 'dark' ? '#0f0f1a' : '#ffffff';
 				
 				// Load accessibility settings
 				try {

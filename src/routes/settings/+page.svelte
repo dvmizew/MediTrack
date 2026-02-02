@@ -375,10 +375,12 @@
 					{/if}
 				</div>
 				<div>
-					<h1 class="text-3xl font-bold text-gray-900 dark:text-white">{fullName}</h1>
+					<h1 class="text-3xl font-bold text-gray-900 dark:text-slate-100">{fullName}</h1>
 					<p class="text-gray-800 dark:text-slate-300 capitalize font-medium">{$authStore.user?.role}</p>
 					{#if $isPacient}
-						<p class="text-sm text-blue-600 dark:text-blue-400 mt-1">{stats.totalXp} XP · {getBadgeName(stats.currentBadge)}</p>
+						<p class="text-sm text-blue-600 dark:text-blue-400 mt-2">Gestionare preferințe, date personale și notificări</p>
+					{:else}
+						<p class="text-sm text-blue-600 dark:text-blue-400 mt-2">Setări cont, securitate și configurări aplicație</p>
 					{/if}
 				</div>
 			</div>
@@ -386,12 +388,12 @@
 
 		<div class="flex flex-col md:flex-row gap-6">
 			<div class="md:w-64 flex-shrink-0">
-				<nav class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-2 space-y-1">
+				<nav class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-2 space-y-1">
 					{#each tabs as tab}
 						{#if tab.show !== false}
 							<button
 								onclick={() => activeTab = tab.id}
-								class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md {activeTab === tab.id ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium scale-105 shadow-md' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}"
+								class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md {activeTab === tab.id ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium scale-105 shadow-md' : 'text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-gray-700'}"
 							>
 								{#if tab.id === 'general'}
 									<User class="w-5 h-5 flex-shrink-0" />
@@ -411,52 +413,52 @@
 
 			<div class="flex-1 min-w-0">
 				{#if activeTab === 'general'}
-					<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6">
+					<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Informații generale</h2>
 						<form onsubmit={(e) => { e.preventDefault(); handleSaveProfile(); }} class="space-y-6">
 							<div>
-								<label for="fullName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+								<label for="fullName" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 									Nume complet
 								</label>
 								<input
 									type="text"
 									id="fullName"
 									bind:value={fullName}
-									class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
+									class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
 									placeholder="Numele tău complet"
 									required
 								/>
 							</div>
 
 							<div>
-								<label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+								<label for="email" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 									Email
 								</label>
 								<input
 									type="email"
 									id="email"
 									bind:value={email}
-									class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
+									class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
 									placeholder="email@example.com"
 									required
 								/>
 							</div>
 
 							<div>
-								<label for="avatarUrl" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+								<label for="avatarUrl" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 									URL avatar (opțional)
 								</label>
 								<input
 									type="url"
 									id="avatarUrl"
 									bind:value={avatarUrl}
-									class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
+									class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
 									placeholder="https://example.com/avatar.jpg"
 								/>
 								{#if avatarUrl}
 									<div class="mt-3 flex items-center gap-3">
 										<img src={avatarUrl} alt="Preview" class="w-12 h-12 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600" />
-										<span class="text-sm text-gray-700 dark:text-gray-300">Previzualizare avatar</span>
+										<span class="text-sm text-gray-700 dark:text-slate-300">Previzualizare avatar</span>
 									</div>
 								{/if}
 							</div>
@@ -481,46 +483,46 @@
 				{/if}
 
 				{#if activeTab === 'security'}
-					<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6">
+					<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Securitate</h2>
 						<form onsubmit={(e) => { e.preventDefault(); handleChangePassword(); }} class="space-y-6">
 							<div>
-								<label for="currentPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+								<label for="currentPassword" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 									Parola curentă
 								</label>
 								<input
 									type={showPasswords ? 'text' : 'password'}
 									id="currentPassword"
 									bind:value={currentPassword}
-									class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
+									class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
 									placeholder="••••••••"
 									required
 								/>
 							</div>
 
 							<div>
-								<label for="newPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+								<label for="newPassword" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 									Parola nouă
 								</label>
 								<input
 									type={showPasswords ? 'text' : 'password'}
 									id="newPassword"
 									bind:value={newPassword}
-									class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
+									class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
 									placeholder="••••••••"
 									required
 								/>
 							</div>
 
 							<div>
-								<label for="confirmPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+								<label for="confirmPassword" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 									Confirmă parola nouă
 								</label>
 								<input
 									type={showPasswords ? 'text' : 'password'}
 									id="confirmPassword"
 									bind:value={confirmPassword}
-									class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
+									class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
 									placeholder="••••••••"
 									required
 								/>
@@ -533,7 +535,7 @@
 									bind:checked={showPasswords}
 									class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
 								/>
-								<label for="showPasswords" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+								<label for="showPasswords" class="ml-2 text-sm text-gray-700 dark:text-slate-300">
 									Arată parolele
 								</label>
 							</div>
@@ -556,14 +558,14 @@
 						</form>
 					</div>
 
-					<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6 mt-6">
+					<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6 mt-6">
 						<div class="flex items-center gap-3 mb-6">
 							<div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
 								<Lock class="w-6 h-6 text-white" />
 							</div>
 							<div>
 								<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Autentificare în doi pași (2FA)</h3>
-								<p class="text-sm text-gray-700 dark:text-gray-300">Protecție suplimentară pentru contul tău</p>
+								<p class="text-sm text-gray-700 dark:text-slate-300">Protecție suplimentară pentru contul tău</p>
 							</div>
 						</div>
 
@@ -589,15 +591,15 @@
 
 						{#if mfaStep === 'verify'}
 							<div class="space-y-5">
-								<div class="flex flex-col items-center p-6 bg-white/70 dark:bg-gray-900/60 rounded-lg border border-slate-200/60 dark:border-gray-800/60">
-									<p class="text-sm text-gray-700 dark:text-gray-300 mb-4 text-center">Scanează acest cod QR în aplicația ta de autentificare</p>
+								<div class="flex flex-col items-center p-6 bg-white/70 dark:bg-slate-800/60 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
+									<p class="text-sm text-gray-700 dark:text-slate-300 mb-4 text-center">Scanează acest cod QR în aplicația ta de autentificare</p>
 									<div class="bg-white p-4 rounded-lg shadow-md">
 										<img src={mfaQr} alt="QR Code 2FA" class="w-48 h-48" />
 									</div>
 									<p class="text-xs text-gray-500 dark:text-gray-500 mt-3 text-center">Google Authenticator · Authy · Microsoft Authenticator</p>
 								</div>
 								<div>
-									<label for="mfaTotp" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+									<label for="mfaTotp" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 										Introdu codul de verificare (6 cifre)
 									</label>
 									<div class="relative">
@@ -617,7 +619,7 @@
 											</div>
 										{/if}
 									</div>
-									<div class="mt-2 flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
+									<div class="mt-2 flex items-center gap-2 text-xs text-gray-700 dark:text-slate-300">
 										<Info class="w-4 h-4" />
 										<span>Codul se actualizează la fiecare 30 de secunde</span>
 									</div>
@@ -643,7 +645,7 @@
 										{/if}
 									</button>
 									<button 
-										class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all font-medium"
+										class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all font-medium"
 										onclick={() => { mfaStep = 'idle'; mfaQr = ''; mfaSecret = ''; mfaTotp = ''; mfaError = ''; }}
 									>
 										Anulează
@@ -724,7 +726,7 @@
 				{/if}
 
 				{#if activeTab === 'notifications'}
-					<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6">
+					<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Setări notificări</h2>
 
 						<!-- Push Notifications Section -->
@@ -765,7 +767,7 @@
 							</div>
 
 							<!-- Subscription Toggle -->
-							<div class="flex items-center justify-between p-4 bg-white/70 dark:bg-gray-900/60 rounded-lg border border-slate-200/60 dark:border-gray-800/60">
+							<div class="flex items-center justify-between p-4 bg-white/70 dark:bg-slate-800/60 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
 								<div class="flex-1">
 									<h4 class="font-medium text-gray-900 dark:text-gray-100">Notificări Push Active</h4>
 									<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -813,10 +815,10 @@
 							{/if}
 
 							<!-- Info Card -->
-							<div class="p-4 bg-white/70 dark:bg-gray-900/60 rounded-lg border border-slate-200/60 dark:border-gray-800/60">
+							<div class="p-4 bg-white/70 dark:bg-slate-800/60 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
 								<div class="flex items-start gap-3">
-									<Info class="w-5 h-5 text-gray-700 dark:text-gray-300 mt-0.5 flex-shrink-0" />
-									<div class="text-sm text-gray-700 dark:text-gray-300">
+									<Info class="w-5 h-5 text-gray-700 dark:text-slate-300 mt-0.5 flex-shrink-0" />
+									<div class="text-sm text-gray-700 dark:text-slate-300">
 										<p class="font-medium mb-1">Despre notificările push</p>
 										<ul class="list-disc list-inside space-y-1">
 											<li>Primești alerte instant pentru medicamente</li>
@@ -833,7 +835,7 @@
 
 				{#if activeTab === 'stats' && $isPacient}
 					<div class="space-y-6">
-						<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6">
+						<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 							<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Statistici și realizări</h2>
 							
 							<div class="flex flex-col items-center mb-8">
@@ -841,30 +843,30 @@
 									<Star class="w-16 h-16 text-white" fill="currentColor" />
 								</div>
 								<h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{getBadgeName(stats.currentBadge)}</h3>
-								<p class="text-lg text-gray-700 dark:text-gray-300">{stats.totalXp} XP</p>
+								<p class="text-lg text-gray-700 dark:text-slate-300">{stats.totalXp} XP</p>
 							</div>
 
 							<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 								<div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
 									<p class="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.currentStreak}</p>
-									<p class="text-sm text-gray-700 dark:text-gray-300 mt-1">Zile consecutive</p>
+									<p class="text-sm text-gray-700 dark:text-slate-300 mt-1">Zile consecutive</p>
 								</div>
 								<div class="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
 									<p class="text-3xl font-bold text-purple-600 dark:text-purple-400">{stats.longestStreak}</p>
-									<p class="text-sm text-gray-700 dark:text-gray-300 mt-1">Record</p>
+									<p class="text-sm text-gray-700 dark:text-slate-300 mt-1">Record</p>
 								</div>
 								<div class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
 									<p class="text-3xl font-bold text-green-600 dark:text-green-400">{stats.completedTreatments}</p>
-									<p class="text-sm text-gray-700 dark:text-gray-300 mt-1">Tratamente finalizate</p>
+									<p class="text-sm text-gray-700 dark:text-slate-300 mt-1">Tratamente finalizate</p>
 								</div>
 								<div class="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
 									<p class="text-3xl font-bold text-orange-600 dark:text-orange-400">{stats.activeTreatments}</p>
-									<p class="text-sm text-gray-700 dark:text-gray-300 mt-1">Tratamente active</p>
+									<p class="text-sm text-gray-700 dark:text-slate-300 mt-1">Tratamente active</p>
 								</div>
 							</div>
 						</div>
 
-						<div class="bg-white/90 dark:bg-gray-900/70 border border-slate-200/70 dark:border-gray-800/70 rounded-xl shadow-sm p-6">
+						<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 							<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Progresie badge-uri</h3>
 							<div class="space-y-4">
 								{#each BADGES as badge}
@@ -874,7 +876,7 @@
 										</div>
 										<div class="flex-1">
 											<p class="font-medium text-gray-900 dark:text-gray-100">{badge.name}</p>
-											<p class="text-sm text-gray-700 dark:text-gray-300">{badge.xp} XP necesar</p>
+											<p class="text-sm text-gray-700 dark:text-slate-300">{badge.xp} XP necesar</p>
 										</div>
 										{#if stats.currentBadge === badge.id}
 											<span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-full">Curent</span>
@@ -909,7 +911,7 @@
 			Codurile vechi vor fi invalidate. Introdu un cod TOTP pentru confirmare.
 		</p>
 		<div>
-			<label for="regenerateTotp" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+			<label for="regenerateTotp" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 				Cod autentificator (6 cifre)
 			</label>
 			<input 
@@ -951,7 +953,7 @@
 			Autentificarea cu doi factori va fi dezactivată complet. Introdu parola pentru confirmare.
 		</p>
 		<div>
-			<label for="disableMfaPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+			<label for="disableMfaPassword" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 				Parola ta
 			</label>
 			<input 

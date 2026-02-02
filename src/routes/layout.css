@@ -26,13 +26,57 @@
    All colors meet WCAG 2.1 AA contrast standards.
    ============================================ */
 
-/* Set root background colors to prevent flash */
+/* Set root background with gradients - prevent flash and apply theme globally */
 html {
-	background-color: #ffffff;
+	background: linear-gradient(
+		135deg,
+		#e3d6ff 0%,
+		#d8d5ff 12%,
+		#cfe1ff 28%,
+		#cbefff 44%,
+		#cdf4e6 62%,
+		#c9f7dc 78%,
+		#c8f6f2 92%,
+		#c7f7ff 100%
+	);
+	background-attachment: fixed;
 }
 
 html.dark {
-	background-color: #111827;
+	background: 
+		radial-gradient(
+			ellipse 120% 80% at 50% 20%,
+			rgba(59, 130, 246, 0.15) 0%,
+			transparent 50%
+		),
+		radial-gradient(
+			ellipse 100% 100% at 85% 90%,
+			rgba(34, 197, 94, 0.12) 0%,
+			transparent 55%
+		),
+		radial-gradient(
+			ellipse 90% 90% at 15% 80%,
+			rgba(168, 85, 247, 0.1) 0%,
+			transparent 50%
+		),
+		linear-gradient(
+			135deg,
+			#0f0f1a 0%,
+			#0d1623 8%,
+			#0c1a2e 16%,
+			#0b1e30 24%,
+			#0a2330 32%,
+			#0a2728 40%,
+			#0b2924 48%,
+			#0c2820 56%,
+			#0d2818 64%,
+			#0e2410 72%,
+			#0f1f0a 80%,
+			#111a08 88%,
+			#0f0f0a 100%
+		);
+	background-attachment: fixed;
+	background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
 }
 
 body {
@@ -338,18 +382,40 @@ select:focus-visible,
 	background-attachment: fixed;
 }
 
-/* Dark theme with similar soft aesthetic - darker base with subtle color variations */
+/* macOS-inspired dark theme with sophisticated wallpaper aesthetic */
 .bg-gradient-blue-purple-dark {
-	background: linear-gradient(
-		135deg,
-		#1a1625 0%,
-		#1a1828 12%,
-		#181d2e 28%,
-		#182230 44%,
-		#182826 62%,
-		#182d27 78%,
-		#18312f 92%,
-		#183338 100%
-	);
+	background: 
+		radial-gradient(
+			ellipse 120% 80% at 50% 20%,
+			rgba(59, 130, 246, 0.15) 0%,
+			transparent 50%
+		),
+		radial-gradient(
+			ellipse 100% 100% at 85% 90%,
+			rgba(34, 197, 94, 0.12) 0%,
+			transparent 55%
+		),
+		radial-gradient(
+			ellipse 90% 90% at 15% 80%,
+			rgba(168, 85, 247, 0.1) 0%,
+			transparent 50%
+		),
+		linear-gradient(
+			135deg,
+			#0f0f1a 0%,
+			#0d1623 8%,
+			#0c1a2e 16%,
+			#0b1e30 24%,
+			#0a2330 32%,
+			#0a2728 40%,
+			#0b2924 48%,
+			#0c2820 56%,
+			#0d2818 64%,
+			#0e2410 72%,
+			#0f1f0a 80%,
+			#111a08 88%,
+			#0f0f0a 100%
+		);
 	background-attachment: fixed;
+	background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
 }
