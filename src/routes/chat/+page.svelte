@@ -3,6 +3,8 @@
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
+	import Card from '$lib/components/Card.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 	import { ChevronRight, Stethoscope, User, AlertCircle, MessageCircle } from '@lucide/svelte';
 	import { loadCollaborations as loadCollabs } from '$lib/utils/loaders';
 
@@ -100,12 +102,12 @@
 					<div class="animate-spin rounded-full h-10 w-10 sm:h-14 sm:w-14 border-3 sm:border-4 border-blue-600 border-t-transparent shadow-lg shadow-blue-500/50"></div>
 				</div>
 			{:else if error}
-				<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 flex items-start gap-3 animate-shake">
+				<Alert containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 flex items-start gap-3 animate-shake">
 					<AlertCircle class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
 					<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
-				</div>
+				</Alert>
 			{:else if collaborations.length === 0}
-				<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 dark:shadow-lg p-8 sm:p-12 md:p-16 text-center animate-scale-in">
+				<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 dark:shadow-lg p-8 sm:p-12 md:p-16 text-center animate-scale-in">
 					<div class="max-w-sm mx-auto">
 						<MessageCircle
 							class="mx-auto h-16 w-16 sm:h-20 sm:w-20 text-slate-300 dark:text-slate-600 mb-3 sm:mb-4"
@@ -121,7 +123,7 @@
 							Vezi Colaborările
 						</button>
 					</div>
-				</div>
+				</Card>
 			{:else}
 				<div class="grid gap-3 sm:gap-4 md:gap-5">
 					{#each collaborations as collab}

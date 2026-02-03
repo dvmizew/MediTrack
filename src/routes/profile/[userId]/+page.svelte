@@ -4,6 +4,8 @@
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api/client';
 	import { authStore } from '$lib/stores/auth';
+	import Card from '$lib/components/Card.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 	import { AlertCircle, ArrowLeft, MessageCircle, Info, Star, TrendingUp, Award, CheckCircle2 } from '@lucide/svelte';
 
 	let userId = $derived($page.params.userId);
@@ -96,7 +98,7 @@
 		</div>
 	{:else if error}
 		<div class="max-w-md mx-auto">
-			<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+			<Alert containerClass="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
 				<div class="w-16 h-16 mx-auto mb-4 text-red-500">
 					<AlertCircle class="w-full h-full" />
 				</div>
@@ -108,7 +110,7 @@
 				>
 					Înapoi la chat
 				</button>
-			</div>
+			</Alert>
 		</div>
 	{:else if user}
 		<!-- Back Button -->
@@ -160,7 +162,7 @@
 
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 			<!-- Account Information -->
-			<div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+			<Card renderCustom containerClass="p-6">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
 						<Info class="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -183,11 +185,11 @@
 						</div>
 					{/if}
 				</div>
-			</div>
+			</Card>
 
 			{#if user.role === 'pacient'}
 				<!-- Patient Stats Card -->
-				<div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+				<Card renderCustom containerClass="p-6">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
 							<Star class="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -210,10 +212,10 @@
 							<Award class="w-8 h-8 text-purple-600 dark:text-purple-400" />
 						</div>
 					</div>
-				</div>
+				</Card>
 
 				<!-- Badge Display -->
-				<div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+				<Card renderCustom containerClass="p-6">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-gradient-to-br {getBadgeColor(stats.currentBadge)} rounded-lg flex items-center justify-center">
 							<Star class="w-6 h-6 text-white" />
@@ -227,10 +229,10 @@
 						<p class="text-2xl font-bold text-gray-900 dark:text-slate-100">{getBadgeName(stats.currentBadge)}</p>
 							<p class="text-gray-700 dark:text-slate-300 mt-1">{stats?.totalXp ?? 0} XP</p>
 					</div>
-				</div>
+				</Card>
 			{:else}
 				<!-- For Medics/Admins - Professional Info -->
-				<div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:col-span-2">
+				<Card renderCustom containerClass="p-6 md:col-span-2">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
 							<CheckCircle2 class="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -247,7 +249,7 @@
 							<p class="text-lg font-semibold text-gray-900 dark:text-slate-100 capitalize">{user.role}</p>
 						</div>
 					</div>
-				</div>
+				</Card>
 			{/if}
 		</div>
 	{/if}

@@ -3,6 +3,7 @@
 	import { authStore, isPacient } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import type { LeaderboardEntry } from '$lib/types/api';
+	import Card from '$lib/components/Card.svelte';
 	import {
 		Calendar,
 		CalendarDays,
@@ -203,7 +204,7 @@
 
 		<!-- Current User Position (if patient) -->
 		{#if $isPacient && currentUserPosition >= 0}
-			<div class="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-2xl p-8 mb-8 shadow-2xl transform hover:scale-105 transition-all duration-300">
+			<div class="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-2xl p-8 mb-8 shadow-2xl transition-all duration-300">
 				<div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
 				<div class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
 				<div class="relative flex items-center justify-between">
@@ -270,19 +271,19 @@
 		<!-- Leaderboard Cards -->
 		<div class="space-y-4 mb-8">
 			{#if loading && !refreshing}
-			<div class="p-12 text-center bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-2xl shadow-lg">
+			<Card renderCustom unstyled containerClass="p-12 text-center bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-2xl shadow-lg">
 				<div class="inline-block animate-spin">
 					<LoaderCircle class="w-16 h-16 text-blue-600" />
 				</div>
 					<p class="mt-4 text-gray-900 dark:text-slate-100 font-medium">Se încarcă leaderboard-ul...</p>
-				</div>
+				</Card>
 			{:else if leaderboard.length === 0}
-			<div class="p-12 text-center bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-2xl shadow-lg">
+			<Card renderCustom unstyled containerClass="p-12 text-center bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-2xl shadow-lg">
 				<Trophy class="w-14 h-14 mx-auto mb-4 text-yellow-500" />
 					<p class="text-xl text-gray-900 dark:text-slate-100 font-medium">
 						Nu au fost găsiți pacienți pe leaderboard
 					</p>
-				</div>
+				</Card>
 			{:else}
 				{#each leaderboard as user, index (user.userId)}
 					{@const isCurrentUser = $authStore.user?.id === user.userId}
@@ -456,7 +457,7 @@
 
 		<!-- Info Section -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-		<div class="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm dark:shadow-lg">
+		<Card renderCustom unstyled containerClass="">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center text-3xl shadow-lg">
 						<Star class="w-7 h-7 text-white" />
@@ -466,9 +467,9 @@
 								<p class="text-sm text-gray-700 dark:text-slate-300 leading-relaxed">
 					Primești XP prin confirmarea dozelor de medicament la timp și prin respectarea planului de tratament. Cu cât ești mai constant, cu atât câștigi mai mult XP!
 				</p>
-			</div>
+			</Card>
 
-		<div class="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm dark:shadow-lg">
+		<Card renderCustom unstyled containerClass="">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center text-3xl shadow-lg">
 						<Flame class="w-7 h-7 text-white" />
@@ -478,9 +479,9 @@
 				<p class="text-sm text-gray-700 dark:text-slate-300 leading-relaxed">
 					Streak-ul măsoară numărul de zile consecutive în care ai confirmat toate dozele. Dacă sari o zi, streak-ul se resetează la 0. Continuitate = Succes!
 				</p>
-			</div>
+			</Card>
 
-		<div class="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm dark:shadow-lg">
+		<Card renderCustom unstyled containerClass="">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center text-3xl shadow-lg">
 						<Trophy class="w-7 h-7 text-white" />
@@ -490,7 +491,7 @@
 			<p class="text-sm text-gray-700 dark:text-slate-300 leading-relaxed">
 				Deblochează badge-uri pe măsură ce avansezi: Bronze (0 XP), Silver (500 XP), Gold (1500 XP), Platinum (3000 XP), Diamond (5000 XP).
 			</p>
-			</div>
+			</Card>
 		</div>
 	</div>
 </div>

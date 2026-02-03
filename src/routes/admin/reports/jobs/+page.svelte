@@ -5,6 +5,8 @@
 	import { authStore } from '$lib/stores/auth';
 	import { toast } from '$lib/utils/toast';
 	import { downloadBlobAsFile } from '$lib/utils/charts';
+	import Card from '$lib/components/Card.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import {
 		CheckCircle2,
@@ -166,7 +168,7 @@
 	</div>
 
 	<!-- Create New Job Section -->
-	<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6">
+	<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6">
 		<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Creează Raport Nou</h2>
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 			<button
@@ -283,7 +285,7 @@
 				</button>
 			</div>
 		</div>
-	</div>
+	</Card>
 
 	<!-- Jobs List -->
 	{#if loading && jobs.length === 0}
@@ -291,17 +293,17 @@
 			<div class="animate-spin rounded-full h-12 w-12 border-3 border-blue-600 border-t-transparent"></div>
 		</div>
 	{:else if error && jobs.length === 0}
-		<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6">
+		<Alert containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6">
 			<p class="text-red-800 dark:text-red-400">{error}</p>
-		</div>
+		</Alert>
 	{:else if jobs.length === 0}
-		<div class="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-12 text-center">
+		<Card renderCustom unstyled containerClass="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-12 text-center">
 			<ClipboardList class="w-12 h-12 mx-auto mb-4 text-gray-500 dark:text-slate-400" />
 			<h3 class="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">Niciun job încă</h3>
 			<p class="text-gray-600 dark:text-slate-400">Creează primul tău raport asincron deasupra</p>
-		</div>
+		</Card>
 	{:else}
-		<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl overflow-hidden">
+		<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl overflow-hidden">
 			<div class="overflow-x-auto">
 				<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
 					<thead class="bg-slate-50/80 dark:bg-slate-900/50">
@@ -364,7 +366,7 @@
 					</tbody>
 				</table>
 			</div>
-		</div>
+		</Card>
 
 		<!-- Info Footer -->
 		<div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">

@@ -1,14 +1,26 @@
 <script lang="ts">
 	import { Users, UserPlus, ChevronRight } from '@lucide/svelte';
-	export let loading: boolean = false;
-	export let patients: Array<any> = [];
-	export let onView: (userId: number) => void;
+	import type { Snippet } from 'svelte';
+
+	interface Props {
+		loading?: boolean;
+		patients?: Array<any>;
+		onView: (userId: number) => void;
+		title?: string;
+		emptyMessage?: string;
+		itemRenderer?: Snippet<[patient: any]>;
+		actions?: Snippet;
+	}
+
+	let { loading = false, patients = [], onView, title = 'Pacienții Tăi', emptyMessage = 'Nu ai pacienți înregistrați încă', itemRenderer, actions }: Props = $props();
 </script>
 
 <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
 	<div class="p-4 md:p-6 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
-		<h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Users class="w-5 h-5" /> Pacienții Tăi</h3>
-		<slot name="actions"></slot>
+		<h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Users class="w-5 h-5" /> {title}</h3>
+		{#if actions}
+			{@render actions()}
+		{/if}
 	</div>
 
 	{#if loading}
@@ -18,25 +30,29 @@
 	{:else if patients.length === 0}
 		<div class="p-12 text-center">
 			<UserPlus class="w-16 h-16 mx-auto text-gray-300 dark:text-slate-600 mb-3" />
-			<p class="text-gray-500 dark:text-slate-400">Nu ai pacienți înregistrați încă</p>
+			<p class="text-gray-500 dark:text-slate-400">{emptyMessage}</p>
 		</div>
 	{:else}
 		<div class="divide-y divide-gray-100 dark:divide-gray-700">
 			{#each patients as patient}
-				<button type="button" onclick={() => onView(patient.user_id)} class="w-full p-4 md:p-5 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition text-left">
-					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-3">
-							<div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-								{patient.name?.charAt(0).toUpperCase() || 'P'}
+				{#if itemRenderer}
+					{@render itemRenderer(patient)}
+				{:else}
+					<button type="button" onclick={() => onView(patient.user_id)} class="w-full p-4 md:p-5 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition text-left">
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-3">
+								<div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+									{patient.name?.charAt(0).toUpperCase() || 'P'}
+								</div>
+								<div>
+									<h4 class="font-semibold text-gray-900 dark:text-slate-100">{patient.name}</h4>
+									<p class="text-sm text-gray-500 dark:text-slate-400">{patient.email}</p>
+								</div>
 							</div>
-							<div>
-								<h4 class="font-semibold text-gray-900 dark:text-slate-100">{patient.name}</h4>
-								<p class="text-sm text-gray-500 dark:text-slate-400">{patient.email}</p>
-							</div>
+							<ChevronRight class="w-5 h-5 text-gray-400" />
 						</div>
-						<ChevronRight class="w-5 h-5 text-gray-400" />
-					</div>
-				</button>
+					</button>
+				{/if}
 			{/each}
 		</div>
 	{/if}

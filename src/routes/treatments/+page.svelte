@@ -5,6 +5,8 @@
 	import { authStore, isMedic } from '$lib/stores/auth';
 	import { api, adminReportsApi } from '$lib/api/client';
 	import Modal from '$lib/components/Modal.svelte';
+	import Card from '$lib/components/Card.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 	import type { Treatment, Collaboration, AdminOverview } from '$lib/types/api';
 	import {
 		AlertCircle,
@@ -169,10 +171,14 @@
 		</div>
 
 		{#if error}
-			<div id="treatment-error" class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 mb-6 flex items-start gap-3 animate-shake" role="alert" aria-live="assertive">
+			<Alert
+				containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 mb-6 flex items-start gap-3 animate-shake"
+				role="alert"
+				ariaLive="assertive"
+			>
 				<AlertCircle class="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
 				<p class="text-sm sm:text-base text-red-800 dark:text-red-400 font-medium">{error}</p>
-			</div>
+			</Alert>
 		{/if}
 
 		{#if isAdmin}
@@ -184,7 +190,7 @@
 			{:else if overview}
 				<!-- Stats Cards -->
 				<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-				<div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border border-green-200 dark:border-green-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-md">
+					<Card renderCustom unstyled containerClass="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border border-green-200 dark:border-green-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-md">
 					<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
 						<CheckCircle2 class="w-4 h-4 sm:w-5 sm:h-5 text-green-700 dark:text-green-200" />
 						<h3 class="text-xs sm:text-sm font-semibold text-green-900 dark:text-green-200 truncate">Active</h3>
@@ -193,9 +199,9 @@
 					{overview.treatments.active ?? 0}
 					</p>
 					<p class="text-xs text-green-700 dark:text-green-300 truncate">În derulare</p>
-				</div>
+					</Card>
 
-				<div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-950 dark:to-slate-900 border border-gray-200 dark:border-slate-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-md">
+					<Card renderCustom unstyled containerClass="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-950 dark:to-slate-900 border border-gray-200 dark:border-slate-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-md">
 					<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
 						<PauseCircle class="w-4 h-4 sm:w-5 sm:h-5 text-slate-700 dark:text-slate-200" />
 						<h3 class="text-xs sm:text-sm font-semibold text-gray-900 dark:text-slate-200 truncate">Inactive</h3>
@@ -204,9 +210,9 @@
 					{overview.treatments.inactive ?? 0}
 					</p>
 					<p class="text-xs text-gray-700 dark:text-slate-400 truncate">Finalizate</p>
-				</div>
+					</Card>
 
-				<div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border border-blue-200 dark:border-blue-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-md">
+					<Card renderCustom unstyled containerClass="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border border-blue-200 dark:border-blue-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-md">
 					<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
 						<BarChart3 class="w-4 h-4 sm:w-5 sm:h-5 text-blue-700 dark:text-blue-200" />
 						<h3 class="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-200 truncate">Total</h3>
@@ -215,19 +221,19 @@
 					{overview.treatments.total ?? 0}
 					</p>
 					<p class="text-xs text-blue-700 dark:text-blue-300 truncate">În sistem</p>
+					</Card>
 				</div>
-		</div>
 
-		<!-- Detailed Breakdown -->
-		<div class="grid gap-4 sm:gap-6 md:grid-cols-2">
-			<!-- Status Breakdown -->
-				<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
-					<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+				<!-- Detailed Breakdown -->
+				<div class="grid gap-4 sm:gap-6 md:grid-cols-2">
+					<!-- Status Breakdown -->
+					<Card renderCustom containerClass="p-0 overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg">
+						<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
 						<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 							<BarChart3 class="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-slate-200" />
-							Detalii Status
-						</h2>
-						<p class="text-xs text-gray-700 dark:text-slate-300 mt-1">Distribuție pe statusuri</p>
+									Detalii Status
+							</h2>
+							<p class="text-xs text-gray-700 dark:text-slate-300 mt-1">Distribuție pe statusuri</p>
 						</div>
 						<div class="p-4 sm:p-6 space-y-4">
 							<div class="space-y-2">
@@ -245,7 +251,7 @@
 										style="width: {overview.treatments.total > 0 ? (overview.treatments.active / overview.treatments.total) * 100 : 0}%"
 									></div>
 								</div>
-							<div class="text-xs text-gray-700 dark:text-slate-200">
+								<div class="text-xs text-gray-700 dark:text-slate-200">
 									{overview.treatments.total > 0 ? Math.round((overview.treatments.active / overview.treatments.total) * 100) : 0}% din total
 								</div>
 							</div>
@@ -265,7 +271,7 @@
 										style="width: {overview.treatments.total > 0 ? (overview.treatments.inactive / overview.treatments.total) * 100 : 0}%"
 									></div>
 								</div>
-							<div class="text-xs text-gray-700 dark:text-slate-200">
+								<div class="text-xs text-gray-700 dark:text-slate-200">
 									{overview.treatments.total > 0 ? Math.round((overview.treatments.inactive / overview.treatments.total) * 100) : 0}% din total
 								</div>
 							</div>
@@ -273,31 +279,31 @@
 							<!-- Summary -->
 							<div class="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700 space-y-2">
 								<div class="flex justify-between text-sm">
-								<span class="text-gray-700 dark:text-slate-200">Total tratamente:</span>
-								<span class="font-bold text-gray-900 dark:text-slate-100">
+									<span class="text-gray-700 dark:text-slate-200">Total tratamente:</span>
+									<span class="font-bold text-gray-900 dark:text-slate-100">
 									{overview.treatments.total ?? 0}
-								</span>
-							</div>
-							<div class="flex justify-between text-sm">
-								<span class="text-gray-700 dark:text-slate-200">Rata activare:</span>
+									</span>
+								</div>
+								<div class="flex justify-between text-sm">
+									<span class="text-gray-700 dark:text-slate-200">Rata activare:</span>
 									<span class="font-bold {overview.treatments.total > 0 && (overview.treatments.active / overview.treatments.total) > 0.7 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">
 										{overview.treatments.total > 0 ? Math.round((overview.treatments.active / overview.treatments.total) * 100) : 0}%
 									</span>
 								</div>
 							</div>
 						</div>
-					</div>
+					</Card>
 
 					<!-- Quick Actions -->
-				<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
-					<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+					<Card renderCustom containerClass="p-0 overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg">
+						<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
 						<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 							<Zap class="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-slate-200" />
 							Acțiuni Rapide
 						</h2>
 						<p class="text-xs text-gray-700 dark:text-slate-300 mt-1">Administrare sistem</p>
-					</div>
-					<div class="p-4 sm:p-6 space-y-3">
+						</div>
+						<div class="p-4 sm:p-6 space-y-3">
 							<a
 								href="/admin/users"
 							class="block p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border border-blue-200 dark:border-blue-700/50 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
@@ -340,7 +346,7 @@
 								</div>
 							</a>
 						</div>
-					</div>
+					</Card>
 				</div>
 			{/if}
 		{:else}
@@ -350,49 +356,50 @@
 					<div class="animate-spin rounded-full h-14 w-14 border-4 border-blue-600 border-t-transparent"></div>
 				</div>
 			{:else if error}
-				<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6 flex items-start gap-3 animate-shake">
+				<Alert containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6 flex items-start gap-3 animate-shake">
 					<AlertCircle class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
 					<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
-				</div>
+				</Alert>
 			{:else if treatments.length === 0}
-			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-2xl shadow-sm p-16 text-center animate-scale-in">
-				<div class="max-w-sm mx-auto">
-					<ClipboardList class="mx-auto h-20 w-20 text-gray-300 dark:text-slate-600 mb-4" />
-					<h3 class="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">Niciun tratament încă</h3>
-				<p class="text-gray-700 dark:text-slate-200">
-						{#if $isMedic}
-							Începe prin a crea un plan de tratament pentru unul dintre pacienții tăi
-						{:else}
-							Medicul tău va crea planuri de tratament aici
-						{/if}
-					</p>
-				</div>
-			</div>
+				<Card renderCustom containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-2xl shadow-sm p-16 text-center animate-scale-in">
+					<div class="max-w-sm mx-auto">
+						<ClipboardList class="mx-auto h-20 w-20 text-gray-300 dark:text-slate-600 mb-4" />
+						<h3 class="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">Niciun tratament încă</h3>
+						<p class="text-gray-700 dark:text-slate-200">
+							{#if $isMedic}
+								Începe prin a crea un plan de tratament pentru unul dintre pacienții tăi
+							{:else}
+								Medicul tău va crea planuri de tratament aici
+							{/if}
+						</p>
+					</div>
+				</Card>
 		{:else}
 			<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 				{#each treatments as treatment}
-				<button
-					type="button"
-					class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl shadow-sm p-6 hover:shadow-lg hover:border-blue-400 dark:hover:border-blue-600 transition cursor-pointer group text-left w-full"
-					onclick={() => viewDetails(treatment.planId)}
-					aria-label="Vezi detalii pentru {treatment.diagnosis}"
+				<Card
+					href={`/treatments/${treatment.planId}`}
+					renderCustom
+					unstyled
+					containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl shadow-sm p-6 hover:shadow-lg hover:border-blue-400 dark:hover:border-blue-600 transition cursor-pointer group text-left w-full"
+					ariaLabel={`Vezi detalii pentru ${treatment.diagnosis}`}
 				>
-					<div class="flex justify-between items-start mb-4">
-						<h3 class="text-lg font-bold text-gray-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+					<div class="flex items-start gap-3 mb-4">
+						<h3 class="text-lg font-bold text-gray-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition flex-1 min-w-0">
 							{treatment.diagnosis}
 						</h3>
 						<span
-							class="px-3 py-1 text-xs font-semibold rounded-full shadow-sm"
+							class="px-3 py-1 text-xs font-semibold rounded-full shadow-sm inline-flex items-center gap-1 whitespace-nowrap flex-shrink-0"
 							class:bg-green-500={treatment.isActive}
 							class:text-white={treatment.isActive}
 							class:bg-gray-100={!treatment.isActive}
 							class:text-gray-600={!treatment.isActive}
 						>
-						{#if treatment.isActive}
-							<CheckCircle2 class="w-4 h-4 inline mr-1" />
-						{:else}
-							<PauseCircle class="w-4 h-4 inline mr-1" />
-						{/if}
+							{#if treatment.isActive}
+								<CheckCircle2 class="w-4 h-4" />
+							{:else}
+								<PauseCircle class="w-4 h-4" />
+							{/if}
 						{treatment.isActive ? 'Activ' : 'Inactiv'}
 						</span>
 					</div>
@@ -423,7 +430,7 @@
 					<div class="flex items-center justify-end pt-3 border-t border-gray-100 dark:border-slate-700">
 						<span class="text-sm text-blue-600 dark:text-blue-400 font-medium group-hover:underline">Vezi detalii →</span>
 					</div>
-				</button>
+				</Card>
 				{/each}
 			</div>
 		{/if}

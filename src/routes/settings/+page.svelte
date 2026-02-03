@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { authStore, isPacient } from '$lib/stores/auth';
-	import { api, mfaApi } from '$lib/api/client';
+	import { api, mfaApi, adminReportsApi } from '$lib/api/client';
 	import { loadUserProfile } from '$lib/utils/loaders';
 	import { BADGES, getBadgeMeta } from '$lib/constants/badges';
 	import { toast } from '$lib/utils/toast';
-	import { User, Lock, Bell, BarChart3, Loader, CheckCircle2, Info, AlertTriangle, Trash2, Star, X, XCircle, Copy, Download, RotateCcw, Shield, Key, Zap } from '@lucide/svelte';
+	import Card from '$lib/components/Card.svelte';
+	import Alert from '$lib/components/Alert.svelte';
+	import { User, Lock, Bell, BarChart3, Loader, CheckCircle2, Info, AlertTriangle, Trash2, Star, X, XCircle, Copy, Download, RotateCcw, Shield, Key, Zap, Cookie } from '@lucide/svelte';
 	import {
 		subscribeToPush,
 		unsubscribeFromPush,
@@ -15,13 +17,25 @@
 	} from '$lib/utils/pushNotifications';
 	import Modal from '$lib/components/Modal.svelte';
 
-	type TabType = 'general' | 'security' | 'notifications' | 'stats';
+	type TabType = 'general' | 'security' | 'notifications' | 'stats' | 'privacy';
 
-	let loading = $state(true);
-	let savingProfile = $state(false);
-	let savingPassword = $state(false);
+	// Consolidated UI state
+	let ui = $state({
+		loading: true,
+		savingProfile: false,
+		savingPassword: false,
+		mfaWorking: false,
+		copiedCode: false,
+		pushLoading: false,
+		testingPush: false,
+		deletingAccount: false,
+		downloadingData: false,
+		showPasswords: false
+	});
+
 	let activeTab = $state<TabType>('general');
 	
+	// User profile data
 	let fullName = $state('');
 	let email = $state('');
 	let avatarUrl = $state('');
@@ -29,119 +43,191 @@
 	let currentPassword = $state('');
 	let newPassword = $state('');
 	let confirmPassword = $state('');
-	let showPasswords = $state(false);
-	
-	// MFA disable modal state
-	let showDisableMfaDialog = $state(false);
-	let disableMfaPassword = $state('');
 
+	// MFA state
 	let mfaStep = $state<'idle' | 'setup' | 'verify' | 'done'>('idle');
 	let mfaQr = $state('');
 	let mfaSecret = $state('');
 	let mfaTotp = $state('');
 	let mfaBackupCodes = $state<string[]>([]);
-	let mfaWorking = $state(false);
 	let mfaError = $state('');
-	let copiedCode = $state(false);
-	let showRegenerateModal = $state(false);
-	let regenerateTotp = $state('');
+
+	type ModalState<T> = {
+		isOpen: boolean;
+		data: T;
+		open: () => void;
+		close: () => void;
+		setData: (newData: Partial<T>) => void;
+		reset: () => void;
+	};
+
+	type PasswordModalData = { password: string; error: string };
+	type TotpModalData = { totp: string };
+
+	// Modal factories
+	const disableMfaModal = $state<ModalState<PasswordModalData>>({
+		isOpen: false,
+		data: { password: '', error: '' },
+		open() { this.isOpen = true; },
+		close() { this.isOpen = false; },
+		setData(newData) { this.data = { ...this.data, ...newData }; },
+		reset() { this.isOpen = false; this.data = { password: '', error: '' }; }
+	});
+
+	const deleteAccountModal = $state<ModalState<PasswordModalData>>({
+		isOpen: false,
+		data: { password: '', error: '' },
+		open() { this.isOpen = true; },
+		close() { this.isOpen = false; },
+		setData(newData) { this.data = { ...this.data, ...newData }; },
+		reset() { this.isOpen = false; this.data = { password: '', error: '' }; }
+	});
+
+	const regenerateModal = $state<ModalState<TotpModalData>>({
+		isOpen: false,
+		data: { totp: '' },
+		open() { this.isOpen = true; },
+		close() { this.isOpen = false; },
+		setData(newData) { this.data = { ...this.data, ...newData }; },
+		reset() { this.isOpen = false; this.data = { totp: '' }; }
+	});
 
 	// Push notifications state
 	let pushSubscribed = $state(false);
-	let pushLoading = $state(false);
 	let pushPermission = $state<NotificationPermission>('default');
-	let testingPush = $state(false);
+
+	// Cookie preferences state
+	const cookiePreferencesKey = 'cookiePreferences';
+	const defaultCookiePreferences = {
+		essential: true,
+		preferences: true,
+		analytics: false
+	};
+	let cookiePreferences = $state({ ...defaultCookiePreferences });
+
+	function loadCookiePreferences() {
+		if (typeof window === 'undefined') return;
+		try {
+			const stored = localStorage.getItem(cookiePreferencesKey);
+			if (stored) {
+				const parsed = JSON.parse(stored);
+				cookiePreferences = { ...defaultCookiePreferences, ...parsed, essential: true };
+				return;
+			}
+
+			const consent = localStorage.getItem('cookieConsent');
+			if (consent === 'rejected') {
+				cookiePreferences = { ...defaultCookiePreferences, preferences: false, analytics: false };
+			} else if (consent === 'accepted') {
+				cookiePreferences = { ...defaultCookiePreferences, preferences: true };
+			}
+		} catch {
+			cookiePreferences = { ...defaultCookiePreferences };
+		}
+	}
+
+	function saveCookiePreferences() {
+		if (typeof window === 'undefined') return;
+		localStorage.setItem(cookiePreferencesKey, JSON.stringify(cookiePreferences));
+		localStorage.setItem(
+			'cookieConsent',
+			cookiePreferences.preferences || cookiePreferences.analytics ? 'accepted' : 'rejected'
+		);
+		localStorage.setItem('cookieConsentDate', new Date().toISOString());
+		toast.success('Preferințele cookie au fost salvate');
+	}
+
+	function resetCookiePreferences() {
+		cookiePreferences = { ...defaultCookiePreferences };
+		saveCookiePreferences();
+	}
 
 	async function startMfaSetup() {
 		try {
-			mfaWorking = true; mfaError = '';
+			ui.mfaWorking = true; mfaError = '';
 			const data = await mfaApi.startSetup();
 			mfaQr = data.qrCode; mfaSecret = data.secret; mfaTotp = '';
 			mfaStep = 'verify';
-		} catch (e: any) {
-			mfaError = e?.message || 'Nu s-a putut iniția 2FA';
+		} catch (e) {
+			mfaError = e instanceof Error ? e.message : 'Nu s-a putut iniția 2FA';
 		} finally {
-			mfaWorking = false;
+			ui.mfaWorking = false;
 		}
 	}
 
 	async function verifyMfaSetup() {
 		try {
-			mfaWorking = true; mfaError = '';
+			ui.mfaWorking = true; mfaError = '';
 			if (!/^\d{6}$/.test(mfaTotp)) { mfaError = 'Cod invalid'; return; }
 			const res = await mfaApi.verifySetup(mfaSecret, mfaTotp);
 			mfaBackupCodes = res.backupCodes || [];
 			mfaStep = 'done';
 			try { const updated = await api.getProfile(); /* keep local state in sync */ } catch {}
-		} catch (e: any) {
-			mfaError = e?.message || 'Cod invalid';
+		} catch (e) {
+			mfaError = e instanceof Error ? e.message : 'Cod invalid';
 		} finally {
-			mfaWorking = false;
+			ui.mfaWorking = false;
 		}
 	}
 
 	async function disableMfa(password: string) {
 		try {
-			mfaWorking = true; mfaError = '';
+			ui.mfaWorking = true;
+			disableMfaModal.setData({ error: '' });
 			await mfaApi.disable(password);
 			mfaStep = 'idle'; mfaQr = ''; mfaSecret=''; mfaTotp=''; mfaBackupCodes=[];
-			showDisableMfaDialog = false;
-			disableMfaPassword = '';
+			disableMfaModal.close();
 			try { const updated = await api.getProfile(); /* keep local state in sync */ } catch {}
-		} catch (e: any) {
-			mfaError = e?.message || 'Nu s-a putut dezactiva 2FA';
+		} catch (e) {
+			const msg = e instanceof Error ? e.message : 'Nu s-a putut dezactiva 2FA';
+			disableMfaModal.setData({ error: msg });
 		} finally {
-			mfaWorking = false;
+			ui.mfaWorking = false;
 		}
 	}
 	
 	function openDisableMfaDialog() {
-		showDisableMfaDialog = true;
-		disableMfaPassword = '';
-		mfaError = '';
+		disableMfaModal.reset();
+		disableMfaModal.open();
 	}
 	
 	function closeDisableMfaDialog() {
-		showDisableMfaDialog = false;
-		disableMfaPassword = '';
-		mfaError = '';
+		disableMfaModal.close();
 	}
 	
 	async function confirmDisableMfa() {
-		if (!disableMfaPassword.trim()) {
-			mfaError = 'Introdu parola';
+		if (!disableMfaModal.data.password.trim()) {
+			disableMfaModal.setData({ error: 'Introdu parola' });
 			return;
 		}
-		await disableMfa(disableMfaPassword);
+		await disableMfa(disableMfaModal.data.password);
 	}
 
 	async function regenerateBackupCodes() {
 		try {
-			mfaWorking = true;
+			ui.mfaWorking = true;
 			mfaError = '';
 			// Open inline modal for TOTP entry instead of separate modal
-			showRegenerateModal = true;
-			regenerateTotp = '';
-		} catch (e: any) {
-			mfaError = e?.message || 'Nu s-au putut regenera codurile';
+			regenerateModal.open();
+		} catch (e) {
+			mfaError = e instanceof Error ? e.message : 'Nu s-au putut regenera codurile';
 		} finally {
-			mfaWorking = false;
+			ui.mfaWorking = false;
 		}
 	}
 
 	async function confirmRegenerateBackupCodes() {
 		try {
-			mfaWorking = true; 
+			ui.mfaWorking = true; 
 			mfaError = '';
-			if (!/^\d{6}$/.test(regenerateTotp)) { throw new Error('Cod TOTP invalid'); }
-			const res = await mfaApi.generateBackupCodes(regenerateTotp);
+			if (!/^\d{6}$/.test(regenerateModal.data.totp)) { throw new Error('Cod TOTP invalid'); }
+			const res = await mfaApi.generateBackupCodes(regenerateModal.data.totp);
 			mfaBackupCodes = res.backupCodes || [];
-			showRegenerateModal = false;
-			regenerateTotp = '';
-		} catch (e: any) {
-			mfaError = e?.message || 'Nu s-au putut regenera codurile';
+			regenerateModal.close();
+		} catch (e) {
+			mfaError = e instanceof Error ? e.message : 'Nu s-au putut regenera codurile';
 		} finally {
-			mfaWorking = false;
+			ui.mfaWorking = false;
 		}
 	}
 
@@ -149,8 +235,8 @@
 		if (mfaBackupCodes.length === 0) return;
 		const text = mfaBackupCodes.join('\n');
 		navigator.clipboard.writeText(text).then(() => {
-			copiedCode = true;
-			setTimeout(() => copiedCode = false, 2000);
+			ui.copiedCode = true;
+			setTimeout(() => ui.copiedCode = false, 2000);
 		}).catch(() => {
 			mfaError = 'Nu s-au putut copia codurile';
 		});
@@ -183,15 +269,17 @@
 		{ id: 'general' as TabType, name: 'General', icon: User },
 		{ id: 'security' as TabType, name: 'Securitate', icon: Lock },
 		{ id: 'notifications' as TabType, name: 'Notificări', icon: Bell },
-		{ id: 'stats' as TabType, name: 'Statistici', icon: BarChart3, show: $isPacient }
+		{ id: 'stats' as TabType, name: 'Statistici', icon: BarChart3, show: $isPacient },
+		{ id: 'privacy' as TabType, name: 'Confidențialitate', icon: Shield }
 	];
 
 	function getTabIcon(tabId: TabType) {
-		const iconMap: Record<TabType, any> = {
+		const iconMap: Record<TabType, typeof User> = {
 			general: User,
 			security: Lock,
 			notifications: Bell,
-			stats: BarChart3
+			stats: BarChart3,
+			privacy: Shield
 		};
 		return iconMap[tabId];
 	}
@@ -202,12 +290,13 @@
 				window.location.href = '/';
 				return;
 			}
+			loadCookiePreferences();
 			await loadProfile();
 			await checkPushStatus();
 		} catch (error) {
 			console.error('Settings initialization error:', error);
 		} finally {
-			loading = false;
+			ui.loading = false;
 		}
 	});
 
@@ -247,7 +336,7 @@
 			return;
 		}
 
-		savingProfile = true;
+		ui.savingProfile = true;
 		try {
 			await api.updateProfile({
 				fullName: fullName.trim(),
@@ -257,10 +346,11 @@
 			
 			const updatedUser = await api.getProfile();
 			authStore.updateUser(updatedUser);
-		} catch (error: any) {
-			toast.error(error.message || 'Nu s-au putut salva modificările');
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : 'Nu s-au putut salva modificările';
+			toast.error(msg);
 		} finally {
-			savingProfile = false;
+			ui.savingProfile = false;
 		}
 	}
 
@@ -285,7 +375,7 @@
 	}
 	
 	async function confirmPasswordChange() {
-		savingPassword = true;
+		ui.savingPassword = true;
 		
 		try {
 			await api.updatePassword({
@@ -296,11 +386,12 @@
 			currentPassword = '';
 			newPassword = '';
 			confirmPassword = '';
-		toast.success('Parola a fost schimbată cu succes');
-	} catch (error: any) {
-		toast.error(error.message || 'Nu s-a putut schimba parola');
+			toast.success('Parola a fost schimbată cu succes');
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : 'Nu s-a putut schimba parola';
+			toast.error(msg);
 		} finally {
-			savingPassword = false;
+			ui.savingPassword = false;
 		}
 	}
 
@@ -313,10 +404,10 @@
 	}
 
 	async function handleTogglePushNotifications() {
-		if (pushLoading) return;
+		if (ui.pushLoading) return;
 
 		try {
-			pushLoading = true;
+			ui.pushLoading = true;
 
 			if (pushSubscribed) {
 				// Unsubscribe
@@ -330,19 +421,20 @@
 				pushPermission = getNotificationPermission();
 				toast.success('Notificările push au fost activate!');
 			}
-		} catch (error: any) {
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : 'Eroare la configurarea notificărilor';
 			console.error('Toggle push error:', error);
-			toast.error(error.message || 'Eroare la configurarea notificărilor');
+			toast.error(msg);
 		} finally {
-			pushLoading = false;
+			ui.pushLoading = false;
 		}
 	}
 
 	async function handleTestPushNotification() {
-		if (testingPush) return;
+		if (ui.testingPush) return;
 
 		try {
-			testingPush = true;
+			ui.testingPush = true;
 			const result = await sendTestPushNotification();
 			
 			if (result.success && result.sent > 0) {
@@ -350,17 +442,79 @@
 			} else {
 				toast.warning('Nu s-au putut trimite notificări. Verifică dacă ești abonat.');
 			}
-		} catch (error: any) {
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : 'Eroare la trimiterea notificării de test';
 			console.error('Test push error:', error);
-			toast.error(error.message || 'Eroare la trimiterea notificării de test');
+			toast.error(msg);
 		} finally {
-			testingPush = false;
+			ui.testingPush = false;
+		}
+	}
+
+	async function handleDownloadPersonalData() {
+		if (ui.downloadingData) return;
+
+		try {
+			ui.downloadingData = true;
+			const blob = await adminReportsApi.exportPersonalData();
+			
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `meditrack_date_personale_${new Date().toISOString().split('T')[0]}.csv`;
+			a.click();
+			window.URL.revokeObjectURL(url);
+
+			toast.success('Datele tale personale au fost descărcate');
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : 'Eroare la descărcarea datelor';
+			console.error('Download personal data error:', error);
+			toast.error(msg);
+		} finally {
+			ui.downloadingData = false;
+		}
+	}
+
+	function openDeleteAccountDialog() {
+		deleteAccountModal.reset();
+		deleteAccountModal.open();
+	}
+
+	function closeDeleteAccountDialog() {
+		deleteAccountModal.close();
+	}
+
+	async function confirmDeleteAccount() {
+		if (!deleteAccountModal.data.password.trim()) {
+			deleteAccountModal.setData({ error: 'Introdu parola pentru confirmare' });
+			return;
+		}
+
+		try {
+			ui.deletingAccount = true;
+			deleteAccountModal.setData({ error: '' });
+
+			await adminReportsApi.deleteAccount(deleteAccountModal.data.password);
+
+			toast.success('Contul tău a fost șters. Vei fi deconectat.');
+			
+			// Log out and redirect
+			setTimeout(() => {
+				authStore.logout();
+				window.location.href = '/';
+			}, 2000);
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : 'Eroare la ștergerea contului';
+			console.error('Delete account error:', error);
+			deleteAccountModal.setData({ error: msg });
+		} finally {
+			ui.deletingAccount = false;
 		}
 	}
 </script>
 
 <main class="page-transition max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-	{#if loading}
+	{#if ui.loading}
 		<div class="flex items-center justify-center min-h-[400px]">
 			<div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
 		</div>
@@ -403,6 +557,8 @@
 									<Bell class="w-5 h-5 flex-shrink-0" />
 								{:else if tab.id === 'stats'}
 									<BarChart3 class="w-5 h-5 flex-shrink-0" />
+								{:else if tab.id === 'privacy'}
+									<Shield class="w-5 h-5 flex-shrink-0" />
 								{/if}
 								<span class="truncate">{tab.name}</span>
 							</button>
@@ -413,7 +569,7 @@
 
 			<div class="flex-1 min-w-0">
 				{#if activeTab === 'general'}
-					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Informații generale</h2>
 						<form onsubmit={(e) => { e.preventDefault(); handleSaveProfile(); }} class="space-y-6">
 							<div>
@@ -466,10 +622,10 @@
 							<div class="flex justify-end pt-4 border-t border-gray-200 dark:border-slate-700">
 								<button
 									type="submit"
-									disabled={savingProfile}
+									disabled={ui.savingProfile}
 									class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
 								>
-									{#if savingProfile}
+									{#if ui.savingProfile}
 										<Loader class="animate-spin h-4 w-4" />
 										Se salvează...
 									{:else}
@@ -479,11 +635,11 @@
 								</button>
 							</div>
 						</form>
-					</div>
+					</Card>
 				{/if}
 
 				{#if activeTab === 'security'}
-					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Securitate</h2>
 						<form onsubmit={(e) => { e.preventDefault(); handleChangePassword(); }} class="space-y-6">
 							<div>
@@ -491,7 +647,7 @@
 									Parola curentă
 								</label>
 								<input
-									type={showPasswords ? 'text' : 'password'}
+									type={ui.showPasswords ? 'text' : 'password'}
 									id="currentPassword"
 									bind:value={currentPassword}
 									class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
@@ -505,7 +661,7 @@
 									Parola nouă
 								</label>
 								<input
-									type={showPasswords ? 'text' : 'password'}
+									type={ui.showPasswords ? 'text' : 'password'}
 									id="newPassword"
 									bind:value={newPassword}
 									class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
@@ -519,7 +675,7 @@
 									Confirmă parola nouă
 								</label>
 								<input
-									type={showPasswords ? 'text' : 'password'}
+									type={ui.showPasswords ? 'text' : 'password'}
 									id="confirmPassword"
 									bind:value={confirmPassword}
 									class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
@@ -532,7 +688,7 @@
 								<input
 									type="checkbox"
 									id="showPasswords"
-									bind:checked={showPasswords}
+									bind:checked={ui.showPasswords}
 									class="w-4 h-4 text-blue-600 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-slate-300 dark:border-slate-600 rounded focus:ring-blue-500"
 								/>
 								<label for="showPasswords" class="ml-2 text-sm text-gray-700 dark:text-slate-300">
@@ -543,10 +699,10 @@
 							<div class="flex justify-end pt-4 border-t border-gray-200 dark:border-slate-700">
 								<button
 									type="submit"
-									disabled={savingPassword}
+									disabled={ui.savingPassword}
 									class="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 hover:shadow-xl hover:shadow-purple-500/50 hover:scale-105 active:scale-95 disabled:bg-gray-400 disabled:hover:scale-100 disabled:hover:shadow-none text-white rounded-lg transition-all duration-300 ease-in-out flex items-center gap-2"
 								>
-									{#if savingPassword}
+									{#if ui.savingPassword}
 										<Loader class="animate-spin h-4 w-4" />
 										Se schimbă...
 									{:else}
@@ -556,9 +712,9 @@
 								</button>
 							</div>
 						</form>
-					</div>
+					</Card>
 
-					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6 mt-6">
+					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6 mt-6">
 						<div class="flex items-center gap-3 mb-6">
 							<div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
 								<Lock class="w-6 h-6 text-white" />
@@ -580,7 +736,7 @@
 								</div>
 								<button 
 									class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 text-white rounded-lg transition-all duration-200 flex items-center gap-2" 
-									disabled={mfaWorking} 
+									disabled={ui.mfaWorking} 
 									onclick={startMfaSetup}
 								>
 									<Shield class="w-5 h-5" />
@@ -626,18 +782,18 @@
 									</div>
 								</div>
 								{#if mfaError}
-									<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg animate-shake">
+									<Alert containerClass="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg animate-shake">
 										<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-											<p id="mfa-error-setup" class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
-									</div>
+										<p id="mfa-error-setup" class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
+									</Alert>
 								{/if}
 								<div class="flex gap-3">
 									<button 
 										class="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-medium" 
-										disabled={mfaWorking || mfaTotp.length!==6} 
+										disabled={ui.mfaWorking || mfaTotp.length!==6} 
 										onclick={verifyMfaSetup}
 									>
-										{#if mfaWorking}
+										{#if ui.mfaWorking}
 											<Loader class="animate-spin h-5 w-5" />
 											Se verifică...
 										{:else}
@@ -681,9 +837,9 @@
 													<button 
 														class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm font-medium hover:shadow-lg hover:scale-105 active:scale-95"
 														onclick={copyAllBackupCodes}
-														disabled={copiedCode}
+														disabled={ui.copiedCode}
 													>
-														{#if copiedCode}
+														{#if ui.copiedCode}
 															<CheckCircle2 class="w-4 h-4" />
 															Copiat!
 														{:else}
@@ -708,7 +864,7 @@
 									<button 
 										class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 text-white rounded-lg transition-all duration-200 flex items-center gap-2 font-medium" 
 										onclick={regenerateBackupCodes} 
-										disabled={mfaWorking}
+										disabled={ui.mfaWorking}
 									>
 										<RotateCcw class="w-4 h-4" />
 										Generează coduri noi
@@ -723,11 +879,11 @@
 								</div>
 							</div>
 						{/if}
-					</div>
+					</Card>
 				{/if}
 
 				{#if activeTab === 'notifications'}
-					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Setări notificări</h2>
 
 						<!-- Push Notifications Section -->
@@ -743,7 +899,7 @@
 							</div>
 
 							<!-- Permission Status -->
-							<div class="p-4 rounded-lg border {pushPermission === 'granted' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : pushPermission === 'denied' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'}">
+							<Alert containerClass="p-4 rounded-lg border {pushPermission === 'granted' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : pushPermission === 'denied' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'}">
 								<div class="flex items-start gap-3">
 									{#if pushPermission === 'granted'}
 										<CheckCircle2 class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
@@ -765,7 +921,7 @@
 										</div>
 									{/if}
 								</div>
-							</div>
+							</Alert>
 
 							<!-- Subscription Toggle -->
 							<div class="flex items-center justify-between p-4 bg-white/70 dark:bg-slate-800/60 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
@@ -781,7 +937,7 @@
 								</div>
 								<button
 									onclick={handleTogglePushNotifications}
-									disabled={pushLoading || pushPermission === 'denied'}
+									disabled={ui.pushLoading || pushPermission === 'denied'}
 									aria-label={pushSubscribed ? 'Dezactivează notificările push' : 'Activează notificările push'}
 									class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed {pushSubscribed ? 'bg-blue-600' : 'bg-gray-200 dark:bg-slate-700'}"
 								>
@@ -799,10 +955,10 @@
 											<p class="text-sm text-purple-700 dark:text-purple-300 mb-3">Trimite o notificare de test pentru a verifica configurarea</p>
 											<button
 												onclick={handleTestPushNotification}
-												disabled={testingPush || !pushSubscribed}
+												disabled={ui.testingPush || !pushSubscribed}
 												class="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 flex items-center gap-2 text-sm font-medium hover:shadow-lg hover:scale-105 active:scale-95"
 											>
-												{#if testingPush}
+												{#if ui.testingPush}
 													<Loader class="animate-spin h-4 w-4" />
 													Se trimite...
 												{:else}
@@ -831,12 +987,12 @@
 								</div>
 							</div>
 						</div>
-					</div>
+					</Card>
 				{/if}
 
 				{#if activeTab === 'stats' && $isPacient}
 					<div class="space-y-6">
-						<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+						<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 							<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Statistici și realizări</h2>
 							
 							<div class="flex flex-col items-center mb-8">
@@ -865,9 +1021,9 @@
 									<p class="text-sm text-gray-700 dark:text-slate-300 mt-1">Tratamente active</p>
 								</div>
 							</div>
-						</div>
+						</Card>
 
-						<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+						<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 							<h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Progresie badge-uri</h3>
 							<div class="space-y-4">
 								{#each BADGES as badge}
@@ -885,27 +1041,178 @@
 									</div>
 								{/each}
 							</div>
-						</div>
+						</Card>
 					</div>
 				{/if}
-			</div>
+
+				{#if activeTab === 'privacy'}
+					<div class="space-y-6">
+					<!-- GDPR Header -->
+					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+						<div class="flex items-center gap-3 mb-4">
+							<div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
+								<Shield class="w-6 h-6 text-white" />
+							</div>
+							<div>
+								<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100">Confidențialitate și Date Personale</h2>
+								<p class="text-sm text-gray-600 dark:text-slate-400">Gestionare date conform GDPR</p>
+							</div>
+						</div>
+
+						<div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+							<div class="flex items-start gap-3">
+								<Info class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+								<div class="text-sm text-blue-900 dark:text-blue-100">
+									<p class="font-medium mb-1">Protecția datelor tale</p>
+									<p class="text-blue-700 dark:text-blue-300">Conform GDPR, ai dreptul la:</p>
+									<ul class="list-disc list-inside mt-2 space-y-1 text-blue-700 dark:text-blue-300">
+										<li>Acces la datele tale personale</li>
+										<li>Export complet al informațiilor tale</li>
+										<li>Ștergerea contului și a datelor asociate</li>
+										<li>Confidențialitate și securitate maximă</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</Card>
+
+					<!-- Export Personal Data -->
+					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+						<div class="flex items-start gap-4">
+							<div class="flex-shrink-0 w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+								<Download class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+							</div>
+							<div class="flex-1">
+								<h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-2">Descarcă datele tale personale</h3>
+								<p class="text-sm text-gray-600 dark:text-slate-400 mb-4">
+									Primești un fișier CSV cu toate informațiile tale: date cont, tratamente, confirmări medicamente și istoric.
+								</p>
+								<button
+									onclick={handleDownloadPersonalData}
+									disabled={ui.downloadingData}
+									class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 flex items-center gap-2 font-medium"
+								>
+									{#if ui.downloadingData}
+										<Loader class="animate-spin h-4 w-4" />
+										Se descarcă...
+									{:else}
+										<Download class="w-4 h-4" />
+										Descarcă datele mele (CSV)
+									{/if}
+								</button>
+							</div>
+						</div>
+					</Card>
+
+					<!-- Cookie Consent Info -->
+					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+						<div class="flex items-start gap-4">
+							<div class="flex-shrink-0 w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+								<Cookie class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+							</div>
+							<div class="flex-1">
+								<h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-2">Cookies și tracking</h3>
+								<p class="text-sm text-gray-600 dark:text-slate-400 mb-4">
+									Poți controla ce tipuri de cookies sunt folosite. Cookies esențiale sunt necesare pentru autentificare și preferințe UI.
+								</p>
+
+								<div class="space-y-3 text-sm">
+									<label class="flex items-center justify-between gap-4 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60 bg-slate-50/70 dark:bg-slate-900/40">
+										<div>
+											<p class="font-semibold text-gray-900 dark:text-slate-100">Esențiale (obligatorii)</p>
+											<p class="text-xs text-gray-600 dark:text-slate-400">Login, sesiune securizată, preferințe UI.</p>
+										</div>
+										<input type="checkbox" class="h-5 w-5 accent-purple-600 opacity-50 cursor-not-allowed" checked disabled />
+									</label>
+
+									<label class="flex items-center justify-between gap-4 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+										<div>
+											<p class="font-semibold text-gray-900 dark:text-slate-100">Preferințe</p>
+											<p class="text-xs text-gray-600 dark:text-slate-400">Tema, layout, filtre salvate.</p>
+										</div>
+										<input type="checkbox" class="h-5 w-5 accent-purple-600" bind:checked={cookiePreferences.preferences} />
+									</label>
+
+									<label class="flex items-center justify-between gap-4 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+										<div>
+											<p class="font-semibold text-gray-900 dark:text-slate-100">Analitice (opționale)</p>
+											<p class="text-xs text-gray-600 dark:text-slate-400">Ne ajută să îmbunătățim produsul. Fără date medicale.</p>
+										</div>
+										<input type="checkbox" class="h-5 w-5 accent-purple-600" bind:checked={cookiePreferences.analytics} />
+									</label>
+								</div>
+
+								<div class="flex flex-wrap gap-3 mt-4">
+									<button
+										onclick={saveCookiePreferences}
+										class="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 hover:shadow-md text-white rounded-lg transition-all duration-200 font-medium"
+									>
+										Salvează preferințele
+									</button>
+									<button
+										onclick={resetCookiePreferences}
+										class="px-4 py-2.5 border border-slate-300 dark:border-slate-600 text-gray-800 dark:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 font-medium"
+									>
+										Resetează la implicit
+									</button>
+								</div>
+
+								<div class="mt-3 flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+									<CheckCircle2 class="w-4 h-4 text-green-600 dark:text-green-400" />
+									<span>Fără publicitate și fără tracking de terțe părți.</span>
+								</div>
+							</div>
+						</div>
+					</Card>
+
+					<!-- Delete Account -->
+					<Card renderCustom unstyled containerClass="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl shadow-sm p-6">
+						<div class="flex items-start gap-4">
+							<div class="flex-shrink-0 w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-lg flex items-center justify-center">
+								<AlertTriangle class="w-5 h-5 text-red-600 dark:text-red-400" />
+							</div>
+							<div class="flex-1">
+								<h3 class="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">Șterge contul definitiv</h3>
+								<p class="text-sm text-red-700 dark:text-red-300 mb-4">
+									<strong>Atenție:</strong> Această acțiune este ireversibilă. Toate datele tale personale vor fi anonimizate sau șterse:
+								</p>
+								<ul class="list-disc list-inside text-sm text-red-700 dark:text-red-300 space-y-1 mb-4">
+									<li>Informații cont (nume, email, parolă)</li>
+									<li>Toate tratamentele și medicamentele</li>
+									<li>Istoric confirmări și notificări</li>
+									<li>Mesaje și colaborări cu medici</li>
+									<li>Statistici și progres (XP, streak-uri, badge-uri)</li>
+								</ul>
+								<button
+									onclick={openDeleteAccountDialog}
+									class="px-5 py-2.5 bg-red-600 hover:bg-red-700 hover:shadow-lg hover:scale-105 active:scale-95 text-white rounded-lg transition-all duration-200 flex items-center gap-2 font-medium"
+								>
+									<Trash2 class="w-4 h-4" />
+									Șterge contul meu
+								</button>
+							</div>
+						</div>
+					</Card>
+				</div>
+			{/if}
 		</div>
-	{/if}
+	</div>
+{/if}
 </main>
 
 <!-- Regenerate Backup Codes Modal -->
 <Modal
-	isOpen={showRegenerateModal}
+	isOpen={regenerateModal.isOpen}
 	title="Generează coduri noi"
 	type="warning"
 	size="md"
 	showCancel={true}
-	confirmText={mfaWorking ? 'Procesează...' : 'Generează'}
+	confirmText={ui.mfaWorking ? 'Procesează...' : 'Generează'}
 	cancelText="Anulează"
-	isLoading={mfaWorking}
+	isLoading={ui.mfaWorking}
 	onConfirm={confirmRegenerateBackupCodes}
-	onCancel={() => { showRegenerateModal = false; regenerateTotp = ''; mfaError = ''; }}
-	onClose={() => { showRegenerateModal = false; regenerateTotp = ''; mfaError = ''; }}
+	onCancel={() => { regenerateModal.close(); mfaError = ''; }}
+	onClose={() => { regenerateModal.close(); mfaError = ''; }}
 >
 	<div class="space-y-4">
 		<p class="text-sm text-gray-600 dark:text-slate-400">
@@ -919,7 +1226,7 @@
 				id="regenerateTotp" 
 				type="text"
 				class="w-full px-4 py-2.5 text-lg tracking-widest text-center border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all font-mono" 
-				bind:value={regenerateTotp} 
+				bind:value={regenerateModal.data.totp} 
 				maxlength={6} 
 				placeholder="000000"
 				autocomplete="off"
@@ -928,24 +1235,24 @@
 			/>
 		</div>
 		{#if mfaError}
-			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+			<Alert containerClass="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
 				<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
 				<p id="mfa-error-regenerate" class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
-			</div>
+			</Alert>
 		{/if}
 	</div>
 </Modal>
 
 <!-- Disable MFA Modal -->
 <Modal
-	isOpen={showDisableMfaDialog}
+	isOpen={disableMfaModal.isOpen}
 	title="Dezactivează 2FA"
 	type="error"
 	size="md"
 	showCancel={true}
-	confirmText={mfaWorking ? 'Procesează...' : 'Dezactivează 2FA'}
+	confirmText={ui.mfaWorking ? 'Procesează...' : 'Dezactivează 2FA'}
 	cancelText="Anulează"
-	isLoading={mfaWorking}
+	isLoading={ui.mfaWorking}
 	onConfirm={confirmDisableMfa}
 	onCancel={closeDisableMfaDialog}
 	onClose={closeDisableMfaDialog}
@@ -962,17 +1269,77 @@
 				id="disableMfaPassword" 
 				type="password"
 				class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" 
-				bind:value={disableMfaPassword} 
+				bind:value={disableMfaModal.data.password} 
 				placeholder="Introdu parola"
 				autocomplete="current-password"
-				aria-describedby={mfaError ? 'mfa-error-disable' : undefined}
+				aria-describedby={disableMfaModal.data.error ? 'mfa-error-disable' : undefined}
 			/>
 		</div>
-		{#if mfaError}
-			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+		{#if disableMfaModal.data.error}
+			<Alert containerClass="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
 				<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-				<p id="mfa-error-disable" class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
+				<p id="mfa-error-disable" class="text-sm text-red-700 dark:text-red-300">{disableMfaModal.data.error}</p>
+			</Alert>
+		{/if}
+	</div>
+</Modal>
+
+<!-- Delete Account Confirmation Modal -->
+<Modal
+	isOpen={deleteAccountModal.isOpen}
+	title="Șterge cont definitiv"
+	type="error"
+	size="md"
+	showCancel={true}
+	confirmText={ui.deletingAccount ? 'Se șterge...' : 'Șterge contul definitiv'}
+	cancelText="Anulează"
+	isLoading={ui.deletingAccount}
+	onConfirm={confirmDeleteAccount}
+	onCancel={closeDeleteAccountDialog}
+	onClose={closeDeleteAccountDialog}
+>
+	<div class="space-y-4">
+		<Alert containerClass="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+			<div class="flex items-start gap-3">
+				<AlertTriangle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+				<div class="text-sm text-red-900 dark:text-red-100">
+					<p class="font-bold mb-2">Această acțiune este IREVERSIBILĂ!</p>
+					<p class="text-red-700 dark:text-red-300">Toate datele tale vor fi șterse permanent:</p>
+					<ul class="list-disc list-inside mt-2 space-y-1 text-red-700 dark:text-red-300">
+						<li>Cont și informații personale</li>
+						<li>Tratamente și medicamente</li>
+						<li>Istoric și confirmări</li>
+						<li>Mesaje și colaborări</li>
+						<li>Statistici și realizări</li>
+					</ul>
+				</div>
 			</div>
+		</Alert>
+
+		<p class="text-sm text-gray-600 dark:text-slate-400">
+			Pentru confirmare, introdu parola ta:
+		</p>
+		
+		<div>
+			<label for="deleteAccountPassword" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+				Parola contului
+			</label>
+			<input 
+				id="deleteAccountPassword" 
+				type="password"
+				class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" 
+				bind:value={deleteAccountModal.data.password} 
+				placeholder="Introdu parola pentru confirmare"
+				autocomplete="current-password"
+				aria-describedby={deleteAccountModal.data.error ? 'delete-account-error' : undefined}
+			/>
+		</div>
+		
+		{#if deleteAccountModal.data.error}
+			<Alert containerClass="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+				<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+				<p id="delete-account-error" class="text-sm text-red-700 dark:text-red-300">{deleteAccountModal.data.error}</p>
+			</Alert>
 		{/if}
 	</div>
 </Modal>

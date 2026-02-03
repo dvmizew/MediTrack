@@ -5,6 +5,7 @@
 	import { authStore, isPacient, isMedic } from '$lib/stores/auth';
 	import { themeStore } from '$lib/stores/theme';
 	import { goto } from '$app/navigation';
+	import { isMedicationTaken, isMedicationSnoozed, getMedicationScheduledTime } from '$lib/utils/medications';
 	import {
 		Users,
 		ClipboardList,
@@ -44,10 +45,23 @@
 	import MedicationsList from '$lib/components/MedicationsList.svelte';
 	import ChartsGroup from '$lib/components/ChartsGroup.svelte';
 	import WelcomeCard from '$lib/components/WelcomeCard.svelte';
-	import type { Medication, Treatment, Collaboration, AdminOverview, Stats, MedicStats } from '$lib/types/api';
+	import type { Medication, Treatment, Collaboration, AdminOverview, Stats, MedicStats, User as ApiUser } from '$lib/types/api';
+
+	type CollaborationStat = AdminOverview['collaborations'][number];
+	type UserRoleCount = AdminOverview['users']['byRole'][number];
+	type AdherenceRecord = {
+		date: string;
+		adherenceRate?: number;
+		confirmed?: number;
+		scheduled?: number;
+	};
+	type MedicationScheduleEntry = {
+		med: Medication;
+		when: Date;
+	};
 
 	let todayMedications = $state<Medication[]>([]);
-	let adherenceHistory = $state<any[]>([]);
+	let adherenceHistory = $state<AdherenceRecord[]>([]);
 	let loading = $state(true);
 	let refreshInterval: ReturnType<typeof setInterval> | null = null;
 	let themeUnsubscribe: (() => void) | null = null;
@@ -171,8 +185,8 @@
 		},
 		{
 			title: 'Colaborări',
-			value: adminOverview.collaborations.reduce((a:any, c:any) => a + c.count, 0),
-			sub: `Acceptate ${adminOverview.collaborations.find((c:any) => c.status === 'accepted')?.count || 0}`,
+			value: adminOverview.collaborations.reduce((a, c) => a + c.count, 0),
+			sub: `Acceptate ${adminOverview.collaborations.find((c) => c.status === 'accepted')?.count || 0}`,
 			accent: 'text-green-600 dark:text-green-400'
 		},
 		{
@@ -188,6 +202,29 @@
 			accent: 'text-orange-600 dark:text-orange-400'
 		}
 	] : []);
+
+	function getAdminBorderClass(accent: string) {
+		if (accent.includes('blue')) return 'border-l-blue-500';
+		if (accent.includes('green')) return 'border-l-green-500';
+		if (accent.includes('purple')) return 'border-l-purple-500';
+		return 'border-l-orange-500';
+	}
+
+	// Compute total users by role for progress bar calculations
+	const totalUsersByRole = $derived.by(() => {
+		if (!adminOverview?.users?.byRole) return 0;
+		return adminOverview.users.byRole.reduce((sum: number, u: UserRoleCount) => sum + u.count, 0);
+	});
+
+	const totalCollaborations = $derived.by(() => {
+		if (!adminOverview?.collaborations) return 0;
+		return adminOverview.collaborations.reduce((sum: number, collab) => sum + collab.count, 0);
+	});
+
+	const acceptedCollaborations = $derived.by(() => {
+		if (!adminOverview?.collaborations) return 0;
+		return adminOverview.collaborations.find((c) => c.status === 'accepted')?.count ?? 0;
+	});
 	
 	// Chart references
 	let weeklyChartCanvas = $state<HTMLCanvasElement | null>(null);
@@ -240,8 +277,9 @@
 			adminError = null;
 			adminOverview = await adminReportsApi.getOverview();
 			setTimeout(renderAdminCharts, 0);
-		} catch (e: any) {
-			adminError = e.message || 'Failed to load admin overview';
+		} catch (e) {
+			const message = e instanceof Error ? e.message : 'Failed to load admin overview';
+			adminError = message;
 		} finally {
 			adminLoading = false;
 		}
@@ -358,7 +396,8 @@
 				pendingInvites: invites.length
 			};
 		} catch (error) {
-			console.error('Failed to load dashboard data:', error);
+			const msg = error instanceof Error ? error.message : String(error);
+			console.error('Failed to load dashboard data:', msg);
 		} finally {
 			loading = false;
 		}
@@ -366,11 +405,23 @@
 
 	async function refreshUserStats() {
 		try {
-			const user = await api.getProfile();
+			const user = await api.getProfile() as ApiUser & { id?: number };
 			// normalize id for authStore consumers
-			authStore.updateUser({ ...user, id: (user as any).id ?? (user as any).userId });
+			const normalizedId = user.id ?? user.userId;
+			authStore.updateUser({
+				id: normalizedId,
+				email: user.email,
+				fullName: user.fullName,
+				role: user.role,
+				avatarUrl: user.avatarUrl,
+				totalXp: user.totalXp,
+				currentStreak: user.currentStreak,
+				longestStreak: user.longestStreak,
+				currentBadge: user.currentBadge
+			});
 		} catch (error) {
-			console.error('Failed to refresh user stats:', error);
+			const msg = error instanceof Error ? error.message : String(error);
+			console.error('Failed to refresh user stats:', msg);
 		}
 	}
 
@@ -381,14 +432,14 @@
 			
 			// Fallback: if no meds returned, load from active treatment plans
 			if (!data || data.length === 0) {
-				const plans = await api.getTreatments();
+				const plans = await api.getTreatments() as Treatment[];
 				const medsByPlan = await Promise.all(
-					(plans || []).map((plan: any) => api.getMedicationsForPlan(plan.planId))
+					plans.map((plan) => api.getMedicationsForPlan(plan.planId))
 				);
 				data = medsByPlan
 					.flat()
-					.filter((m: any) => m && m.isActive !== false)
-					.filter((m: any) => {
+					.filter((m): m is Medication => Boolean(m) && m.isActive !== false)
+					.filter((m) => {
 						const start = m.startDate ? new Date(m.startDate) : null;
 						const end = m.endDate ? new Date(m.endDate) : null;
 						const afterStart = !start || start <= today;
@@ -400,8 +451,8 @@
 			todayMedications = data;
 			
 			// Load historical adherence data
-			const history = await api.getMedicationHistoryAdherence(7);
-			adherenceHistory = history.sort((a: any, b: any) => 
+			const history = await api.getMedicationHistoryAdherence(7) as AdherenceRecord[];
+			adherenceHistory = history.sort((a, b) => 
 				new Date(a.date).getTime() - new Date(b.date).getTime()
 			);
 			
@@ -409,7 +460,8 @@
 			updateStats();
 			updateCharts();
 		} catch (error) {
-			console.error('Failed to load medications:', error);
+			const msg = error instanceof Error ? error.message : String(error);
+			console.error('Failed to load medications:', msg);
 		} finally {
 			loading = false;
 		}
@@ -436,13 +488,13 @@
 		const enriched = todayMedications
 			.filter((m) => !isMedicationTaken(m))
 			.map((m) => ({ med: m, when: getMedicationScheduledTime(m, now) }))
-			.filter((x) => x.when instanceof Date) as Array<{ med: any; when: Date }>;
+			.filter((x): x is MedicationScheduleEntry => x.when instanceof Date);
 
 		enriched.sort((a, b) => a.when.getTime() - b.when.getTime());
 
 		const upcomingEntry = enriched.find((x) => x.when.getTime() >= now.getTime()) || null;
 
-		let latestOverdueEntry: { med: any; when: Date } | null = null;
+		let latestOverdueEntry: MedicationScheduleEntry | null = null;
 		if (!upcomingEntry) {
 			const past = enriched.filter((x) => x.when.getTime() < now.getTime());
 			past.sort((a, b) => b.when.getTime() - a.when.getTime());
@@ -472,12 +524,12 @@
 			overdue,
 			snoozed,
 			upcomingLabel: countdownLabel,
-			weeklyAdherence: adherenceHistory.length > 0 ? Math.round(adherenceHistory.reduce((sum: number, d: any) => sum + (d.adherenceRate || 0), 0) / adherenceHistory.length) : (total ? Math.round((taken / total) * 100) : 0)
+			weeklyAdherence: adherenceHistory.length > 0 ? Math.round(adherenceHistory.reduce((sum: number, d) => sum + (d.adherenceRate ?? 0), 0) / adherenceHistory.length) : (total ? Math.round((taken / total) * 100) : 0)
 		};
 	}
 
 	// Countdown state and helpers
-	let nextDose = $state<any | null>(null);
+	let nextDose = $state<Medication | null>(null);
 	let countdownLabel = $state('Nicio doză programată');
 	let countdownText = $state('--:--:--');
 	let countdownTotalSeconds = $state(0);
@@ -560,7 +612,7 @@
 		}
 	}
 
-	async function confirmMedication(medication: any) {
+	async function confirmMedication(medication: Medication) {
 		try {
 			await api.confirmMedication({
 				doseId: medication.doseId,
@@ -569,11 +621,12 @@
 			await loadMedications();
 			await refreshUserStats();
 		} catch (error) {
-			console.error('Failed to confirm medication:', error);
+			const msg = error instanceof Error ? error.message : String(error);
+			console.error('Failed to confirm medication:', msg);
 		}
 	}
 
-	async function snoozeMedication(medication: any) {
+	async function snoozeMedication(medication: Medication) {
 		try {
 			await api.snoozeMedication({
 				doseId: medication.doseId,
@@ -581,7 +634,8 @@
 			});
 			await loadMedications();
 		} catch (error) {
-			console.error('Failed to snooze medication:', error);
+			const msg = error instanceof Error ? error.message : String(error);
+			console.error('Failed to snooze medication:', msg);
 		}
 	}
 
@@ -593,36 +647,15 @@
 		goto(`/treatments/${planId}`);
 	}
 
-	function isMedicationTaken(med: any) {
-		return med.result === 'pozitiv';
-	}
-
-	function isMedicationSnoozed(med: any, now = new Date()) {
-		return !isMedicationTaken(med) && med.snoozedUntil && new Date(med.snoozedUntil) > now;
-	}
-
-	// Determine the effective scheduled Date for a medication today
-	function getMedicationScheduledTime(med: any, now = new Date()): Date | null {
-		if (isMedicationTaken(med)) return null;
-		if (isMedicationSnoozed(med, now)) {
-			return new Date(med.snoozedUntil);
-		}
-		if (!med.time) return null;
-		const [hours, minutes] = String(med.time).split(':').map(Number);
-		const scheduled = new Date();
-		scheduled.setHours(hours, minutes, 0, 0);
-		return scheduled;
-	}
-
 	function buildTodayTimeline() {
 		// Always use historical 7-day data for the timeline chart when available
 		if (adherenceHistory.length > 0) {
 			return {
-				labels: adherenceHistory.map((d: any) => {
+				labels: adherenceHistory.map((d) => {
 					const date = new Date(d.date);
 					return date.toLocaleDateString('ro-RO', { month: 'short', day: 'numeric' });
 				}),
-				data: adherenceHistory.map((d: any) => d.adherenceRate || 0)
+				data: adherenceHistory.map((d) => d.adherenceRate ?? 0)
 			};
 		}
 
@@ -709,16 +742,27 @@
 				<ActionButton href={action.href} label={action.label} description={action.description} icon={action.icon} iconBg={action.iconBg} iconColor={action.iconColor} borderHover={action.borderHover} />
 			{/each}
 		</div>
-
 		<!-- Patients List -->
-		<PatientsList {loading} {patients} onView={viewPatient}>
-			<button slot="actions" onclick={() => goto('/collaborations')} class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Vezi toți →</button>
-		</PatientsList>
+		{#snippet patientsActions()}
+			<button onclick={() => goto('/collaborations')} class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Vezi toți →</button>
+		{/snippet}
+		<PatientsList 
+			{loading} 
+			{patients} 
+			onView={viewPatient}
+			actions={patientsActions}
+		/>
 
 		<!-- Recent Treatments -->
-		<TreatmentsList {loading} {treatments} onView={viewTreatment}>
-			<button slot="actions" onclick={() => goto('/treatments')} class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Vezi toate →</button>
-		</TreatmentsList>
+		{#snippet treatmentsActions()}
+			<button onclick={() => goto('/treatments')} class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Vezi toate →</button>
+		{/snippet}
+		<TreatmentsList 
+			{loading} 
+			{treatments} 
+			onView={viewTreatment}
+			actions={treatmentsActions}
+		/>
 	</div>
 {:else if isAdmin}
 	<!-- Admin Dashboard -->
@@ -738,25 +782,24 @@
 				<!-- KPI Cards Grid -->
 				<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
 					{#each adminCards as card}
-						<article
-							class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 border-l-4 {card.accent === 'text-blue-600 dark:text-blue-400' ? 'border-l-blue-500' : card.accent === 'text-green-600 dark:text-green-400' ? 'border-l-green-500' : card.accent === 'text-purple-600 dark:text-purple-400' ? 'border-l-purple-500' : 'border-l-orange-500'} rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl transition-all"
-							role="region"
-							aria-label={`${card.title}: ${card.value}${card.sub ? `, ${card.sub}` : ''}`}
-						>
-							<div class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2 truncate">{card.title}</div>
-							<div class="text-xl sm:text-2xl md:text-3xl font-bold {card.accent} mb-1">{card.value}</div>
-							<p class="text-xs text-gray-600 dark:text-slate-400 line-clamp-2">{card.sub}</p>
-						</article>
+						<Card
+							title={card.title}
+							value={card.value}
+							sub={card.sub}
+							accent={card.accent}
+							containerClass={`border-l-4 ${getAdminBorderClass(card.accent)} p-3 sm:p-4 md:p-5`}
+						/>
 					{/each}
 				</div>
 
 				<!-- Admin Modules Quick Links -->
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 					<!-- Users Management Card -->
-					<a
+					<Card
 						href="/admin/users"
-						class="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 border-l-4 border-l-blue-500 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
-						aria-label="Gestionează Utilizatori: Vizualizează, editează și monitorizează"
+						renderCustom
+						ariaLabel="Gestionează Utilizatori: Vizualizează, editează și monitorizează"
+						containerClass="group border-l-4 border-l-blue-500 p-4 sm:p-5 md:p-6 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
 					>
 						<div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">
 							<Users class="w-16 h-16 flex-shrink-0 text-blue-600 dark:text-blue-400" />
@@ -764,13 +807,14 @@
 						</div>
 						<h3 class="text-base sm:text-lg font-bold text-blue-800 dark:text-blue-200 mb-1">Utilizatori</h3>
 						<p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">Vizualizează, editează și monitorizează conturi</p>
-					</a>
+					</Card>
 
 					<!-- Reports Card -->
-					<a
+					<Card
 						href="/admin/reports"
-						class="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 border-l-4 border-l-emerald-500 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
-						aria-label="Rapoarte: Overview și rapoarte detaliate"
+						renderCustom
+						ariaLabel="Rapoarte: Overview și rapoarte detaliate"
+						containerClass="group border-l-4 border-l-emerald-500 p-4 sm:p-5 md:p-6 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
 					>
 						<div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">
 							<BarChart3 class="w-16 h-16 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
@@ -778,7 +822,7 @@
 						</div>
 						<h3 class="text-base sm:text-lg font-bold text-emerald-800 dark:text-emerald-200 mb-1">Rapoarte</h3>
 						<p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">Overview și analize detaliate sistem</p>
-					</a>
+					</Card>
 				</div>
 
 				<!-- 2-Column Layout for Content Sections -->
@@ -786,7 +830,7 @@
 					<!-- Left Column -->
 					<div class="space-y-6">
 						<!-- Users by Role -->
-						<section class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden">
 							<div class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
 								<div>
 									<h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2"><User class="w-5 h-5" /> Utilizatori după Rol</h2>
@@ -817,11 +861,11 @@
 											<div class="w-full bg-slate-200/70 dark:bg-slate-700 rounded-full h-2 sm:h-2.5 overflow-hidden">
 												<div 
 													class="{r.role === 'admin' ? 'bg-gradient-to-r from-purple-500 to-purple-600' : r.role === 'medic' ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 'bg-gradient-to-r from-green-500 to-green-600'} h-full transition-all duration-500 rounded-full"
-													style="width: {adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0) > 0 ? (r.count / adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0)) * 100 : 0}%"
+													style="width: {totalUsersByRole > 0 ? (r.count / totalUsersByRole) * 100 : 0}%"
 												></div>
 											</div>
 											<div class="text-xs text-gray-600 dark:text-slate-300 mt-1.5">
-												{Math.round((r.count / adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0)) * 100)}% din total
+												{Math.round((r.count / totalUsersByRole) * 100)}% din total
 											</div>
 										</div>
 									{/each}
@@ -830,7 +874,7 @@
 									<div class="mt-4 pt-3 border-t border-slate-200/70 dark:border-slate-800/70">
 										<div class="flex items-center justify-between text-sm">
 											<span class="text-gray-700 dark:text-slate-100">Total utilizatori:</span>
-											<span class="font-bold text-gray-900 dark:text-slate-100">{adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0)}</span>
+											<span class="font-bold text-gray-900 dark:text-slate-100">{totalUsersByRole}</span>
 										</div>
 									</div>
 								{:else}
@@ -840,10 +884,10 @@
 									</div>
 								{/if}
 							</div>
-						</section>
+						</Card>
 
 						<!-- Collaborations -->
-						<div class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
 								<div>
 									<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Users class="w-5 h-5" /> Status Colaborări</h2>
@@ -876,12 +920,12 @@
 											<div class="w-full bg-slate-200/70 dark:bg-slate-800 rounded-full h-2 sm:h-2.5 overflow-hidden">
 												<div 
 													class="{c.status === 'accepted' ? 'bg-gradient-to-r from-green-500 to-green-600' : c.status === 'pending' ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' : 'bg-gradient-to-r from-red-500 to-red-600'} h-full transition-all duration-500 rounded-full"
-													style="width: {adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0 ? (c.count / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100 : 0}%"
+													style="width: {totalCollaborations > 0 ? (c.count / totalCollaborations) * 100 : 0}%"
 												></div>
 											</div>
 											<div class="text-xs text-gray-700 dark:text-slate-200">
 												{#if c.status === 'accepted'}
-													{Math.round((c.count / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}% dintre relații
+													{Math.round((c.count / totalCollaborations) * 100)}% dintre relații
 												{:else if c.status === 'pending'}
 													În curs de procesare
 												{:else}
@@ -901,18 +945,18 @@
 									<div class="mt-4 pt-4 border-t border-slate-200/70 dark:border-slate-800/70 space-y-2 text-xs">
 										<div class="flex justify-between">
 											<span class="text-gray-700 dark:text-slate-300">Total colaborări:</span>
-											<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)}</span>
+											<span class="font-semibold text-gray-900 dark:text-slate-100">{totalCollaborations}</span>
 										</div>
 										<div class="flex justify-between">
 											<span class="text-gray-700 dark:text-slate-300">Rata acceptare:</span>
-											<span class="font-semibold {(adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0.8 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">{Math.round(((adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}%</span>
+											<span class="font-semibold {totalCollaborations > 0 && (acceptedCollaborations / totalCollaborations) > 0.8 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">{Math.round((acceptedCollaborations / (totalCollaborations || 1)) * 100)}%</span>
 										</div>
 									</div>
 								{/if}
 							</div>
-						</div>
+						</Card>
 						<!-- 7-Day Adherence Chart -->
-						<div class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700">
 								<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Calendar class="w-5 h-5" /> Conformitate - 7 zile</h2>
 							</div>
@@ -933,13 +977,13 @@
 									</div>
 								{/if}
 							</div>
-						</div>
+						</Card>
 					</div>
 
 					<!-- Right Column -->
 					<div class="space-y-6">
 						<!-- Treatments -->
-						<div class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
 								<div>
 									<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Pill class="w-5 h-5" /> Tratamente</h2>
@@ -971,10 +1015,10 @@
 									</div>
 								{/if}
 							</div>
-						</div>
+						</Card>
 
 						<!-- 30-Day Adherence Chart -->
-						<div class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700">
 								<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><TrendingUp class="w-5 h-5" /> Conformitate - 30 zile</h2>
 							</div>
@@ -995,7 +1039,7 @@
 									</div>
 								{/if}
 							</div>
-						</div>
+						</Card>
 					</div>
 				</div>
 			</div>
@@ -1071,7 +1115,7 @@
 
 	<!-- Streak Loss Penalty Alert -->
 	{#if streakBroken}
-		<div class="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-l-4 border-l-red-600 dark:border-l-red-400 border border-red-200 dark:border-red-800 rounded-lg p-4 md:p-5 animate-pulse-alert">
+		<Card renderCustom unstyled containerClass="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-l-4 border-l-red-600 dark:border-l-red-400 border border-red-200 dark:border-red-800 rounded-lg p-4 md:p-5 animate-pulse-alert">
 			<div class="flex items-start gap-4">
 				<div class="flex-shrink-0 mt-0.5">
 					<div class="w-8 h-8 rounded-full bg-red-600 dark:bg-red-500 flex items-center justify-center text-white font-bold text-sm">−</div>
@@ -1086,10 +1130,10 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</Card>
 	{:else if countdownStatus === 'critical'}
 		<!-- Critical Warning -->
-		<div class="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-l-4 border-l-orange-600 dark:border-l-orange-400 border border-orange-200 dark:border-orange-800 rounded-lg p-4 md:p-5 animate-pulse">
+		<Card renderCustom unstyled containerClass="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-l-4 border-l-orange-600 dark:border-l-orange-400 border border-orange-200 dark:border-orange-800 rounded-lg p-4 md:p-5 animate-pulse">
 			<div class="flex items-start gap-3">
 				<div class="flex-shrink-0">
 					<AlertTriangle class="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5" />
@@ -1101,7 +1145,7 @@
 					</p>
 				</div>
 			</div>
-		</div>
+		</Card>
 	{/if}
 
 	<!-- Medications List -->
@@ -1109,7 +1153,7 @@
 		loading={loading}
 		medications={todayMedications}
 		isTakenFn={isMedicationTaken}
-		isSnoozedFn={(m: any) => isMedicationSnoozed(m)}
+		isSnoozedFn={(m: Medication) => isMedicationSnoozed(m)}
 		onConfirm={confirmMedication}
 		onSnooze={snoozeMedication}
 		celebrate={allDoneToday}
@@ -1118,7 +1162,7 @@
 		countdownText={countdownText}
 		countdownProgress={countdownProgress}
 		countdownStatus={countdownStatus}
-		nextDoseId={nextDose?.doseId ?? nextDose?.id ?? nextDose?.medicationId ?? null}
+		nextDoseId={nextDose?.doseId ?? null}
 		muted={streakBroken}
 	/>
 
@@ -1127,11 +1171,11 @@
 		{#each patientCards as card, idx}
 			{#if idx === 0}
 				<!-- Conformitate card -->
-				<div class="sm:col-span-2 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg p-6 flex flex-col h-full">
+				<Card renderCustom containerClass="sm:col-span-2 p-6">
 					<div class="flex items-center justify-between mb-3">
 						<h3 class="font-semibold text-gray-700 dark:text-slate-300 text-sm">{card.title}</h3>
 						{#if adherenceHistory.length >= 2}
-							{@const trend = adherenceHistory[adherenceHistory.length - 1]?.adherenceRate - adherenceHistory[0]?.adherenceRate}
+							{@const trend = (adherenceHistory[adherenceHistory.length - 1]?.adherenceRate ?? 0) - (adherenceHistory[0]?.adherenceRate ?? 0)}
 							<span class="text-xs font-medium px-2 py-1 rounded-full {trend > 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : trend < 0 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'}">
 								{#if trend > 0}↗ +{trend.toFixed(0)}%{:else if trend < 0}↘ {trend.toFixed(0)}%{:else}→ Stabil{/if}
 							</span>
@@ -1182,11 +1226,11 @@
 							</div>
 						</div>
 					</div>
-				</div>
+				</Card>
 			{:else}
 				{#if card.nextDose}
 					<!-- Combined Today + Next Dose card -->
-					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl p-4 md:p-5 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl transition h-full flex flex-col justify-between">
+					<Card renderCustom containerClass="p-4 md:p-5">
 						<div>
 							<p class="text-sm text-gray-700 dark:text-slate-300 mb-1">{card.title}</p>
 							<p class={`text-2xl md:text-3xl font-bold ${card.accent}`}>{card.value}</p>
@@ -1196,7 +1240,7 @@
 							<p class="text-xs text-gray-500 dark:text-slate-400 mb-1">Următoarea doză</p>
 							<p class="text-sm font-semibold text-blue-600 dark:text-blue-400">{card.nextDose}</p>
 						</div>
-					</div>
+					</Card>
 				{:else}
 					<Card title={card.title} value={card.value} sub={card.sub} accent={card.accent} ariaLabel={card.ariaLabel} />
 				{/if}

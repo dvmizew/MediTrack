@@ -4,6 +4,8 @@
 	import { adminReportsApi } from '$lib/api/client';
 	import { authStore } from '$lib/stores/auth';
 	import { toast } from '$lib/utils/toast';
+	import Card from '$lib/components/Card.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 	import { BarChart3, FileText, Users, Pill, CheckCircle2, Zap, Check } from '@lucide/svelte';
 	import { createPieChart, createBarChart, createLineChart } from '$lib/utils/charts';
 
@@ -139,31 +141,31 @@
 			<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
 		</div>
 	{:else if error}
-		<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg">
+		<Alert containerClass="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg">
 			{error}
-		</div>
+		</Alert>
 	{:else if overview}
 		<!-- Charts Row -->
 		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
+			<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2"><Users class="w-5 h-5" /> Utilizatori după Rol</h2>
 				<canvas id="usersPieChart"></canvas>
-			</div>
+			</Card>
 
-			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
+			<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2"><FileText class="w-5 h-5" /> Planuri Tratament</h2>
 				<canvas id="treatmentsBarChart"></canvas>
-			</div>
+			</Card>
 
-			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
-			<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2"><BarChart3 class="w-5 h-5" /> Aderență</h2>
+			<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
+				<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2"><BarChart3 class="w-5 h-5" /> Aderență</h2>
 				<canvas id="adherenceLineChart"></canvas>
-			</div>
+			</Card>
 		</div>
 
 		<!-- Stats Cards -->
 		<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
+			<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
 				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
 					<Users class="w-5 h-5" />
 					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-300 truncate">Utilizatori</h3>
@@ -173,9 +175,9 @@
 					<Check class="w-3 h-3" />
 					{overview.users.active ?? 0} activi
 				</p>
-			</div>
+			</Card>
 
-			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
+			<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
 				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
 					<FileText class="w-5 h-5" />
 					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-300 truncate">Tratamente</h3>
@@ -185,30 +187,30 @@
 					<Check class="w-3 h-3" />
 					{overview.treatments.active ?? 0} active
 				</p>
-			</div>
+			</Card>
 
-			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
+			<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
 				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
 					<Pill class="w-5 h-5" />
 					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-300 truncate">Doze</h3>
 				</div>
 				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-1">{overview.doses.total ?? 0}</p>
 				<p class="text-xs text-gray-700 dark:text-slate-300 truncate">Total sistem</p>
-			</div>
+			</Card>
 
-			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
+			<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-md">
 				<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
 					<CheckCircle2 class="w-5 h-5" />
 					<h3 class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-300 truncate">Aderență</h3>
 				</div>
 				<p class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-1">{formatPercent(overview.adherence.last30Days.rate)}</p>
 				<p class="text-xs text-gray-700 dark:text-slate-300 truncate">{overview.adherence.last30Days.confirmed}/{overview.adherence.last30Days.scheduled} doze</p>
-			</div>
+			</Card>
 		</div>
 
 		<!-- Detailed Tables -->
 		<div class="grid gap-6 md:grid-cols-2">
-			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
+			<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2"><Users class="w-5 h-5" /> Utilizatori după Rol</h2>
 				<div class="overflow-hidden rounded-lg border border-gray-200 dark:border-slate-700">
 					<table class="min-w-full text-sm">
@@ -228,9 +230,9 @@
 						</tbody>
 					</table>
 				</div>
-			</div>
+			</Card>
 
-			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
+			<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2"><Users class="w-5 h-5" /> Colaborări după Status</h2>
 				<div class="overflow-hidden rounded-lg border border-gray-200 dark:border-slate-700">
 					<table class="min-w-full text-sm">
@@ -250,11 +252,11 @@
 						</tbody>
 					</table>
 				</div>
-			</div>
+			</Card>
 		</div>
 
 		<!-- Adherence Details -->
-		<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
+		<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-6 shadow-md">
 			<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2"><BarChart3 class="w-5 h-5" /> Detalii Aderență</h2>
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -271,7 +273,7 @@
 						{overview.adherence.last30Days.confirmed} confirmate din {overview.adherence.last30Days.scheduled} programate
 					</p>
 				</div>
-			</div>
-		</div>
+				</div>
+			</Card>
 {/if}
 </main>

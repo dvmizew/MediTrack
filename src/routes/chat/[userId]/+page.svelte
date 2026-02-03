@@ -5,6 +5,7 @@
 	import { authStore, isMedic } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import { socketClient } from '$lib/api/socket';
+	import Alert from '$lib/components/Alert.svelte';
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { ArrowLeft, MoreVertical, Plus, FileText, Bell, BarChart3, MessageCircle, AlertCircle, Loader, Send, Calendar, Phone, Stethoscope, User, Mail } from '@lucide/svelte';
@@ -572,7 +573,7 @@
 			</div>
 		{:else if error}
 			<div class="flex-1 flex items-center justify-center p-3 sm:p-4">
-				<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 max-w-md text-center mx-3">
+				<Alert containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 max-w-md text-center mx-3">
 					<AlertCircle class="w-10 h-10 sm:w-12 sm:h-12 text-red-600 dark:text-red-400 mx-auto mb-2 sm:mb-3" />
 					<p class="text-sm sm:text-base text-red-800 dark:text-red-400 font-medium mb-3 sm:mb-4">{error}</p>
 					<button
@@ -581,7 +582,7 @@
 					>
 						Înapoi la Mesaje
 					</button>
-				</div>
+				</Alert>
 			</div>
 		{:else}
 			<!-- Messages Container -->

@@ -7,6 +7,7 @@
 	import { downloadBlobAsFile } from '$lib/utils/charts';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import Card from '$lib/components/Card.svelte';
 	import {
 		Ban,
 		CalendarDays,
@@ -380,7 +381,7 @@
 		</div>
 	{:else}
 		<!-- Filters -->
-		<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl shadow-md p-6 mb-6">
+		<Card renderCustom containerClass="p-6 mb-6">
 			<div class="flex items-center gap-2 mb-4">
 				<Search class="w-5 h-5 text-gray-700 dark:text-slate-300" />
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Filtrare și Căutare</h2>
@@ -421,19 +422,19 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</Card>
 
 		<!-- Users List -->
 		{#if filteredUsers.length === 0}
-			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl shadow-md p-16 text-center">
+			<Card renderCustom containerClass="p-16 text-center">
 				<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-slate-700 mb-4">
 					<Users class="h-8 w-8 text-gray-400 dark:text-slate-500" />
 				</div>
 				<p class="text-lg font-medium text-gray-900 dark:text-slate-100 mb-2">Niciun utilizator găsit</p>
 				<p class="text-gray-500 dark:text-slate-400">Încearcă să schimbi criteriile de căutare</p>
-			</div>
+			</Card>
 		{:else}
-			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl shadow-md overflow-hidden">
+			<Card renderCustom containerClass="p-0 overflow-hidden">
 				<div class="hidden md:block overflow-x-auto">
 					<table class="w-full">
 						<thead class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50 border-b border-gray-200 dark:border-slate-700">
@@ -624,7 +625,7 @@
 						</div>
 					{/each}
 				</div>
-			</div>
+			</Card>
 		{/if}
 	{/if}
 </main>

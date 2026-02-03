@@ -10,6 +10,7 @@
 	import { goto } from '$app/navigation';
 	import { Sun, Moon, FileText } from '@lucide/svelte';
 	import AccessibilityMenu from '$lib/components/AccessibilityMenu.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 	import { authRegisterSchema, authLoginSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
 
 	let email = $state('');
@@ -153,14 +154,14 @@
 		<!-- Card -->
 		<div class="bg-white/98 dark:bg-slate-800/98 backdrop-blur-md rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 p-6 md:p-8 hover:shadow-2xl transition-shadow duration-300" role="main">
 			{#if error}
-				<div 
-					id="auth-error"
-					class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm animate-shake"
+				<Alert
+					containerClass="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm animate-shake"
 					role="alert"
-					aria-live="assertive"
+					ariaLive="assertive"
+					ariaLabel="Eroare autentificare"
 				>
 					{error}
-				</div>
+				</Alert>
 			{/if}
 
 		{#if showMfaStep}

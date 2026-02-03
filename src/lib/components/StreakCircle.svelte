@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Alert from '$lib/components/Alert.svelte';
+
 	let {
 		streak = 0,
 		countdownText = '--:--:--',
@@ -162,11 +164,11 @@
 			{/if}
 		{:else if muted}
 			<!-- Streak lost state -->
-			<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-2 text-center">
+			<Alert containerClass="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-2 text-center">
 				<p class="text-xs sm:text-sm font-semibold text-red-900 dark:text-red-200">
 					Streak resetat. Reia din nou!
 				</p>
-			</div>
+			</Alert>
 		{/if}
 	</div>
 </div>
