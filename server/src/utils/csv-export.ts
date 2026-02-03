@@ -2,6 +2,8 @@
  * CSV Export utilities for admin reports and data exports
  */
 
+import { formatRoDate, formatRoTime, formatRoDateTime } from './dateFormat.js';
+
 export function arrayToCSV(data: any[], headers?: string[]): string {
 	if (data.length === 0) return '';
 
@@ -36,7 +38,7 @@ export function generateUsersCSV(users: any[], isAnonymous: boolean = false): st
 		const row: any = {
 			'Rol': u.role,
 			'Status': u.is_active ? 'Activ' : 'Inactiv',
-			'Data Creării': new Date(u.created_at).toLocaleDateString('ro-RO'),
+			'Data Creării': formatRoDate(u.created_at),
 		};
 
 		if (isAnonymous) {
@@ -59,7 +61,7 @@ export function generateTreatmentsCSV(treatments: any[], isAnonymous: boolean = 
 		const row: any = {
 			'Diagnostic': t.diagnosis || t.diagnoza,
 			'Status': (t.is_active ?? t.activ) ? 'Activ' : 'Inactiv',
-			'Data Creare': new Date(t.created_at || t.data_creare).toLocaleDateString('ro-RO'),
+		'Data Creare': formatRoDate(t.created_at || t.data_criere),
 			'Medicamente': t.total_doses || t.medication_count || 0,
 		};
 
@@ -84,7 +86,7 @@ export function generateCollaborationsCSV(collaborations: any[]): string {
 		'Pacient': c.patient_full_name,
 		'Medic': c.doctor_full_name,
 		'Status': c.status_invitatie,
-		'Data': new Date(c.created_at).toLocaleDateString('ro-RO'),
+		'Data': formatRoDate(c.created_at),
 	}));
 
 	return arrayToCSV(data);
@@ -93,7 +95,7 @@ export function generateCollaborationsCSV(collaborations: any[]): string {
 export function generateAdherenceCSV(adherenceData: any[], isAnonymous: boolean = false): string {
 	const data = adherenceData.map(a => {
 		const row: any = {
-			'Data': a.date || new Date(a.scheduled_time).toLocaleDateString('ro-RO'),
+			'Data': a.date || formatRoDate(a.scheduled_time),
 			'Medicament': a.medication || a.medication_name,
 			'Status': a.taken ? 'Luat' : (a.status === 'pozitiv' ? 'Luat' : 'Neconfirmat'),
 			'Ora Programată': a.scheduled_time,
@@ -114,8 +116,8 @@ export function generateAdherenceCSV(adherenceData: any[], isAnonymous: boolean 
 
 export function generateActivityReportCSV(activities: any[]): string {
 	const data = activities.map(a => ({
-		'Data': new Date(a.timestamp).toLocaleDateString('ro-RO'),
-		'Ora': new Date(a.timestamp).toLocaleTimeString('ro-RO'),
+		'Data': formatRoDate(a.timestamp),
+		'Ora': formatRoTime(a.timestamp),
 		'Utilizator': a.user_name,
 		'Activitate': a.activity,
 		'Detalii': a.details || '-',
@@ -137,7 +139,7 @@ export function generatePersonalDataExportCSV(user: any, treatments: any[], conf
 		'Nume': user.full_name,
 		'Email': user.email,
 		'Rol': user.role,
-		'Data Creare Cont': new Date(user.created_at).toLocaleDateString('ro-RO'),
+		'Data Creare Cont': formatRoDate(user.created_at),
 	}]);
 	sections.push(userInfo);
 
@@ -151,7 +153,7 @@ export function generatePersonalDataExportCSV(user: any, treatments: any[], conf
 			'Diagnostic': t.diagnoza,
 			'Descriere': t.descriere || '-',
 			'Status': t.activ ? 'Activ' : 'Inactiv',
-			'Data Creare': new Date(t.data_creare).toLocaleDateString('ro-RO'),
+			'Data Creare': formatRoDate(t.data_creare),
 		})));
 		sections.push(treatmentCSV);
 	} else {
@@ -166,9 +168,9 @@ export function generatePersonalDataExportCSV(user: any, treatments: any[], conf
 	if (confirmations.length > 0) {
 		const confirmCSV = arrayToCSV(confirmations.map(c => ({
 			'Medicament': c.medication_name,
-			'Data Programată': new Date(c.scheduled_for).toLocaleDateString('ro-RO'),
+			'Data Programată': formatRoDate(c.scheduled_for),
 			'Rezultat': c.rezultat === 'pozitiv' ? 'Confirmat' : 'Neconfirmat',
-			'Data Confirmare': c.timestamp_confirmare ? new Date(c.timestamp_confirmare).toLocaleString('ro-RO') : '-',
+			'Data Confirmare': c.timestamp_confirmare ? formatRoDateTime(c.timestamp_confirmare) : '-',
 		})));
 		sections.push(confirmCSV);
 	} else {

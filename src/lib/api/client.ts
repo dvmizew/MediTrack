@@ -277,6 +277,17 @@ export const api = {
 		})
 };
 
+// Helper for authenticated blob fetches
+async function fetchBlob(endpoint: string): Promise<Blob> {
+	const response = await fetch(`${API_URL}${endpoint}`, {
+		headers: {
+			'Authorization': `Bearer ${get(authStore).token}`
+		}
+	});
+	if (!response.ok) throw new Error('Export failed');
+	return response.blob();
+}
+
 // Admin reports
 export const adminReportsApi = {
 	getOverview: () => request('/admin/reports/overview'),
@@ -284,35 +295,9 @@ export const adminReportsApi = {
 	getMedicReport: (userId: number | string) => request(`/admin/reports/medic/${userId}`),
 
 	// CSV Exports
-	exportUsers: () => 
-		fetch(`${API_URL}/admin/reports/export/users`, {
-			headers: {
-				'Authorization': `Bearer ${get(authStore).token}`
-			}
-		}).then(r => {
-			if (!r.ok) throw new Error('Export failed');
-			return r.blob();
-		}),
-
-	exportTreatments: () => 
-		fetch(`${API_URL}/admin/reports/export/treatments`, {
-			headers: {
-				'Authorization': `Bearer ${get(authStore).token}`
-			}
-		}).then(r => {
-			if (!r.ok) throw new Error('Export failed');
-			return r.blob();
-		}),
-
-	exportCollaborations: () => 
-		fetch(`${API_URL}/admin/reports/export/collaborations`, {
-			headers: {
-				'Authorization': `Bearer ${get(authStore).token}`
-			}
-		}).then(r => {
-			if (!r.ok) throw new Error('Export failed');
-			return r.blob();
-		}),
+	exportUsers: () => fetchBlob('/admin/reports/export/users'),
+	exportTreatments: () => fetchBlob('/admin/reports/export/treatments'),
+	exportCollaborations: () => fetchBlob('/admin/reports/export/collaborations'),
 
 	// Async Report Jobs
 	createReportJob: (reportType: 'users' | 'treatments' | 'doses' | 'full_system', isAnonymous: boolean = false) =>
@@ -348,15 +333,7 @@ export const adminReportsApi = {
 		}),
 
 	// GDPR
-	exportPersonalData: () =>
-		fetch(`${API_URL}/admin/reports/export/personal-data`, {
-			headers: {
-				'Authorization': `Bearer ${get(authStore).token}`
-			}
-		}).then(r => {
-			if (!r.ok) throw new Error('Export failed');
-			return r.blob();
-		}),
+	exportPersonalData: () => fetchBlob('/admin/reports/export/personal-data'),
 
 	deleteAccount: (password: string) =>
 		request('/admin/reports/delete-account', {
