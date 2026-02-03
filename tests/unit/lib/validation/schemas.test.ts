@@ -99,20 +99,6 @@ describe('Validation Schemas', () => {
     });
   });
 
-  describe('profileUpdateSchema', () => {
-    it('should accept valid avatar URL', () => {
-      const data = { avatarUrl: 'https://example.com/avatar.jpg' };
-      const result = profileUpdateSchema.safeParse(data);
-      expect(result.success).toBe(true);
-    });
-
-    it('should reject invalid URL', () => {
-      const data = { avatarUrl: 'not-a-url' };
-      const result = profileUpdateSchema.safeParse(data);
-      expect(result.success).toBe(false);
-    });
-  });
-
   describe('messageSchema', () => {
     it('should accept valid message', () => {
       const data = { toUserId: 123, content: 'Hello world' };

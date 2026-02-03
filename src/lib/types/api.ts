@@ -4,7 +4,6 @@ export interface User {
   email: string;
   fullName: string;
   role: 'admin' | 'medic' | 'pacient';
-  avatarUrl?: string;
   currentStreak?: number;
   longestStreak?: number;
   totalXp?: number;
@@ -89,7 +88,6 @@ export interface LeaderboardEntry {
   streak?: number; // alias for currentStreak
   badge: string;
   rank: number;
-  avatarUrl?: string;
 }
 
 export interface AdminOverview {

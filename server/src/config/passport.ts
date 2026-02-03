@@ -35,8 +35,8 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
             // Update google_id if not set
             if (!user.google_id) {
               await query(
-                'UPDATE users SET google_id = $1, avatar_url = $2, mfa_enabled = true WHERE user_id = $3',
-                [profile.id, profile.photos?.[0]?.value, user.user_id]
+                'UPDATE users SET google_id = $1, mfa_enabled = true WHERE user_id = $2',
+                [profile.id, user.user_id]
               );
             }
             
@@ -45,10 +45,10 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
 
           // Create new user
           const newUser = await query(
-            `INSERT INTO users (email, full_name, google_id, avatar_url, role, mfa_enabled) 
-             VALUES ($1, $2, $3, $4, 'pacient', true) 
+            `INSERT INTO users (email, full_name, google_id, role, mfa_enabled) 
+             VALUES ($1, $2, $3, 'pacient', true) 
              RETURNING *`,
-            [email, profile.displayName, profile.id, profile.photos?.[0]?.value]
+            [email, profile.displayName, profile.id]
           );
 
           // Initialize patient profile

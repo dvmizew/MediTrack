@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { authStore, isPacient } from '$lib/stores/auth';
+	import { themeStore } from '$lib/stores/theme';
+	import { accessibility } from '$lib/stores/accessibility';
 	import { api, mfaApi, adminReportsApi } from '$lib/api/client';
 	import { loadUserProfile } from '$lib/utils/loaders';
 	import { BADGES, getBadgeMeta } from '$lib/constants/badges';
 	import { toast } from '$lib/utils/toast';
 	import Card from '$lib/components/Card.svelte';
 	import Alert from '$lib/components/Alert.svelte';
-	import { User, Lock, Bell, BarChart3, Loader, CheckCircle2, Info, AlertTriangle, Trash2, Star, X, XCircle, Copy, Download, RotateCcw, Shield, Key, Zap, Cookie } from '@lucide/svelte';
+	import { User, Lock, Bell, BarChart3, Loader, CheckCircle2, Info, AlertTriangle, Trash2, Star, X, XCircle, Copy, Download, RotateCcw, Shield, Key, Zap, Cookie, Sun, Moon } from '@lucide/svelte';
 	import {
 		subscribeToPush,
 		unsubscribeFromPush,
@@ -34,11 +36,16 @@
 	});
 
 	let activeTab = $state<TabType>('general');
+
+	const textSizeOptions: Array<{ value: 'normal' | 'large' | 'xlarge'; label: string; icon: string }> = [
+		{ value: 'normal', label: 'Normal (100%)', icon: 'A' },
+		{ value: 'large', label: 'Mare (125%)', icon: 'A+' },
+		{ value: 'xlarge', label: 'Extra Mare (150%)', icon: 'A++' }
+	];
 	
 	// User profile data
 	let fullName = $state('');
 	let email = $state('');
-	let avatarUrl = $state('');
 	
 	let currentPassword = $state('');
 	let newPassword = $state('');
@@ -290,6 +297,7 @@
 				window.location.href = '/';
 				return;
 			}
+			
 			loadCookiePreferences();
 			await loadProfile();
 			await checkPushStatus();
@@ -317,7 +325,6 @@
 			const user = profile.user;
 			fullName = user.fullName || '';
 			email = user.email || '';
-			avatarUrl = user.avatarUrl || '';
 
 			mfaStep = user.mfaEnabled ? 'done' : 'idle';
 			if ($isPacient) {
@@ -327,7 +334,6 @@
 			console.error('Failed to load profile:', error);
 			fullName = $authStore.user?.fullName || 'User';
 			email = $authStore.user?.email || '';
-			avatarUrl = '';
 		}
 	}
 
@@ -340,8 +346,7 @@
 		try {
 			await api.updateProfile({
 				fullName: fullName.trim(),
-				email: email.trim(),
-				avatarUrl: avatarUrl.trim()
+				email: email.trim()
 			});
 			
 			const updatedUser = await api.getProfile();
@@ -522,11 +527,7 @@
 		<div class="mb-8">
 			<div class="flex items-center gap-4">
 				<div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-					{#if avatarUrl}
-						<img src={avatarUrl} alt={fullName} class="w-full h-full rounded-full object-cover" />
-					{:else}
-						<span class="text-white text-3xl font-bold">{fullName ? fullName.charAt(0).toUpperCase() : 'U'}</span>
-					{/if}
+					<span class="text-white text-3xl font-bold">{fullName ? fullName.charAt(0).toUpperCase() : 'U'}</span>
 				</div>
 				<div>
 					<h1 class="text-3xl font-bold text-gray-900 dark:text-slate-100">{fullName}</h1>
@@ -569,9 +570,10 @@
 
 			<div class="flex-1 min-w-0">
 				{#if activeTab === 'general'}
-					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
-						<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Informații generale</h2>
-						<form onsubmit={(e) => { e.preventDefault(); handleSaveProfile(); }} class="space-y-6">
+					<div class="space-y-6">
+						<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+							<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Informații generale</h2>
+							<form onsubmit={(e) => { e.preventDefault(); handleSaveProfile(); }} class="space-y-6">
 							<div>
 								<label for="fullName" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
 									Nume complet
@@ -600,25 +602,6 @@
 								/>
 							</div>
 
-							<div>
-								<label for="avatarUrl" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
-									URL avatar (opțional)
-								</label>
-								<input
-									type="url"
-									id="avatarUrl"
-									bind:value={avatarUrl}
-									class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
-									placeholder="https://example.com/avatar.jpg"
-								/>
-								{#if avatarUrl}
-									<div class="mt-3 flex items-center gap-3">
-										<img src={avatarUrl} alt="Preview" class="w-12 h-12 rounded-full object-cover border-2 border-slate-300 dark:border-slate-600" />
-										<span class="text-sm text-gray-700 dark:text-slate-300">Previzualizare avatar</span>
-									</div>
-								{/if}
-							</div>
-
 							<div class="flex justify-end pt-4 border-t border-gray-200 dark:border-slate-700">
 								<button
 									type="submit"
@@ -634,8 +617,103 @@
 									{/if}
 								</button>
 							</div>
-						</form>
-					</Card>
+							</form>
+						</Card>
+
+						<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+							<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Preferințe aplicație</h2>
+							<div class="space-y-8">
+								<div>
+									<p class="text-sm font-semibold text-gray-700 dark:text-slate-300 mb-3">Temă</p>
+									<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+										<button
+											type="button"
+											onclick={() => themeStore.set('light')}
+											class="flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition {$themeStore === 'light'
+												? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100'
+												: 'border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300'}"
+										>
+											<Sun class="w-5 h-5" />
+											<span class="text-sm font-medium">Lumină</span>
+										</button>
+										<button
+											type="button"
+											onclick={() => themeStore.set('dark')}
+											class="flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition {$themeStore === 'dark'
+												? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100'
+												: 'border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300'}"
+										>
+											<Moon class="w-5 h-5" />
+											<span class="text-sm font-medium">Întunecată</span>
+										</button>
+									</div>
+								</div>
+
+								<div>
+									<p class="text-sm font-semibold text-gray-700 dark:text-slate-300 mb-3">Dimensiune text</p>
+									<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+										{#each textSizeOptions as option}
+											<button
+												type="button"
+												onclick={() => accessibility.setTextSize(option.value)}
+												class="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition {$accessibility.textSize === option.value
+													? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100'
+													: 'border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300'}"
+											>
+												<span class="font-bold">{option.icon}</span>
+												<span class="text-sm font-medium">{option.label}</span>
+											</button>
+										{/each}
+									</div>
+								</div>
+
+								<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+									<label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+										<input
+											type="checkbox"
+											checked={$accessibility.highContrast}
+											onchange={(e) => accessibility.setHighContrast(e.currentTarget.checked)}
+											class="w-5 h-5 rounded border-slate-300 accent-blue-600"
+											aria-label="Contrast crescut"
+										/>
+										<span class="text-sm font-medium text-gray-700 dark:text-slate-300">Contrast crescut</span>
+									</label>
+									<label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+										<input
+											type="checkbox"
+											checked={$accessibility.reduceMotion}
+											onchange={(e) => accessibility.setReduceMotion(e.currentTarget.checked)}
+											class="w-5 h-5 rounded border-slate-300 accent-blue-600"
+											aria-label="Reducere mișcare"
+										/>
+										<span class="text-sm font-medium text-gray-700 dark:text-slate-300">Reducere mișcare</span>
+									</label>
+									<label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition md:col-span-2">
+										<input
+											type="checkbox"
+											checked={$accessibility.readingMode}
+											onchange={(e) => accessibility.setReadingMode(e.currentTarget.checked)}
+											class="w-5 h-5 rounded border-slate-300 accent-blue-600"
+											aria-label="Mod citire"
+										/>
+										<span class="text-sm font-medium text-gray-700 dark:text-slate-300">Mod citire</span>
+									</label>
+								</div>
+
+								<div class="flex flex-wrap items-center gap-3 pt-2">
+									<button
+										type="button"
+										onclick={() => accessibility.reset()}
+										class="px-4 py-2.5 border border-slate-300 dark:border-slate-600 text-gray-800 dark:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 font-medium flex items-center gap-2"
+									>
+										<RotateCcw class="w-4 h-4" />
+										Resetează preferințele
+									</button>
+									<span class="text-xs text-slate-600 dark:text-slate-400">Preferințele se salvează automat.</span>
+								</div>
+							</div>
+						</Card>
+					</div>
 				{/if}
 
 				{#if activeTab === 'security'}
@@ -1343,3 +1421,4 @@
 		{/if}
 	</div>
 </Modal>
+

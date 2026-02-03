@@ -41,6 +41,7 @@
 	"dependencies": {
 		"@lucide/svelte": "^0.563.1",
 		"chart.js": "^4.4.1",
+		"cropperjs": "^2.1.0",
 		"date-fns": "^3.0.0",
 		"dompurify": "^3.0.8",
 		"socket.io-client": "^4.7.2",

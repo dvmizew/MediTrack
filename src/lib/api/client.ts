@@ -106,7 +106,7 @@ export const api = {
 
 	getProfile: () => request('/users/me'),
 
-	updateProfile: (data: { fullName?: string; email?: string; avatarUrl?: string }) =>
+	updateProfile: (data: { fullName?: string; email?: string }) =>
 		request('/users/me', {
 			method: 'PATCH',
 			body: JSON.stringify(data)

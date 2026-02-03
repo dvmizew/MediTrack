@@ -306,7 +306,6 @@
 		} rounded-2xl shadow-lg p-6`}
 					>
 						<div class="flex items-center justify-between gap-4">
-							<!-- Left: Rank + Avatar + Name -->
 							<div class="flex items-center gap-4 min-w-0 flex-1">
 								<!-- Rank Badge -->
 								<div class={`flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center font-black text-2xl ${
@@ -320,7 +319,6 @@
 									{/if}
 								</div>
 
-								<!-- Avatar -->
 								<div class="relative flex-shrink-0">
 									<div class={`w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg ${
 										isTop3 ? 'bg-gradient-to-br from-purple-500 to-pink-500 ring-4 ring-purple-200 dark:ring-purple-800' : 'bg-gradient-to-br from-blue-500 to-purple-600'

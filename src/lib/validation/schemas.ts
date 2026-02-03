@@ -37,13 +37,7 @@ export const authRegisterSchema = z.object({
 
 export const profileUpdateSchema = z.object({
   fullName: fullNameSchema.optional(),
-  email: emailSchema.optional(),
-  avatarUrl: z
-    .string()
-    .trim()
-    .url('URL avatar invalid')
-    .max(500, 'URL prea lung')
-    .optional()
+  email: emailSchema.optional()
 });
 
 export const messageSchema = z.object({
