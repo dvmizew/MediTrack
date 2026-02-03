@@ -538,6 +538,7 @@
 	let countdownStatus = $state<'none' | 'normal' | 'warning' | 'critical' | 'done'>('none');
 	let allDoneToday = $state(false);
 	let streakBroken = $state(false);
+	let showRewardModal = $state(false);
 	const displayStreak = $derived(streakBroken ? 0 : ($authStore.user?.currentStreak || 0));
 	let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -620,6 +621,11 @@
 			});
 			await loadMedications();
 			await refreshUserStats();
+			
+			// Check if all doses are now completed and show reward modal
+			if (allDoneToday && !showRewardModal) {
+				showRewardModal = true;
+			}
 		} catch (error) {
 			const msg = error instanceof Error ? error.message : String(error);
 			console.error('Failed to confirm medication:', msg);
@@ -1034,29 +1040,6 @@
 		}
 	/>
 
-	<!-- Daily XP Earned Showcase -->
-	{#if allDoneToday}
-		<div class="relative overflow-hidden bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 rounded-2xl shadow-lg p-8 border-2 border-yellow-200 dark:border-yellow-800">
-			<!-- Animated background -->
-			<div class="absolute inset-0 opacity-20">
-				<div class="absolute top-0 left-0 w-40 h-40 bg-yellow-400 rounded-full blur-3xl animate-pulse"></div>
-				<div class="absolute bottom-0 right-0 w-40 h-40 bg-amber-400 rounded-full blur-3xl animate-pulse"></div>
-			</div>
-			
-			<div class="relative flex items-center justify-between">
-				<div>
-					<p class="text-sm font-semibold text-gray-800 dark:text-yellow-300 mb-1 inline-flex items-center gap-2">
-						<Star class="w-5 h-5 animate-bounce" />
-						Recompensă de astazi
-					</p>
-					<p class="text-4xl font-black text-gray-900 dark:text-yellow-100">+50 XP</p>
-					<p class="text-sm text-gray-700 dark:text-yellow-300 mt-2">Felicitări! Ai îndeplinit toate misiunile!</p>
-				</div>
-				<div class="text-6xl drop-shadow-lg animate-bounce">🎉</div>
-			</div>
-		</div>
-	{/if}
-
 	<!-- Streak Loss Penalty Alert -->
 	{#if streakBroken}
 		<Card renderCustom unstyled containerClass="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-l-4 border-l-red-600 dark:border-l-red-400 border border-red-200 dark:border-red-800 rounded-lg p-4 md:p-5 animate-pulse-alert">
@@ -1194,5 +1177,43 @@
 
 	<!-- Charts Grid -->
 	<ChartsGroup bind:weeklyCanvas={weeklyChartCanvas} />
+	</div>
+{/if}
+
+<!-- Daily XP Reward Modal - Outside all sections to overlay entire viewport -->
+{#if showRewardModal}
+	<div
+		class="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm transition-opacity duration-200 flex items-center justify-center"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="reward-title"
+	>
+		<div class="relative overflow-hidden bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 rounded-2xl shadow-2xl p-8 border-2 border-yellow-200 dark:border-yellow-800 max-w-md w-11/12 mx-4">
+			<!-- Animated background -->
+			<div class="absolute inset-0 opacity-20">
+				<div class="absolute top-0 left-0 w-40 h-40 bg-yellow-400 rounded-full blur-3xl animate-pulse"></div>
+				<div class="absolute bottom-0 right-0 w-40 h-40 bg-amber-400 rounded-full blur-3xl animate-pulse"></div>
+			</div>
+			
+			<div class="relative text-center space-y-4">
+				<div class="text-6xl drop-shadow-lg animate-bounce">🎉</div>
+				<div>
+					<p id="reward-title" class="text-sm font-semibold text-gray-800 dark:text-yellow-300 mb-2 inline-flex items-center gap-2 justify-center">
+						<Star class="w-5 h-5 animate-bounce" />
+						Recompensă de astazi
+					</p>
+					<p class="text-5xl font-black text-gray-900 dark:text-yellow-100 mb-3">+50 XP</p>
+					<p class="text-base text-gray-700 dark:text-yellow-300">Felicitări! Ai îndeplinit toate misiunile!</p>
+				</div>
+				
+				<button
+					type="button"
+					onclick={() => showRewardModal = false}
+					class="mt-6 px-6 py-3 text-base font-semibold text-white bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-700 hover:to-amber-700 rounded-lg shadow-lg transition active:scale-95"
+				>
+					Închide
+				</button>
+			</div>
+		</div>
 	</div>
 {/if}

@@ -70,23 +70,23 @@
 	}
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6">
+<div class="space-y-4 md:space-y-6">
 	<div class="max-w-7xl mx-auto">
 		<!-- Header -->
-		<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-			<div>
-				<h1 class="text-4xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-					<Activity class="w-10 h-10 text-indigo-600 dark:text-indigo-400" />
+		<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-6">
+			<div class="space-y-1">
+				<h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-slate-100 flex items-center gap-3">
+					<Activity class="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
 					Monitorizare Sistem
 				</h1>
-				<p class="text-slate-600 dark:text-slate-400 mt-1">
+				<p class="text-sm text-gray-700 dark:text-slate-300 font-medium">
 					Real-time metrics și performanță
 				</p>
 			</div>
 			<button
 				onclick={loadData}
 				disabled={refreshing}
-				class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+				class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
 			>
 				<div class:animate-spin={refreshing}>
 					<RotateCcw class="w-4 h-4" />
@@ -95,6 +95,7 @@
 			</button>
 		</div>
 
+		<div class="space-y-4 md:space-y-6">
 		<!-- Error Alert -->
 		{#if error}
 			<Alert type="error" containerClass="mb-6">
@@ -113,9 +114,9 @@
 			</div>
 		{:else}
 			<!-- Key Metrics -->
-			<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
 				<!-- Active Users -->
-				<Card renderCustom containerClass="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
+				<Card renderCustom containerClass="border-l-4 border-l-blue-500">
 					<div class="flex items-start justify-between">
 						<div>
 							<p class="text-sm font-medium text-slate-600 dark:text-slate-400">Utilizatori Activi</p>
@@ -131,7 +132,7 @@
 				</Card>
 
 				<!-- Total Requests -->
-				<Card renderCustom containerClass="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
+				<Card renderCustom containerClass="border-l-4 border-l-emerald-500">
 					<div class="flex items-start justify-between">
 						<div>
 							<p class="text-sm font-medium text-slate-600 dark:text-slate-400">Total Cereri</p>
@@ -147,7 +148,7 @@
 				</Card>
 
 				<!-- Slow Queries -->
-				<Card renderCustom containerClass="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
+				<Card renderCustom containerClass="border-l-4 border-l-amber-500">
 					<div class="flex items-start justify-between">
 						<div>
 							<p class="text-sm font-medium text-slate-600 dark:text-slate-400">Queries Lente (&gt;1s)</p>
@@ -163,7 +164,7 @@
 				</Card>
 
 				<!-- Slow Endpoints -->
-				<Card renderCustom containerClass="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
+				<Card renderCustom containerClass="border-l-4 border-l-red-500">
 					<div class="flex items-start justify-between">
 						<div>
 							<p class="text-sm font-medium text-slate-600 dark:text-slate-400">Endpoint-uri Lente (&gt;500ms)</p>
@@ -181,11 +182,14 @@
 
 			<!-- User Activity -->
 			{#if overview?.activeUsers}
-			<Card renderCustom containerClass="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm mb-8">
-					<h2 class="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+			<Card renderCustom containerClass="p-0 overflow-hidden">
+				<div class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
+					<h2 class="text-lg font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 						<Users class="w-5 h-5 text-blue-600" />
 						Activitate Utilizatori
 					</h2>
+				</div>
+				<div class="p-4 sm:p-6">
 					<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
 						<div class="p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
 							<p class="text-xs text-slate-600 dark:text-slate-400 font-medium">Astăzi</p>
@@ -210,16 +214,20 @@
 							</p>
 						</div>
 					</div>
-				</Card>
+				</div>
+			</Card>
 			{/if}
 
 			<!-- Endpoint Performance -->
 			{#if metrics?.summary && Object.keys(metrics.summary).length > 0}
-			<Card renderCustom containerClass="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm mb-8">
-					<h2 class="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+			<Card renderCustom containerClass="p-0 overflow-hidden">
+				<div class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
+					<h2 class="text-lg font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 						<TrendingUp class="w-5 h-5 text-green-600" />
 						Performanță Endpoint-uri
 					</h2>
+				</div>
+				<div class="p-4 sm:p-6">
 					<div class="overflow-x-auto">
 						<table class="w-full text-sm">
 							<thead>
@@ -253,24 +261,26 @@
 							</tbody>
 						</table>
 					</div>
-				</Card>
+				</div>
+			</Card>
 			{/if}
 
 			<!-- Query Performance -->
 			{#if queryPerformance?.recentQueries && queryPerformance.recentQueries.length > 0}
-			<Card renderCustom containerClass="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm mb-8">
-					<div class="flex items-center justify-between mb-4">
-						<h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-							<Zap class="w-5 h-5 text-yellow-600" />
-							Query Performance (Ultimele 10)
-						</h2>
-						<button
-						onclick={clearMetrics}
-							class="text-xs px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
-						>
-							Șterge Metrice
-						</button>
-					</div>
+			<Card renderCustom containerClass="p-0 overflow-hidden">
+				<div class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+					<h2 class="text-lg font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
+						<Zap class="w-5 h-5 text-yellow-600" />
+						Query Performance (Ultimele 10)
+					</h2>
+					<button
+					onclick={clearMetrics}
+						class="text-xs px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+					>
+						Șterge Metrice
+					</button>
+				</div>
+				<div class="p-4 sm:p-6">
 					<div class="space-y-2 max-h-96 overflow-y-auto">
 						{#each queryPerformance.recentQueries as query, i}
 							<div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
@@ -290,9 +300,11 @@
 							</div>
 						{/each}
 					</div>
-				</Card>
+				</div>
+			</Card>
 			{/if}
 		{/if}
+		</div>
 	</div>
 </div>
 
