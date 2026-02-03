@@ -38,7 +38,7 @@ const httpServer = createServer(app);
 const getAllowedOrigins = () => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   const origins = [frontendUrl];
-  
+
   // If frontend is http://localhost, also allow https://localhost
   if (frontendUrl.includes('localhost')) {
     if (frontendUrl.startsWith('http://')) {
@@ -47,7 +47,7 @@ const getAllowedOrigins = () => {
       origins.push(frontendUrl.replace('https://', 'http://'));
     }
   }
-  
+
   return origins;
 };
 
@@ -116,7 +116,7 @@ app.use('/notifications', notificationRoutes);
 app.use('/push', pushRoutes);
 app.use('/admin/reports', reportsRoutes);
 app.use('/leaderboard', leaderboardRoutes);
-app.use('/admin', performanceRoutes);
+app.use('/admin/reports', performanceRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

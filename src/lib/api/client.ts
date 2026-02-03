@@ -343,6 +343,7 @@ export const adminReportsApi = {
 
 	// Monitoring
 	getMetrics: () => request('/admin/reports/metrics'),
+	getSystemHealth: () => request('/admin/reports/system-health'),
 	getQueryPerformance: () => request('/admin/reports/performance/queries'),
 	clearQueryMetrics: () => request('/admin/reports/performance/queries/clear', { method: 'POST' })
 };
