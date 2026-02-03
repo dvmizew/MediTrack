@@ -29,7 +29,8 @@
 		TrendingUp,
 		ChevronRight,
 		ArrowRight,
-		Star
+		Star,
+		Activity
 	} from '@lucide/svelte';
 	import {
 		getChartTheme,
@@ -792,20 +793,20 @@
 				</div>
 
 				<!-- Admin Modules Quick Links -->
-				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 					<!-- Users Management Card -->
 					<Card
 						href="/admin/users"
 						renderCustom
 						ariaLabel="Gestionează Utilizatori: Vizualizează, editează și monitorizează"
-						containerClass="group border-l-4 border-l-blue-500 p-4 sm:p-5 md:p-6 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+						containerClass="group border-l-4 border-l-blue-500 p-6 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 h-full flex flex-col"
 					>
-						<div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">
-							<Users class="w-16 h-16 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+						<div class="flex items-start justify-between gap-3 mb-4">
+							<Users class="w-14 h-14 flex-shrink-0 text-blue-600 dark:text-blue-400" />
 							<ArrowRight class="w-5 h-5 text-blue-400 dark:text-blue-300 group-hover:translate-x-1 transition-transform flex-shrink-0" />
 						</div>
-						<h3 class="text-base sm:text-lg font-bold text-blue-800 dark:text-blue-200 mb-1">Utilizatori</h3>
-						<p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">Vizualizează, editează și monitorizează conturi</p>
+						<h3 class="text-lg font-bold text-blue-800 dark:text-blue-200 mb-2">Utilizatori</h3>
+						<p class="text-sm text-slate-700 dark:text-slate-300">Vizualizează, editează și monitorizează conturi</p>
 					</Card>
 
 					<!-- Reports Card -->
@@ -813,14 +814,29 @@
 						href="/admin/reports"
 						renderCustom
 						ariaLabel="Rapoarte: Overview și rapoarte detaliate"
-						containerClass="group border-l-4 border-l-emerald-500 p-4 sm:p-5 md:p-6 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+						containerClass="group border-l-4 border-l-emerald-500 p-6 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 h-full flex flex-col"
 					>
-						<div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">
-							<BarChart3 class="w-16 h-16 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
+						<div class="flex items-start justify-between gap-3 mb-4">
+							<BarChart3 class="w-14 h-14 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
 							<ArrowRight class="w-5 h-5 text-emerald-400 dark:text-emerald-300 group-hover:translate-x-1 transition-transform flex-shrink-0" />
 						</div>
-						<h3 class="text-base sm:text-lg font-bold text-emerald-800 dark:text-emerald-200 mb-1">Rapoarte</h3>
-						<p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">Overview și analize detaliate sistem</p>
+						<h3 class="text-lg font-bold text-emerald-800 dark:text-emerald-200 mb-2">Rapoarte</h3>
+						<p class="text-sm text-slate-700 dark:text-slate-300">Overview și analize detaliate sistem</p>
+					</Card>
+
+					<!-- Monitoring Card -->
+					<Card
+						href="/admin/monitoring"
+						renderCustom
+						ariaLabel="Monitorizare: Metrici real-time și performanță sistem"
+						containerClass="group border-l-4 border-l-purple-500 p-6 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 h-full flex flex-col"
+					>
+						<div class="flex items-start justify-between gap-3 mb-4">
+							<Activity class="w-14 h-14 flex-shrink-0 text-purple-600 dark:text-purple-400" />
+							<ArrowRight class="w-5 h-5 text-purple-400 dark:text-purple-300 group-hover:translate-x-1 transition-transform flex-shrink-0" />
+						</div>
+						<h3 class="text-lg font-bold text-purple-800 dark:text-purple-200 mb-2">Monitorizare</h3>
+						<p class="text-sm text-slate-700 dark:text-slate-300">Metrici real-time și performanță sistem</p>
 					</Card>
 				</div>
 
@@ -829,7 +845,7 @@
 					<!-- Left Column -->
 					<div class="space-y-6">
 						<!-- Users by Role -->
-						<Card renderCustom containerClass="p-0 overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden h-full flex flex-col">
 							<div class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
 								<div>
 									<h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2"><User class="w-5 h-5" /> Utilizatori după Rol</h2>
@@ -886,7 +902,7 @@
 						</Card>
 
 						<!-- Collaborations -->
-						<Card renderCustom containerClass="p-0 overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden h-full flex flex-col">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
 								<div>
 									<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Users class="w-5 h-5" /> Status Colaborări</h2>
@@ -955,7 +971,7 @@
 							</div>
 						</Card>
 						<!-- 7-Day Adherence Chart -->
-						<Card renderCustom containerClass="p-0 overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden h-full flex flex-col">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700">
 								<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Calendar class="w-5 h-5" /> Conformitate - 7 zile</h2>
 							</div>
@@ -982,7 +998,7 @@
 					<!-- Right Column -->
 					<div class="space-y-6">
 						<!-- Treatments -->
-						<Card renderCustom containerClass="p-0 overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden h-full flex flex-col">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
 								<div>
 									<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Pill class="w-5 h-5" /> Tratamente</h2>
@@ -1017,7 +1033,7 @@
 						</Card>
 
 						<!-- 30-Day Adherence Chart -->
-						<Card renderCustom containerClass="p-0 overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden h-full flex flex-col">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700">
 								<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><TrendingUp class="w-5 h-5" /> Conformitate - 30 zile</h2>
 							</div>

@@ -339,7 +339,12 @@ export const adminReportsApi = {
 		request('/admin/reports/delete-account', {
 			method: 'POST',
 			body: JSON.stringify({ password })
-		})
+		}),
+
+	// Monitoring
+	getMetrics: () => request('/admin/reports/metrics'),
+	getQueryPerformance: () => request('/admin/reports/performance/queries'),
+	clearQueryMetrics: () => request('/admin/reports/performance/queries/clear', { method: 'POST' })
 };
 
 // MFA API
