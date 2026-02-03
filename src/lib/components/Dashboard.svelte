@@ -780,20 +780,20 @@
 		{:else if adminOverview}
 			<div class="space-y-4 md:space-y-6">
 				<!-- KPI Cards Grid -->
-				<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 min-w-0">
 					{#each adminCards as card}
 						<Card
 							title={card.title}
 							value={card.value}
 							sub={card.sub}
 							accent={card.accent}
-							containerClass={`border-l-4 ${getAdminBorderClass(card.accent)} p-3 sm:p-4 md:p-5`}
+							containerClass={`border-l-4 ${getAdminBorderClass(card.accent)}`}
 						/>
 					{/each}
 				</div>
 
 				<!-- Admin Modules Quick Links -->
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0">
 					<!-- Users Management Card -->
 					<Card
 						href="/admin/users"
@@ -843,9 +843,9 @@
 				<!-- 2-Column Layout for Content Sections -->
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 					<!-- Left Column -->
-					<div class="space-y-6">
+					<div class="flex flex-col gap-6 h-full">
 						<!-- Users by Role -->
-						<Card renderCustom containerClass="p-0 overflow-hidden h-full flex flex-col">
+						<Card renderCustom containerClass="p-0 overflow-hidden h-full flex flex-col flex-[2]">
 							<div class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
 								<div>
 									<h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2"><User class="w-5 h-5" /> Utilizatori după Rol</h2>
@@ -853,7 +853,7 @@
 								</div>
 								<a href="/admin/users" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline w-fit">Gestionează →</a>
 							</div>
-							<div class="p-3 sm:p-4 md:p-6 space-y-3">
+							<div class="p-3 sm:p-4 md:p-6 space-y-3 flex-1">
 								{#if adminOverview.users.byRole && adminOverview.users.byRole.length > 0}
 									{#each adminOverview.users.byRole as r}
 										<div class="rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 p-3 sm:p-4 hover:shadow-md transition-all">
@@ -900,36 +900,49 @@
 								{/if}
 							</div>
 						</Card>
+					</div>
 
+					<!-- Right Column -->
+					<div class="flex flex-col gap-6 h-full">
 						<!-- Collaborations -->
-						<Card renderCustom containerClass="p-0 overflow-hidden h-full flex flex-col">
-							<div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+						<Card renderCustom containerClass="p-0 overflow-hidden h-full flex flex-col flex-[1.2]">
+							<div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
 								<div>
 									<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Users class="w-5 h-5" /> Status Colaborări</h2>
 									<p class="text-xs text-gray-600 dark:text-slate-400 mt-1">Relații medic-pacient și acceptare</p>
 								</div>
 								<a href="/collaborations" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">Vezi toți →</a>
 							</div>
-							<div class="p-4 space-y-3">
+							<div class="p-3 sm:p-4 flex-1 flex flex-col gap-3">
 								{#if adminOverview.collaborations && adminOverview.collaborations.length > 0}
-									{#each adminOverview.collaborations as c}
-										<div class="space-y-1.5">
-											<div class="flex items-center justify-between">
-												<div class="flex items-center gap-2">
-													{#if c.status === 'pending'}
-														<Clock class="w-5 h-5" />
-														<span class="font-medium text-gray-900 dark:text-slate-100">În așteptare</span>
-													{:else if c.status === 'accepted'}
-														<CheckCircle2 class="w-5 h-5" />
-														<span class="font-medium text-green-900 dark:text-green-100">Acceptate</span>
-													{:else if c.status === 'rejected'}
-														<AlertCircle class="w-5 h-5" />
-														<span class="font-medium text-red-900 dark:text-red-100">Respinse</span>
-													{:else}
-														<span class="font-medium text-gray-900 dark:text-slate-100">{c.status}</span>
+									<div class="grid gap-2">
+										{#each adminOverview.collaborations as c}
+											<div class="rounded-md border border-slate-200/60 dark:border-slate-700/60 bg-white/70 dark:bg-slate-800/60 p-2">
+												<div class="flex flex-col items-center text-center gap-1.5">
+													<div class="flex items-center gap-2">
+														{#if c.status === 'pending'}
+															<div class="w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+																<Clock class="w-4 h-4 text-yellow-700 dark:text-yellow-400" />
+															</div>
+															<span class="text-xs sm:text-sm font-medium text-gray-900 dark:text-slate-100">În așteptare</span>
+														{:else if c.status === 'accepted'}
+															<div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+																<CheckCircle2 class="w-4 h-4 text-green-700 dark:text-green-400" />
+															</div>
+															<span class="text-xs sm:text-sm font-medium text-green-900 dark:text-green-100">Acceptate</span>
+														{:else if c.status === 'rejected'}
+															<div class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+																<AlertCircle class="w-4 h-4 text-red-700 dark:text-red-400" />
+															</div>
+															<span class="text-xs sm:text-sm font-medium text-red-900 dark:text-red-100">Respinse</span>
+														{:else}
+															<div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+																<span class="text-xs font-semibold text-gray-700 dark:text-slate-200">?</span>
+															</div>
+															<span class="text-xs sm:text-sm font-medium text-gray-900 dark:text-slate-100">{c.status}</span>
 													{/if}
 												</div>
-												<span class="text-lg font-bold text-gray-900 dark:text-slate-100">{c.count}</span>
+												<span class="text-lg sm:text-xl font-bold text-gray-900 dark:text-slate-100">{c.count}</span>
 											</div>
 											<!-- Progress bar with percentage -->
 											<div class="w-full bg-slate-200/70 dark:bg-slate-800 rounded-full h-2 sm:h-2.5 overflow-hidden">
@@ -938,7 +951,7 @@
 													style="width: {totalCollaborations > 0 ? (c.count / totalCollaborations) * 100 : 0}%"
 												></div>
 											</div>
-											<div class="text-xs text-gray-700 dark:text-slate-200">
+												<div class="text-[11px] sm:text-xs text-gray-700 dark:text-slate-200 text-center">
 												{#if c.status === 'accepted'}
 													{Math.round((c.count / totalCollaborations) * 100)}% dintre relații
 												{:else if c.status === 'pending'}
@@ -949,6 +962,7 @@
 											</div>
 										</div>
 									{/each}
+									</div>
 								{:else}
 									<div class="py-6 text-center text-gray-500 dark:text-slate-400">
 										<HelpCircle class="w-12 h-12 mx-auto mb-2" />
@@ -957,7 +971,7 @@
 								{/if}
 
 								{#if adminOverview.collaborations && adminOverview.collaborations.length > 0}
-									<div class="mt-4 pt-4 border-t border-slate-200/70 dark:border-slate-800/70 space-y-2 text-xs">
+									<div class="mt-auto pt-3 border-t border-slate-200/70 dark:border-slate-800/70 space-y-1 text-[11px] sm:text-xs">
 										<div class="flex justify-between">
 											<span class="text-gray-700 dark:text-slate-300">Total colaborări:</span>
 											<span class="font-semibold text-gray-900 dark:text-slate-100">{totalCollaborations}</span>
@@ -966,91 +980,6 @@
 											<span class="text-gray-700 dark:text-slate-300">Rata acceptare:</span>
 											<span class="font-semibold {totalCollaborations > 0 && (acceptedCollaborations / totalCollaborations) > 0.8 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">{Math.round((acceptedCollaborations / (totalCollaborations || 1)) * 100)}%</span>
 										</div>
-									</div>
-								{/if}
-							</div>
-						</Card>
-						<!-- 7-Day Adherence Chart -->
-						<Card renderCustom containerClass="p-0 overflow-hidden h-full flex flex-col">
-							<div class="p-6 border-b border-slate-200 dark:border-slate-700">
-								<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Calendar class="w-5 h-5" /> Conformitate - 7 zile</h2>
-							</div>
-							<div class="p-6">
-								{#if adminOverview.adherence.last7Days.scheduled > 0}
-									<div class="mb-4 max-w-[200px] mx-auto" role="img" aria-label="Conformitate 7 zile - diagramă">
-										<canvas bind:this={adherence7Canvas} aria-hidden="true"></canvas>
-									</div>
-									<div class="grid grid-cols-3 gap-2 text-xs text-center">
-										<div><div class="text-gray-700 dark:text-slate-300">Programate</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last7Days.scheduled}</div></div>
-										<div><div class="text-gray-700 dark:text-slate-300">Confirmate</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last7Days.confirmed}</div></div>
-										<div><div class="text-gray-700 dark:text-slate-300">Rată</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last7Days.rate}</div></div>
-									</div>
-								{:else}
-									<div class="py-8 text-center text-gray-500 dark:text-slate-400">
-										<BarChart3 class="w-12 h-12 mx-auto mb-2" />
-										<p class="text-sm">Nicio dată de conformitate în ultimele 7 zile</p>
-									</div>
-								{/if}
-							</div>
-						</Card>
-					</div>
-
-					<!-- Right Column -->
-					<div class="space-y-6">
-						<!-- Treatments -->
-						<Card renderCustom containerClass="p-0 overflow-hidden h-full flex flex-col">
-							<div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-								<div>
-									<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Pill class="w-5 h-5" /> Tratamente</h2>
-									<p class="text-sm text-gray-600 dark:text-slate-400 mt-1">Status și numere</p>
-								</div>
-								<a href="/treatments" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline transition-colors flex items-center gap-1">
-									Vezi toți
-									<ChevronRight class="w-4 h-4" />
-								</a>
-							</div>
-							<div class="p-4 space-y-2">
-								{#if adminOverview.treatments.total > 0}
-									<div class="flex items-center justify-between p-3 rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
-										<span class="text-gray-700 dark:text-slate-300 text-sm">Activ</span>
-										<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.treatments.active ?? 0}</span>
-									</div>
-									<div class="flex items-center justify-between p-3 rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
-										<span class="text-gray-700 dark:text-slate-300 text-sm">Inactiv</span>
-										<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.treatments.inactive ?? 0}</span>
-									</div>
-									<div class="flex items-center justify-between p-3 rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
-										<span class="text-gray-700 dark:text-slate-300 text-sm">Total</span>
-										<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.treatments.total ?? 0}</span>
-									</div>
-								{:else}
-									<div class="py-6 text-center text-gray-500 dark:text-slate-400">
-										<Pill class="w-12 h-12 mx-auto mb-2" />
-										<p class="text-sm">Niciun tratament în sistem</p>
-									</div>
-								{/if}
-							</div>
-						</Card>
-
-						<!-- 30-Day Adherence Chart -->
-						<Card renderCustom containerClass="p-0 overflow-hidden h-full flex flex-col">
-							<div class="p-6 border-b border-slate-200 dark:border-slate-700">
-								<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><TrendingUp class="w-5 h-5" /> Conformitate - 30 zile</h2>
-							</div>
-							<div class="p-6">
-								{#if adminOverview.adherence.last30Days.scheduled > 0}
-									<div class="mb-4 max-w-[200px] mx-auto" role="img" aria-label="Conformitate 30 zile - diagramă">
-										<canvas bind:this={adherence30Canvas} aria-hidden="true"></canvas>
-									</div>
-									<div class="grid grid-cols-3 gap-2 text-xs text-center">
-										<div><div class="text-gray-700 dark:text-slate-300">Programate</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last30Days.scheduled}</div></div>
-										<div><div class="text-gray-700 dark:text-slate-300">Confirmate</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last30Days.confirmed}</div></div>
-										<div><div class="text-gray-700 dark:text-slate-300">Rată</div><div class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.adherence.last30Days.rate}</div></div>
-									</div>
-								{:else}
-									<div class="py-8 text-center text-gray-500 dark:text-slate-400">
-										<BarChart3 class="w-12 h-12 mx-auto mb-2" />
-										<p class="text-sm">Nicio dată de conformitate în ultimele 30 zile</p>
 									</div>
 								{/if}
 							</div>
@@ -1067,7 +996,7 @@
 		streakBroken ? 'rounded-3xl bg-slate-100/70 dark:bg-slate-900/60 p-4 md:p-6' : ''
 	}`}
 >
-	<!-- Welcome Card (patient, same design) -->
+	<!-- Welcome Card -->
 	<WelcomeCard
 		name={$authStore.user?.fullName || ''}
 		title={
