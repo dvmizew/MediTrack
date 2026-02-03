@@ -5,6 +5,7 @@
 	import { loadUserProfile } from '$lib/utils/loaders';
 	import { BADGES, getBadgeMeta } from '$lib/constants/badges';
 	import { toast } from '$lib/utils/toast';
+	import Card from '$lib/components/Card.svelte';
 	import { User, Lock, Bell, BarChart3, Loader, CheckCircle2, Info, AlertTriangle, Trash2, Star, X, XCircle, Copy, Download, RotateCcw, Shield, Key, Zap, Cookie } from '@lucide/svelte';
 	import {
 		subscribeToPush,
@@ -567,7 +568,7 @@
 
 			<div class="flex-1 min-w-0">
 				{#if activeTab === 'general'}
-					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Informații generale</h2>
 						<form onsubmit={(e) => { e.preventDefault(); handleSaveProfile(); }} class="space-y-6">
 							<div>
@@ -633,11 +634,11 @@
 								</button>
 							</div>
 						</form>
-					</div>
+					</Card>
 				{/if}
 
 				{#if activeTab === 'security'}
-					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Securitate</h2>
 						<form onsubmit={(e) => { e.preventDefault(); handleChangePassword(); }} class="space-y-6">
 							<div>
@@ -710,9 +711,9 @@
 								</button>
 							</div>
 						</form>
-					</div>
+					</Card>
 
-					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6 mt-6">
+					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6 mt-6">
 						<div class="flex items-center gap-3 mb-6">
 							<div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
 								<Lock class="w-6 h-6 text-white" />
@@ -877,11 +878,11 @@
 								</div>
 							</div>
 						{/if}
-					</div>
+					</Card>
 				{/if}
 
 				{#if activeTab === 'notifications'}
-					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Setări notificări</h2>
 
 						<!-- Push Notifications Section -->
@@ -985,12 +986,12 @@
 								</div>
 							</div>
 						</div>
-					</div>
+					</Card>
 				{/if}
 
 				{#if activeTab === 'stats' && $isPacient}
 					<div class="space-y-6">
-						<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+						<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 							<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-6">Statistici și realizări</h2>
 							
 							<div class="flex flex-col items-center mb-8">
@@ -1019,9 +1020,9 @@
 									<p class="text-sm text-gray-700 dark:text-slate-300 mt-1">Tratamente active</p>
 								</div>
 							</div>
-						</div>
+						</Card>
 
-						<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+						<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 							<h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Progresie badge-uri</h3>
 							<div class="space-y-4">
 								{#each BADGES as badge}
@@ -1039,14 +1040,14 @@
 									</div>
 								{/each}
 							</div>
-						</div>
+						</Card>
 					</div>
 				{/if}
 
 				{#if activeTab === 'privacy'}
 					<div class="space-y-6">
 					<!-- GDPR Header -->
-					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<div class="flex items-center gap-3 mb-4">
 							<div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
 								<Shield class="w-6 h-6 text-white" />
@@ -1072,10 +1073,10 @@
 								</div>
 							</div>
 						</div>
-					</div>
+					</Card>
 
 					<!-- Export Personal Data -->
-					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<div class="flex items-start gap-4">
 							<div class="flex-shrink-0 w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
 								<Download class="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -1100,10 +1101,10 @@
 								</button>
 							</div>
 						</div>
-					</div>
+					</Card>
 
 					<!-- Cookie Consent Info -->
-					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+					<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
 						<div class="flex items-start gap-4">
 							<div class="flex-shrink-0 w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
 								<Cookie class="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -1161,10 +1162,10 @@
 								</div>
 							</div>
 						</div>
-					</div>
+					</Card>
 
 					<!-- Delete Account -->
-					<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl shadow-sm p-6">
+					<Card renderCustom unstyled containerClass="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl shadow-sm p-6">
 						<div class="flex items-start gap-4">
 							<div class="flex-shrink-0 w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-lg flex items-center justify-center">
 								<AlertTriangle class="w-5 h-5 text-red-600 dark:text-red-400" />
@@ -1190,7 +1191,7 @@
 								</button>
 							</div>
 						</div>
-					</div>
+					</Card>
 				</div>
 			{/if}
 		</div>

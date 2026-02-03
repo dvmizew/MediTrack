@@ -4,6 +4,7 @@
 	import { authStore, isMedic, isPacient } from '$lib/stores/auth';
 	import { api, adminReportsApi } from '$lib/api/client';
 	import { toast } from '$lib/utils/toast';
+	import Card from '$lib/components/Card.svelte';
 	import type { Collaboration, AdminOverview } from '$lib/types/api';
 	import {
 		AlertCircle,
@@ -133,10 +134,10 @@
 		</div>
 
 		{#if error}
-			<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 mb-6 flex items-start gap-3 animate-shake">
+			<Card renderCustom unstyled containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 mb-6 flex items-start gap-3 animate-shake">
 				<AlertCircle class="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
 				<p class="text-sm sm:text-base text-red-800 dark:text-red-400 font-medium">{error}</p>
-			</div>
+			</Card>
 		{/if}
 
 		{#if isAdmin}
@@ -148,7 +149,7 @@
 			{:else if overview}
 				<!-- Stats Cards -->
 				<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-<div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border border-green-200 dark:border-green-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-md">
+					<Card renderCustom unstyled containerClass="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border border-green-200 dark:border-green-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-md">
 								<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
 									<CheckCircle2 class="w-4 h-4 sm:w-5 sm:h-5 text-green-700 dark:text-green-200" />
 									<h3 class="text-xs sm:text-sm font-semibold text-green-900 dark:text-green-200 truncate">Acceptate</h3>
@@ -157,9 +158,9 @@
 									{overview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0}
 								</p>
 								<p class="text-xs text-green-700 dark:text-green-300 truncate">Active în sistem</p>
-					</div>
+					</Card>
 
-<div class="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900 border border-yellow-200 dark:border-yellow-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-md">
+					<Card renderCustom unstyled containerClass="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900 border border-yellow-200 dark:border-yellow-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-md">
 								<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
 									<Clock class="w-4 h-4 sm:w-5 sm:h-5 text-yellow-700 dark:text-yellow-200" />
 									<h3 class="text-xs sm:text-sm font-semibold text-yellow-900 dark:text-yellow-200 truncate">În așteptare</h3>
@@ -168,9 +169,9 @@
 									{overview.collaborations.find((c: any) => c.status === 'pending')?.count || 0}
 								</p>
 								<p class="text-xs text-yellow-700 dark:text-yellow-300 truncate">De procesat</p>
-					</div>
+					</Card>
 
-				<div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border border-red-200 dark:border-red-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-md">
+					<Card renderCustom unstyled containerClass="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border border-red-200 dark:border-red-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-md">
 						<div class="flex items-center gap-1.5 sm:gap-2 mb-2">
 							<XCircle class="w-4 h-4 sm:w-5 sm:h-5 text-red-700 dark:text-red-200" />
 						<h3 class="text-xs sm:text-sm font-semibold text-red-900 dark:text-red-200 truncate">Respinse</h3>
@@ -179,13 +180,13 @@
 						{overview.collaborations.find((c: any) => c.status === 'rejected')?.count || 0}
 					</p>
 					<p class="text-xs text-red-700 dark:text-red-300 truncate">Nefinalizate</p>
-					</div>
+					</Card>
 				</div>
 
 				<!-- Detailed Breakdown -->
 				<div class="grid gap-4 sm:gap-6 md:grid-cols-2">
 					<!-- Status Breakdown -->
-					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
+					<Card renderCustom containerClass="p-0 overflow-hidden">
 						<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
 							<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 								<BarChart3 class="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-slate-200" />
@@ -240,10 +241,10 @@
 								</div>
 							</div>
 						</div>
-					</div>
+					</Card>
 
 					<!-- Quick Actions -->
-				<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg overflow-hidden">
+					<Card renderCustom containerClass="p-0 overflow-hidden">
 					<div class="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
 						<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 							<Zap class="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-slate-200" />
@@ -294,13 +295,13 @@
 								</div>
 							</a>
 						</div>
-					</div>
+					</Card>
 				</div>
 			{/if}
 		{:else}
 			<!-- Send Invite Form (Pacient only) -->
 			{#if $isPacient}
-				<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-xl shadow-sm dark:shadow-lg border border-slate-200 dark:border-slate-700/50 p-6 mb-6 hover:shadow-lg transition-shadow duration-300 animate-scale-in">
+				<Card renderCustom containerClass="p-6 mb-6 hover:shadow-lg transition-shadow duration-300 animate-scale-in">
 					<h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2">
 						<Plus class="w-6 h-6 text-blue-600 dark:text-blue-400" />
 						Invită un Medic
@@ -331,12 +332,12 @@
 							{/if}
 						</button>
 					</form>
-				</div>
+				</Card>
 			{/if}
 
 			<!-- Pending Invites -->
 			{#if pendingInvites.length > 0}
-			<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-xl shadow-sm dark:shadow-lg border border-slate-200 dark:border-slate-700/50 overflow-hidden mb-6 animate-scale-in">
+			<Card renderCustom containerClass="p-0 overflow-hidden mb-6 animate-scale-in">
 				<div class="p-6 border-b border-gray-100 dark:border-slate-700 bg-gradient-to-r from-yellow-50 to-white dark:from-slate-800/50 dark:to-slate-900">
 					<h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 						<Clock class="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
@@ -403,11 +404,11 @@
 							</div>
 						{/each}
 					</div>
-				</div>
+				</Card>
 			{/if}
 
 			<!-- Active Collaborations -->
-		<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-xl shadow-sm dark:shadow-lg border border-slate-200 dark:border-slate-700/50 overflow-hidden animate-scale-in">
+		<Card renderCustom containerClass="p-0 overflow-hidden animate-scale-in">
 			<div class="p-6 border-b border-gray-100 dark:border-slate-700 bg-gradient-to-r from-green-50 to-white dark:from-slate-800/50 dark:to-slate-900">
 				<h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 					<CheckCircle2 class="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -427,7 +428,7 @@
 				{:else}
 					<div class="grid gap-5 md:grid-cols-2 p-6">
 						{#each collaborations as collab}
-							<div class="border-2 border-gray-200 dark:border-slate-700 dark:bg-slate-800/50 rounded-xl p-5 hover:border-green-300 dark:hover:border-green-600 hover:shadow-xl hover:shadow-green-500/10 hover:-translate-y-1 transition-all duration-300 group animate-scale-in">
+							<Card renderCustom unstyled containerClass="border-2 border-gray-200 dark:border-slate-700 dark:bg-slate-800/50 rounded-xl p-5 hover:border-green-300 dark:hover:border-green-600 hover:shadow-xl hover:shadow-green-500/10 hover:-translate-y-1 transition-all duration-300 group animate-scale-in">
 								<div class="flex items-center gap-4 mb-4">
 									<div class="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:scale-110 transition-transform duration-300">
 										{$isMedic ? (collab.pacientName?.charAt(0).toUpperCase() || '?') : (collab.medicName?.charAt(0).toUpperCase() || '?')}
@@ -459,11 +460,11 @@
 											</button>
 									{/if}
 								</div>
-							</div>
+							</Card>
 						{/each}
 					</div>
 				{/if}
-			</div>
+			</Card>
 		{/if}
 	</main>
 {/if}

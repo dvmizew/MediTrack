@@ -5,6 +5,7 @@
 	import { api } from '$lib/api/client';
 	import { profileUpdateSchema, parseWithFriendlyErrors } from '$lib/validation/schemas';
 	import { loadUserProfile } from '$lib/utils/loaders';
+	import Card from '$lib/components/Card.svelte';
 	import { Info, Star, Award, CheckCircle, BarChart3, Settings, Pill } from '@lucide/svelte';
 
 	let loading = $state(true);
@@ -143,7 +144,7 @@
 
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 			<!-- Account Information -->
-			<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+			<Card renderCustom containerClass="p-6">
 				<div class="flex items-center gap-3 mb-4">
 					<div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
 						<Info class="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -166,11 +167,11 @@
 						</p>
 					</div>
 				</div>
-			</div>
+			</Card>
 
 			{#if $isPacient}
 				<!-- Patient Stats Card -->
-				<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+				<Card renderCustom containerClass="p-6">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
 							<Star class="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -193,10 +194,10 @@
 							<Award class="w-8 h-8 text-purple-600 dark:text-purple-400" />
 						</div>
 					</div>
-				</div>
+				</Card>
 
 				<!-- Badge Display -->
-				<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6">
+				<Card renderCustom containerClass="p-6">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-gradient-to-br {getBadgeColor(stats.currentBadge)} rounded-lg flex items-center justify-center">
 							<Award class="w-6 h-6 text-white" />
@@ -210,10 +211,10 @@
 						<p class="text-2xl font-bold text-gray-900 dark:text-slate-100">{getBadgeName(stats.currentBadge)}</p>
 						<p class="text-gray-600 dark:text-slate-400 mt-1">{stats?.totalXp ?? 0} XP</p>
 					</div>
-				</div>
+				</Card>
 			{:else}
 				<!-- For Medics/Admins - Activity Summary -->
-				<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg p-6 md:col-span-2">
+				<Card renderCustom containerClass="p-6 md:col-span-2">
 					<div class="flex items-center gap-3 mb-4">
 						<div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
 							<CheckCircle class="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -230,7 +231,7 @@
 							<p class="text-3xl font-bold text-gray-900 dark:text-slate-100">-</p>
 						</div>
 					</div>
-				</div>
+				</Card>
 			{/if}
 		</div>
 
@@ -238,7 +239,7 @@
 		<div class="mt-8">
 			<h2 class="text-2xl font-semibold text-gray-900 dark:text-slate-100 mb-4">Acțiuni rapide</h2>
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<a href="/settings" class="block p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-in-out group">
+				<Card href="/settings" renderCustom containerClass="p-4 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-in-out group">
 					<div class="flex items-center gap-3">
 						<div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 ease-in-out">
 							<Settings class="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -248,9 +249,9 @@
 							<p class="text-sm text-gray-600 dark:text-slate-400">Configurează contul</p>
 						</div>
 					</div>
-				</a>
+				</Card>
 
-				<a href="/dashboard" class="block p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-in-out group">
+				<Card href="/dashboard" renderCustom containerClass="p-4 hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-in-out group">
 					<div class="flex items-center gap-3">
 						<div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 ease-in-out">
 							<BarChart3 class="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -260,9 +261,9 @@
 							<p class="text-sm text-gray-600 dark:text-slate-400">Vezi statistici</p>
 						</div>
 					</div>
-				</a>
+				</Card>
 
-				<a href="/treatments" class="block p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm dark:shadow-lg hover:border-green-400 dark:hover:border-green-500 hover:shadow-xl hover:shadow-green-500/10 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-in-out group">
+				<Card href="/treatments" renderCustom containerClass="p-4 hover:border-green-400 dark:hover:border-green-500 hover:shadow-xl hover:shadow-green-500/10 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-in-out group">
 					<div class="flex items-center gap-3">
 						<div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 ease-in-out">
 							<Pill class="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -272,7 +273,7 @@
 							<p class="text-sm text-gray-600 dark:text-slate-400">Gestionează tratamentele</p>
 						</div>
 					</div>
-				</a>
+				</Card>
 			</div>
 		</div>
 	{/if}

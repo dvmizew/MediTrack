@@ -203,6 +203,13 @@
 		}
 	] : []);
 
+	function getAdminBorderClass(accent: string) {
+		if (accent.includes('blue')) return 'border-l-blue-500';
+		if (accent.includes('green')) return 'border-l-green-500';
+		if (accent.includes('purple')) return 'border-l-purple-500';
+		return 'border-l-orange-500';
+	}
+
 	// Compute total users by role for progress bar calculations
 	const totalUsersByRole = $derived.by(() => {
 		if (!adminOverview?.users?.byRole) return 0;
@@ -764,25 +771,24 @@
 				<!-- KPI Cards Grid -->
 				<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
 					{#each adminCards as card}
-						<article
-							class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 border-l-4 {card.accent === 'text-blue-600 dark:text-blue-400' ? 'border-l-blue-500' : card.accent === 'text-green-600 dark:text-green-400' ? 'border-l-green-500' : card.accent === 'text-purple-600 dark:text-purple-400' ? 'border-l-purple-500' : 'border-l-orange-500'} rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl transition-all"
-							role="region"
-							aria-label={`${card.title}: ${card.value}${card.sub ? `, ${card.sub}` : ''}`}
-						>
-							<div class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-slate-200 mb-2 truncate">{card.title}</div>
-							<div class="text-xl sm:text-2xl md:text-3xl font-bold {card.accent} mb-1">{card.value}</div>
-							<p class="text-xs text-gray-600 dark:text-slate-400 line-clamp-2">{card.sub}</p>
-						</article>
+						<Card
+							title={card.title}
+							value={card.value}
+							sub={card.sub}
+							accent={card.accent}
+							containerClass={`border-l-4 ${getAdminBorderClass(card.accent)} p-3 sm:p-4 md:p-5`}
+						/>
 					{/each}
 				</div>
 
 				<!-- Admin Modules Quick Links -->
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 					<!-- Users Management Card -->
-					<a
+					<Card
 						href="/admin/users"
-						class="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 border-l-4 border-l-blue-500 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
-						aria-label="Gestionează Utilizatori: Vizualizează, editează și monitorizează"
+						renderCustom
+						ariaLabel="Gestionează Utilizatori: Vizualizează, editează și monitorizează"
+						containerClass="group border-l-4 border-l-blue-500 p-4 sm:p-5 md:p-6 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
 					>
 						<div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">
 							<Users class="w-16 h-16 flex-shrink-0 text-blue-600 dark:text-blue-400" />
@@ -790,13 +796,14 @@
 						</div>
 						<h3 class="text-base sm:text-lg font-bold text-blue-800 dark:text-blue-200 mb-1">Utilizatori</h3>
 						<p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">Vizualizează, editează și monitorizează conturi</p>
-					</a>
+					</Card>
 
 					<!-- Reports Card -->
-					<a
+					<Card
 						href="/admin/reports"
-						class="group bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 border-l-4 border-l-emerald-500 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
-						aria-label="Rapoarte: Overview și rapoarte detaliate"
+						renderCustom
+						ariaLabel="Rapoarte: Overview și rapoarte detaliate"
+						containerClass="group border-l-4 border-l-emerald-500 p-4 sm:p-5 md:p-6 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
 					>
 						<div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">
 							<BarChart3 class="w-16 h-16 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
@@ -804,7 +811,7 @@
 						</div>
 						<h3 class="text-base sm:text-lg font-bold text-emerald-800 dark:text-emerald-200 mb-1">Rapoarte</h3>
 						<p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">Overview și analize detaliate sistem</p>
-					</a>
+					</Card>
 				</div>
 
 				<!-- 2-Column Layout for Content Sections -->
@@ -812,7 +819,7 @@
 					<!-- Left Column -->
 					<div class="space-y-6">
 						<!-- Users by Role -->
-						<section class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden">
 							<div class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
 								<div>
 									<h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2"><User class="w-5 h-5" /> Utilizatori după Rol</h2>
@@ -866,10 +873,10 @@
 									</div>
 								{/if}
 							</div>
-						</section>
+						</Card>
 
 						<!-- Collaborations -->
-						<div class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
 								<div>
 									<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Users class="w-5 h-5" /> Status Colaborări</h2>
@@ -936,9 +943,9 @@
 									</div>
 								{/if}
 							</div>
-						</div>
+						</Card>
 						<!-- 7-Day Adherence Chart -->
-						<div class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700">
 								<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Calendar class="w-5 h-5" /> Conformitate - 7 zile</h2>
 							</div>
@@ -959,13 +966,13 @@
 									</div>
 								{/if}
 							</div>
-						</div>
+						</Card>
 					</div>
 
 					<!-- Right Column -->
 					<div class="space-y-6">
 						<!-- Treatments -->
-						<div class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
 								<div>
 									<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><Pill class="w-5 h-5" /> Tratamente</h2>
@@ -997,10 +1004,10 @@
 									</div>
 								{/if}
 							</div>
-						</div>
+						</Card>
 
 						<!-- 30-Day Adherence Chart -->
-						<div class="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg overflow-hidden">
+						<Card renderCustom containerClass="p-0 overflow-hidden">
 							<div class="p-6 border-b border-slate-200 dark:border-slate-700">
 								<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2"><TrendingUp class="w-5 h-5" /> Conformitate - 30 zile</h2>
 							</div>
@@ -1021,7 +1028,7 @@
 									</div>
 								{/if}
 							</div>
-						</div>
+						</Card>
 					</div>
 				</div>
 			</div>
@@ -1097,7 +1104,7 @@
 
 	<!-- Streak Loss Penalty Alert -->
 	{#if streakBroken}
-		<div class="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-l-4 border-l-red-600 dark:border-l-red-400 border border-red-200 dark:border-red-800 rounded-lg p-4 md:p-5 animate-pulse-alert">
+		<Card renderCustom unstyled containerClass="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-l-4 border-l-red-600 dark:border-l-red-400 border border-red-200 dark:border-red-800 rounded-lg p-4 md:p-5 animate-pulse-alert">
 			<div class="flex items-start gap-4">
 				<div class="flex-shrink-0 mt-0.5">
 					<div class="w-8 h-8 rounded-full bg-red-600 dark:bg-red-500 flex items-center justify-center text-white font-bold text-sm">−</div>
@@ -1112,10 +1119,10 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</Card>
 	{:else if countdownStatus === 'critical'}
 		<!-- Critical Warning -->
-		<div class="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-l-4 border-l-orange-600 dark:border-l-orange-400 border border-orange-200 dark:border-orange-800 rounded-lg p-4 md:p-5 animate-pulse">
+		<Card renderCustom unstyled containerClass="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-l-4 border-l-orange-600 dark:border-l-orange-400 border border-orange-200 dark:border-orange-800 rounded-lg p-4 md:p-5 animate-pulse">
 			<div class="flex items-start gap-3">
 				<div class="flex-shrink-0">
 					<AlertTriangle class="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5" />
@@ -1127,7 +1134,7 @@
 					</p>
 				</div>
 			</div>
-		</div>
+		</Card>
 	{/if}
 
 	<!-- Medications List -->
@@ -1153,7 +1160,7 @@
 		{#each patientCards as card, idx}
 			{#if idx === 0}
 				<!-- Conformitate card -->
-				<div class="sm:col-span-2 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-lg p-6 flex flex-col h-full">
+				<Card renderCustom containerClass="sm:col-span-2 p-6">
 					<div class="flex items-center justify-between mb-3">
 						<h3 class="font-semibold text-gray-700 dark:text-slate-300 text-sm">{card.title}</h3>
 						{#if adherenceHistory.length >= 2}
@@ -1208,11 +1215,11 @@
 							</div>
 						</div>
 					</div>
-				</div>
+				</Card>
 			{:else}
 				{#if card.nextDose}
 					<!-- Combined Today + Next Dose card -->
-					<div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 rounded-xl p-4 md:p-5 shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl transition h-full flex flex-col justify-between">
+					<Card renderCustom containerClass="p-4 md:p-5">
 						<div>
 							<p class="text-sm text-gray-700 dark:text-slate-300 mb-1">{card.title}</p>
 							<p class={`text-2xl md:text-3xl font-bold ${card.accent}`}>{card.value}</p>
@@ -1222,7 +1229,7 @@
 							<p class="text-xs text-gray-500 dark:text-slate-400 mb-1">Următoarea doză</p>
 							<p class="text-sm font-semibold text-blue-600 dark:text-blue-400">{card.nextDose}</p>
 						</div>
-					</div>
+					</Card>
 				{:else}
 					<Card title={card.title} value={card.value} sub={card.sub} accent={card.accent} ariaLabel={card.ariaLabel} />
 				{/if}

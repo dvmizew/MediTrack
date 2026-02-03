@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { adminReportsApi } from '$lib/api/client';
+	import Card from '$lib/components/Card.svelte';
 	import { User } from '@lucide/svelte';
 	import { authStore } from '$lib/stores/auth';
 
@@ -50,12 +51,12 @@
 			<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
 		</div>
 	{:else if error}
-		<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg">
+		<Card renderCustom unstyled containerClass="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg">
 			{error}
-		</div>
+		</Card>
 	{:else if report}
 		<div class="grid gap-4 md:grid-cols-3">
-			<div class="md:col-span-2 bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-5 space-y-3">
+			<Card renderCustom unstyled containerClass="md:col-span-2 bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-5 space-y-3">
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Profil</h2>
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-800 dark:text-slate-200">
 					<p><span class="font-semibold">Nume: </span>{report.user.full_name || 'N/A'}</p>
@@ -64,17 +65,17 @@
 					<p><span class="font-semibold">Status: </span>{report.user.is_active ? 'Activ' : 'Inactiv'}</p>
 					<p><span class="font-semibold">Creat: </span>{fmtDate(report.user.created_at)}</p>
 				</div>
-			</div>
-			<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-5 space-y-2">
+			</Card>
+			<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-5 space-y-2">
 				<h3 class="text-sm font-semibold text-gray-700 dark:text-slate-300">Aderență</h3>
 				<p class="text-sm text-gray-700 dark:text-slate-200">XP: {report.stats?.nivel_xp ?? 0}</p>
 				<p class="text-sm text-gray-700 dark:text-slate-200">Streak curent: {report.stats?.current_streak ?? 0}</p>
 				<p class="text-sm text-gray-700 dark:text-slate-200">Streak maxim: {report.stats?.longest_streak ?? 0}</p>
 				<p class="text-sm text-gray-700 dark:text-slate-200">Badge: {report.stats?.current_badge ?? 'N/A'}</p>
-			</div>
+			</Card>
 		</div>
 
-		<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-5 space-y-3">
+		<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-5 space-y-3">
 			<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Planuri de tratament</h2>
 			{#if report.treatments.length === 0}
 				<p class="text-sm text-gray-700 dark:text-slate-300">Nu există planuri active.</p>
@@ -100,9 +101,9 @@
 					</table>
 				</div>
 			{/if}
-		</div>
+		</Card>
 
-		<div class="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-5 space-y-3">
+		<Card renderCustom unstyled containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl p-5 space-y-3">
 			<h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Confirmări doze (ultimele 100)</h2>
 			{#if report.confirmations.length === 0}
 				<p class="text-sm text-gray-700 dark:text-slate-300">Nu există confirmări.</p>
@@ -128,6 +129,6 @@
 					</table>
 				</div>
 			{/if}
-		</div>
+		</Card>
 	{/if}
 </main>

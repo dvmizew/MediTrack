@@ -6,6 +6,7 @@
 	import { api } from '$lib/api/client';
 	import { ArrowLeft, CalendarDays, Pencil, Pill, Plus, Trash2 } from '@lucide/svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import Card from '$lib/components/Card.svelte';
 
 	const planIdParam = $derived($page.params.planId ?? '0');
 	let planId = $derived(parseInt(planIdParam, 10));
@@ -393,7 +394,7 @@
 			</div>
 		{:else if treatment}
 			<!-- Treatment Header -->
-			<div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 sm:p-6 mb-6">
+			<Card renderCustom unstyled containerClass="mb-6">
 				<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
 					<div class="flex-1 min-w-0">
 						<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-2 break-words">{treatment.diagnosis}</h1>
@@ -453,10 +454,10 @@
 						<p class="font-semibold text-gray-900 dark:text-slate-100">{formatDate(treatment.createdAt)}</p>
 					</div>
 				</div>
-			</div>
+			</Card>
 
 			<!-- Medications Section -->
-			<div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 sm:p-6">
+			<Card renderCustom unstyled containerClass="">
 				<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
 					<h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 						<Pill class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
@@ -532,7 +533,7 @@
 						{/each}
 					</div>
 				{/if}
-			</div>
+			</Card>
 		{/if}
 	</main>
 {/if}
