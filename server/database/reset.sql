@@ -2,6 +2,7 @@
 -- This script drops all tables, types, and functions, then recreates everything
 
 -- Drop all tables (in reverse dependency order)
+DROP TABLE IF EXISTS push_subscriptions CASCADE;
 DROP TABLE IF EXISTS report_jobs CASCADE;
 DROP TABLE IF EXISTS notifications CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
@@ -28,6 +29,3 @@ DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 
 -- Now recreate everything from init.sql
 \i init.sql
-
--- Load sample data
-\i sample-data.sql

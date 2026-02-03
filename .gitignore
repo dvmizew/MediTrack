@@ -24,6 +24,21 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 /server/reports
+/server/logs
+/server/artifacts
+
+# Test outputs & results
+/tests/results
+/tests/coverage
+/tests/reports
+playwright-report
+coverage
+
+# Build & temp outputs
+/results
+/outputs
+/artifacts
+/temp
 
 /docs
 localhost.pem

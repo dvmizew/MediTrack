@@ -119,9 +119,9 @@ router.get('/overview', authenticate, authorize('admin'), async (req: Request, r
 
     res.json({
       users: {
-        byRole: usersByRole.rows,
-        active: usersActive.rows[0]?.active ?? 0,
-        inactive: usersActive.rows[0]?.inactive ?? 0,
+        byRole: usersByRoleResult.rows,
+        active: usersActiveResult.rows[0]?.active ?? 0,
+        inactive: usersActiveResult.rows[0]?.inactive ?? 0,
       },
       collaborations: collabCounts.rows,
       treatments: {

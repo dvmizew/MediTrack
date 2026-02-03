@@ -145,6 +145,20 @@ npm run dev
 docker exec -i meditrack-db psql -U meditrack -d meditrack < server/database/init.sql
 ```
 
+### Database Setup Flow
+```bash
+# Fresh setup (automatic via setup.sh)
+docker compose up -d
+docker exec -i meditrack-db psql -U meditrack -d meditrack < server/database/init.sql
+docker exec -i meditrack-db psql -U meditrack -d meditrack < server/database/indexes.sql
+
+# Reset existing database
+docker exec -i meditrack-db psql -U meditrack -d meditrack < server/database/reset.sql
+
+# Access database directly
+docker exec -it meditrack-db psql -U meditrack -d meditrack
+```
+
 ## Test Credentials
 **Admin:**
 - email: admin@meditrack.com
@@ -154,11 +168,69 @@ docker exec -i meditrack-db psql -U meditrack -d meditrack < server/database/ini
 - dr.ionescu@meditrack.com
 - dr.popescu@meditrack.com
 - dr.radu@meditrack.com
+- dr.stefan@meditrack.com
+- dr.ana@meditrack.com
+- dr.maria@meditrack.com
 
 **Sample Patients** (all with password: pacient123):
-- ion.vasile@example.com
-- ana.mihai@example.com
-- george.popa@example.com
+- ion.vasile@example.com (XP: 150, Badge: Bronze)
+- ana.mihai@example.com (XP: 420, Badge: Bronze)
+- george.popa@example.com (XP: 875, Badge: Silver)
+- maria.gheorghe@example.com (XP: 1650, Badge: Gold)
+- radu.ionescu@example.com (XP: 1875, Badge: Gold)
+- mihai.petre@example.com (XP: 2100, Badge: Gold)
+- alexandra.tudor@example.com (XP: 3200, Badge: Platinum)
+- dimitri.vasile@example.com (XP: 5800, Badge: Diamond)
+
+## Demo Data Details
+
+### Relationships (9 Total)
+| Patient | Doctor | Status |
+|---------|--------|--------|
+| ion.vasile@example.com | dr.ionescu@meditrack.com | Accepted |
+| ion.vasile@example.com | dr.popescu@meditrack.com | Pending |
+| ana.mihai@example.com | dr.ionescu@meditrack.com | Accepted |
+| george.popa@example.com | dr.radu@meditrack.com | Accepted |
+| maria.gheorghe@example.com | dr.stefan@meditrack.com | Accepted |
+| radu.ionescu@example.com | dr.stefan@meditrack.com | Accepted |
+| mihai.petre@example.com | dr.ana@meditrack.com | Accepted |
+| alexandra.tudor@example.com | dr.ana@meditrack.com | Accepted |
+| dimitri.vasile@example.com | dr.maria@meditrack.com | Accepted |
+
+### Treatment Plans (7 Total)
+| Patient | Doctor | Diagnosis | Start | End |
+|---------|--------|-----------|-------|-----|
+| ion.vasile@example.com | dr.ionescu@meditrack.com | Hypertension | 2026-01-15 | 2026-04-15 |
+| ana.mihai@example.com | dr.ionescu@meditrack.com | Type 2 Diabetes | 2026-01-20 | 2026-07-20 |
+| george.popa@example.com | dr.radu@meditrack.com | Asthma | 2026-02-01 | 2026-08-01 |
+| maria.gheorghe@example.com | dr.stefan@meditrack.com | Depression | 2026-01-25 | 2026-04-25 |
+| radu.ionescu@example.com | dr.stefan@meditrack.com | Anxiety Disorder | 2025-12-01 | 2026-06-01 |
+| mihai.petre@example.com | dr.ana@meditrack.com | Cholesterol | 2026-02-03 | 2026-05-03 |
+| alexandra.tudor@example.com | dr.ana@meditrack.com | ADHD | 2026-01-10 | 2026-12-10 |
+
+### Treatment Doses (8 Total)
+- **ion.vasile**: Amlodipine 5mg - Morning (08:00) & Evening (20:00)
+- **ana.mihai**: Metformin 500mg - Before meals (3x daily)
+- **george.popa**: Salbutamol inhaler - As needed
+- **maria.gheorghe**: Sertraline 50mg - Morning (08:00)
+- **radu.ionescu**: Lorazepam 1mg - Morning & Evening
+- **mihai.petre**: Atorvastatin 20mg - Evening (20:00)
+- **alexandra.tudor**: Methylphenidate 10mg - Morning (07:30)
+- **dimitri.vasile**: Lisinopril 10mg - Morning (08:00)
+
+### Chat Messages (5 Total)
+- dr.ionescu → ion.vasile: "How are you feeling with the new medication?"
+- ion.vasile → dr.ionescu: "Much better, thanks for checking"
+- dr.radu → george.popa: "Remember to check your blood pressure daily"
+- george.popa → dr.radu: "Will do, already tracking it"
+- dr.ana → alexandra.tudor: "See you at the next appointment on Friday"
+
+### Notifications (5 Total)
+- Reminder: Dose for ion.vasile (Amlodipine 5mg at 08:00)
+- Alert: High XP bonus available for dimitri.vasile
+- Chat: New message from dr.ionescu to ion.vasile
+- Invite: dr.popescu invited ion.vasile to treatment
+- Treatment Update: Treatment plan updated for ana.mihai
 
 ## Environment Variables
 All required variables have defaults in `.env.example` that work with `docker-compose.yml`:
@@ -224,16 +296,51 @@ Optional (leave empty to skip):
 
 ## Development Notes
 
-### Database Schema
-- **Users**: Core user data, authentication, MFA
-- **Patient Profiles**: XP, streaks, badges
-- **Doctor-Patient**: M:N relationship with invitation status
-- **Treatment Plans**: Medication schedules with soft delete
-- **Treatment Doses**: Individual dose instances with confirmations
-- **Dose Confirmations**: Patient-logged dose data with XP earned
-- **Messages**: Chat history with read/unread status
-- **Notifications**: Multi-type notification system
-- **Push Subscriptions**: Web Push endpoint storage
+### Database Schema (11 Tables)
+
+#### Core Entities
+- **users**: Authentication, roles (admin/medic/pacient), email, password hash, Google OAuth, MFA config
+- **patient_profiles**: Gamification data (XP, current/longest streak, badge level, total progress)
+- **doctor_patient**: Doctor-patient relationships with invitation workflow (pending/accepted/rejected)
+- **mfa_attempts**: Security tracking for failed MFA attempts
+
+#### Treatment Management
+- **treatment_plans**: Medication plans created by doctors (diagnosis, start/end dates, soft delete support)
+- **treatment_doses**: Individual doses with schedule info (medication name, details, timing, status)
+- **dose_confirmations**: Patient-confirmed doses with results and XP earned (for gamification)
+
+#### Communication
+- **messages**: Real-time chat between doctors and patients (content, read/unread status, timestamps)
+- **notifications**: System notifications (reminders, alerts, chat messages, invites, treatment updates)
+
+#### Infrastructure
+- **push_subscriptions**: Web Push notification endpoints (VAPID-based)
+- **report_jobs**: Async report generation queue with job status tracking
+
+#### Enums & Types
+- **user_role**: admin | medic | pacient
+- **badge_type**: bronze | silver | gold | platinum | diamond
+- **invite_status**: pending | accepted | rejected
+- **dose_status**: pending | confirmed | missed | snoozed
+- **notification_type**: reminder | alert | chat | invite | treatment_update
+- **notification_status**: unread | read
+- **report_type**: users | treatments | doses
+- **job_status**: pending | processing | completed | failed
+
+#### Demo Data (Auto-loaded)
+- **Users**: 15 total (1 admin, 6 doctors, 8 patients)
+- **Patient Profiles**: 8 patients with XP range 150–5,800 across all badge tiers
+  - 2 Bronze (150, 420 XP)
+  - 1 Silver (875 XP)
+  - 3 Gold (1,650–2,100 XP)
+  - 1 Platinum (3,200 XP)
+  - 1 Diamond (5,800 XP)
+- **Doctor-Patient Relationships**: 9 relationships (8 accepted, 1 pending invitation)
+- **Treatment Plans**: 7 plans with realistic diagnoses
+- **Treatment Doses**: 8 doses with scheduled timing
+- **Dose Confirmations**: 1 confirmed dose with XP tracking
+- **Messages**: 5 chat messages between doctors and patients
+- **Notifications**: 5 notifications (reminders, alerts, chat, invites)
 
 ### Performance Optimizations
 - Database indexes on foreign keys and frequently queried columns
