@@ -142,7 +142,6 @@ router.get('/conversations', authenticate, async (req: Request, res: Response) =
       `SELECT DISTINCT ON (other_user_id)
               other_user_id,
               other_user_name,
-              other_user_avatar,
               other_user_role,
               last_message,
               last_message_time,
@@ -170,7 +169,6 @@ router.get('/conversations', authenticate, async (req: Request, res: Response) =
     res.json(result.rows.map((c: any) => ({
       otherUserId: c.other_user_id,
       otherUserName: c.other_user_name,
-      otherUserAvatar: c.other_user_avatar,
       otherUserRole: c.other_user_role,
       lastMessage: c.last_message,
       lastMessageTime: c.last_message_time,

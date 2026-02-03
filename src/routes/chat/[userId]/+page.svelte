@@ -439,7 +439,6 @@
 								onclick={() => viewProfile()}
 								class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 hover:bg-white/10 dark:hover:bg-black/20 rounded-xl p-1.5 sm:p-2 transition-all duration-200"
 							>
-								<!-- Avatar with online status -->
 								<div class="relative flex-shrink-0">
 									<div class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-lg ring-2 ring-white/50">
 										<span class="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-br from-blue-600 to-purple-600 bg-clip-text text-transparent">

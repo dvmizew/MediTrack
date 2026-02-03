@@ -133,7 +133,6 @@
 						>
 							<div class="flex items-center justify-between gap-2 sm:gap-4">
 								<div class="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-									<!-- Avatar with online status indicator -->
 									<div class="relative flex-shrink-0">
 										<div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-md sm:group-hover:scale-110 transition-transform duration-300">
 											{collab.name?.charAt(0).toUpperCase() || '?'}
