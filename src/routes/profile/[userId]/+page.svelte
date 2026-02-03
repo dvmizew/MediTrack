@@ -5,6 +5,7 @@
 	import { api } from '$lib/api/client';
 	import { authStore } from '$lib/stores/auth';
 	import Card from '$lib/components/Card.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 	import { AlertCircle, ArrowLeft, MessageCircle, Info, Star, TrendingUp, Award, CheckCircle2 } from '@lucide/svelte';
 
 	let userId = $derived($page.params.userId);
@@ -97,7 +98,7 @@
 		</div>
 	{:else if error}
 		<div class="max-w-md mx-auto">
-			<Card renderCustom unstyled containerClass="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+			<Alert containerClass="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
 				<div class="w-16 h-16 mx-auto mb-4 text-red-500">
 					<AlertCircle class="w-full h-full" />
 				</div>
@@ -109,7 +110,7 @@
 				>
 					Înapoi la chat
 				</button>
-			</Card>
+			</Alert>
 		</div>
 	{:else if user}
 		<!-- Back Button -->

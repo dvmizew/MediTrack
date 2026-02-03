@@ -5,6 +5,7 @@
 	import { api, adminReportsApi } from '$lib/api/client';
 	import { toast } from '$lib/utils/toast';
 	import Card from '$lib/components/Card.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 	import type { Collaboration, AdminOverview } from '$lib/types/api';
 	import {
 		AlertCircle,
@@ -134,10 +135,10 @@
 		</div>
 
 		{#if error}
-			<Card renderCustom unstyled containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 mb-6 flex items-start gap-3 animate-shake">
+			<Alert containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 mb-6 flex items-start gap-3 animate-shake">
 				<AlertCircle class="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
 				<p class="text-sm sm:text-base text-red-800 dark:text-red-400 font-medium">{error}</p>
-			</Card>
+			</Alert>
 		{/if}
 
 		{#if isAdmin}

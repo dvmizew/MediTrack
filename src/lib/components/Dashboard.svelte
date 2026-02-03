@@ -742,16 +742,27 @@
 				<ActionButton href={action.href} label={action.label} description={action.description} icon={action.icon} iconBg={action.iconBg} iconColor={action.iconColor} borderHover={action.borderHover} />
 			{/each}
 		</div>
-
 		<!-- Patients List -->
-		<PatientsList {loading} {patients} onView={viewPatient}>
-			<button slot="actions" onclick={() => goto('/collaborations')} class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Vezi toți →</button>
-		</PatientsList>
+		{#snippet patientsActions()}
+			<button onclick={() => goto('/collaborations')} class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Vezi toți →</button>
+		{/snippet}
+		<PatientsList 
+			{loading} 
+			{patients} 
+			onView={viewPatient}
+			actions={patientsActions}
+		/>
 
 		<!-- Recent Treatments -->
-		<TreatmentsList {loading} {treatments} onView={viewTreatment}>
-			<button slot="actions" onclick={() => goto('/treatments')} class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Vezi toate →</button>
-		</TreatmentsList>
+		{#snippet treatmentsActions()}
+			<button onclick={() => goto('/treatments')} class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Vezi toate →</button>
+		{/snippet}
+		<TreatmentsList 
+			{loading} 
+			{treatments} 
+			onView={viewTreatment}
+			actions={treatmentsActions}
+		/>
 	</div>
 {:else if isAdmin}
 	<!-- Admin Dashboard -->

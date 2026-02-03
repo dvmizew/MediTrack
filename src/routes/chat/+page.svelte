@@ -4,6 +4,7 @@
 	import { authStore } from '$lib/stores/auth';
 	import { api } from '$lib/api/client';
 	import Card from '$lib/components/Card.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 	import { ChevronRight, Stethoscope, User, AlertCircle, MessageCircle } from '@lucide/svelte';
 	import { loadCollaborations as loadCollabs } from '$lib/utils/loaders';
 
@@ -101,10 +102,10 @@
 					<div class="animate-spin rounded-full h-10 w-10 sm:h-14 sm:w-14 border-3 sm:border-4 border-blue-600 border-t-transparent shadow-lg shadow-blue-500/50"></div>
 				</div>
 			{:else if error}
-				<Card renderCustom unstyled containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 flex items-start gap-3 animate-shake">
+				<Alert containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 flex items-start gap-3 animate-shake">
 					<AlertCircle class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
 					<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
-				</Card>
+				</Alert>
 			{:else if collaborations.length === 0}
 				<Card renderCustom unstyled containerClass="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 dark:shadow-lg p-8 sm:p-12 md:p-16 text-center animate-scale-in">
 					<div class="max-w-sm mx-auto">

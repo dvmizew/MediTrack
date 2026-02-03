@@ -6,6 +6,7 @@
 	import { BADGES, getBadgeMeta } from '$lib/constants/badges';
 	import { toast } from '$lib/utils/toast';
 	import Card from '$lib/components/Card.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 	import { User, Lock, Bell, BarChart3, Loader, CheckCircle2, Info, AlertTriangle, Trash2, Star, X, XCircle, Copy, Download, RotateCcw, Shield, Key, Zap, Cookie } from '@lucide/svelte';
 	import {
 		subscribeToPush,
@@ -781,10 +782,10 @@
 									</div>
 								</div>
 								{#if mfaError}
-									<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg animate-shake">
+									<Alert containerClass="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg animate-shake">
 										<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-											<p id="mfa-error-setup" class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
-									</div>
+										<p id="mfa-error-setup" class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
+									</Alert>
 								{/if}
 								<div class="flex gap-3">
 									<button 
@@ -898,7 +899,7 @@
 							</div>
 
 							<!-- Permission Status -->
-							<div class="p-4 rounded-lg border {pushPermission === 'granted' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : pushPermission === 'denied' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'}">
+							<Alert containerClass="p-4 rounded-lg border {pushPermission === 'granted' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : pushPermission === 'denied' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'}">
 								<div class="flex items-start gap-3">
 									{#if pushPermission === 'granted'}
 										<CheckCircle2 class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
@@ -920,7 +921,7 @@
 										</div>
 									{/if}
 								</div>
-							</div>
+							</Alert>
 
 							<!-- Subscription Toggle -->
 							<div class="flex items-center justify-between p-4 bg-white/70 dark:bg-slate-800/60 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
@@ -1234,10 +1235,10 @@
 			/>
 		</div>
 		{#if mfaError}
-			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+			<Alert containerClass="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
 				<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
 				<p id="mfa-error-regenerate" class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
-			</div>
+			</Alert>
 		{/if}
 	</div>
 </Modal>
@@ -1275,10 +1276,10 @@
 			/>
 		</div>
 		{#if disableMfaModal.data.error}
-			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+			<Alert containerClass="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
 				<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
 				<p id="mfa-error-disable" class="text-sm text-red-700 dark:text-red-300">{disableMfaModal.data.error}</p>
-			</div>
+			</Alert>
 		{/if}
 	</div>
 </Modal>
@@ -1298,7 +1299,7 @@
 	onClose={closeDeleteAccountDialog}
 >
 	<div class="space-y-4">
-		<div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+		<Alert containerClass="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
 			<div class="flex items-start gap-3">
 				<AlertTriangle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
 				<div class="text-sm text-red-900 dark:text-red-100">
@@ -1313,7 +1314,7 @@
 					</ul>
 				</div>
 			</div>
-		</div>
+		</Alert>
 
 		<p class="text-sm text-gray-600 dark:text-slate-400">
 			Pentru confirmare, introdu parola ta:
@@ -1335,10 +1336,10 @@
 		</div>
 		
 		{#if deleteAccountModal.data.error}
-			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+			<Alert containerClass="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
 				<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
 				<p id="delete-account-error" class="text-sm text-red-700 dark:text-red-300">{deleteAccountModal.data.error}</p>
-			</div>
+			</Alert>
 		{/if}
 	</div>
 </Modal>

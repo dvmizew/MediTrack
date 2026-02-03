@@ -5,6 +5,7 @@
 	import { authStore } from '$lib/stores/auth';
 	import { toast } from '$lib/utils/toast';
 	import Card from '$lib/components/Card.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 	import { BarChart3, FileText, Users, Pill, CheckCircle2, Zap, Check } from '@lucide/svelte';
 	import { createPieChart, createBarChart, createLineChart } from '$lib/utils/charts';
 
@@ -140,9 +141,9 @@
 			<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
 		</div>
 	{:else if error}
-		<Card renderCustom unstyled containerClass="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg">
+		<Alert containerClass="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg">
 			{error}
-		</Card>
+		</Alert>
 	{:else if overview}
 		<!-- Charts Row -->
 		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

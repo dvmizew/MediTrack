@@ -6,6 +6,7 @@
 	import { toast } from '$lib/utils/toast';
 	import { downloadBlobAsFile } from '$lib/utils/charts';
 	import Card from '$lib/components/Card.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import {
 		CheckCircle2,
@@ -292,9 +293,9 @@
 			<div class="animate-spin rounded-full h-12 w-12 border-3 border-blue-600 border-t-transparent"></div>
 		</div>
 	{:else if error && jobs.length === 0}
-		<Card renderCustom unstyled containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6">
+		<Alert containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6">
 			<p class="text-red-800 dark:text-red-400">{error}</p>
-		</Card>
+		</Alert>
 	{:else if jobs.length === 0}
 		<Card renderCustom unstyled containerClass="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-12 text-center">
 			<ClipboardList class="w-12 h-12 mx-auto mb-4 text-gray-500 dark:text-slate-400" />

@@ -6,6 +6,7 @@
 	import { api, adminReportsApi } from '$lib/api/client';
 	import Modal from '$lib/components/Modal.svelte';
 	import Card from '$lib/components/Card.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 	import type { Treatment, Collaboration, AdminOverview } from '$lib/types/api';
 	import {
 		AlertCircle,
@@ -170,10 +171,14 @@
 		</div>
 
 		{#if error}
-			<Card renderCustom unstyled containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 mb-6 flex items-start gap-3 animate-shake" role="alert" ariaLive="assertive">
+			<Alert
+				containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 mb-6 flex items-start gap-3 animate-shake"
+				role="alert"
+				ariaLive="assertive"
+			>
 				<AlertCircle class="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
 				<p class="text-sm sm:text-base text-red-800 dark:text-red-400 font-medium">{error}</p>
-			</Card>
+			</Alert>
 		{/if}
 
 		{#if isAdmin}
@@ -351,10 +356,10 @@
 					<div class="animate-spin rounded-full h-14 w-14 border-4 border-blue-600 border-t-transparent"></div>
 				</div>
 			{:else if error}
-				<Card renderCustom unstyled containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6 flex items-start gap-3 animate-shake">
+				<Alert containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6 flex items-start gap-3 animate-shake">
 					<AlertCircle class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
 					<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
-				</Card>
+				</Alert>
 			{:else if treatments.length === 0}
 				<Card renderCustom containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-2xl shadow-sm p-16 text-center animate-scale-in">
 					<div class="max-w-sm mx-auto">
@@ -379,22 +384,22 @@
 					containerClass="bg-white/90 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 rounded-xl shadow-sm p-6 hover:shadow-lg hover:border-blue-400 dark:hover:border-blue-600 transition cursor-pointer group text-left w-full"
 					ariaLabel={`Vezi detalii pentru ${treatment.diagnosis}`}
 				>
-					<div class="flex justify-between items-start mb-4">
-						<h3 class="text-lg font-bold text-gray-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+					<div class="flex items-start gap-3 mb-4">
+						<h3 class="text-lg font-bold text-gray-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition flex-1 min-w-0">
 							{treatment.diagnosis}
 						</h3>
 						<span
-							class="px-3 py-1 text-xs font-semibold rounded-full shadow-sm"
+							class="px-3 py-1 text-xs font-semibold rounded-full shadow-sm inline-flex items-center gap-1 whitespace-nowrap flex-shrink-0"
 							class:bg-green-500={treatment.isActive}
 							class:text-white={treatment.isActive}
 							class:bg-gray-100={!treatment.isActive}
 							class:text-gray-600={!treatment.isActive}
 						>
-						{#if treatment.isActive}
-							<CheckCircle2 class="w-4 h-4 inline mr-1" />
-						{:else}
-							<PauseCircle class="w-4 h-4 inline mr-1" />
-						{/if}
+							{#if treatment.isActive}
+								<CheckCircle2 class="w-4 h-4" />
+							{:else}
+								<PauseCircle class="w-4 h-4" />
+							{/if}
 						{treatment.isActive ? 'Activ' : 'Inactiv'}
 						</span>
 					</div>

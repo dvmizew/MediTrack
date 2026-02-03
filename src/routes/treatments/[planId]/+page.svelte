@@ -7,6 +7,7 @@
 	import { ArrowLeft, CalendarDays, Pencil, Pill, Plus, Trash2 } from '@lucide/svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import Card from '$lib/components/Card.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 
 	const planIdParam = $derived($page.params.planId ?? '0');
 	let planId = $derived(parseInt(planIdParam, 10));
@@ -389,9 +390,9 @@
 				<div class="animate-spin rounded-full h-14 w-14 border-4 border-blue-600 border-t-transparent"></div>
 			</div>
 		{:else if error}
-			<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6">
+			<Alert containerClass="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6">
 				<p class="text-red-800 dark:text-red-400 font-medium">{error}</p>
-			</div>
+			</Alert>
 		{:else if treatment}
 			<!-- Treatment Header -->
 			<Card renderCustom unstyled containerClass="mb-6">
