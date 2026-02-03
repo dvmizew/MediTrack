@@ -45,10 +45,23 @@
 	import MedicationsList from '$lib/components/MedicationsList.svelte';
 	import ChartsGroup from '$lib/components/ChartsGroup.svelte';
 	import WelcomeCard from '$lib/components/WelcomeCard.svelte';
-	import type { Medication, Treatment, Collaboration, AdminOverview, Stats, MedicStats } from '$lib/types/api';
+	import type { Medication, Treatment, Collaboration, AdminOverview, Stats, MedicStats, User as ApiUser } from '$lib/types/api';
+
+	type CollaborationStat = AdminOverview['collaborations'][number];
+	type UserRoleCount = AdminOverview['users']['byRole'][number];
+	type AdherenceRecord = {
+		date: string;
+		adherenceRate?: number;
+		confirmed?: number;
+		scheduled?: number;
+	};
+	type MedicationScheduleEntry = {
+		med: Medication;
+		when: Date;
+	};
 
 	let todayMedications = $state<Medication[]>([]);
-	let adherenceHistory = $state<any[]>([]);
+	let adherenceHistory = $state<AdherenceRecord[]>([]);
 	let loading = $state(true);
 	let refreshInterval: ReturnType<typeof setInterval> | null = null;
 	let themeUnsubscribe: (() => void) | null = null;
@@ -172,8 +185,8 @@
 		},
 		{
 			title: 'Colaborări',
-			value: adminOverview.collaborations.reduce((a:any, c:any) => a + c.count, 0),
-			sub: `Acceptate ${adminOverview.collaborations.find((c:any) => c.status === 'accepted')?.count || 0}`,
+			value: adminOverview.collaborations.reduce((a, c) => a + c.count, 0),
+			sub: `Acceptate ${adminOverview.collaborations.find((c) => c.status === 'accepted')?.count || 0}`,
 			accent: 'text-green-600 dark:text-green-400'
 		},
 		{
@@ -193,7 +206,17 @@
 	// Compute total users by role for progress bar calculations
 	const totalUsersByRole = $derived.by(() => {
 		if (!adminOverview?.users?.byRole) return 0;
-		return adminOverview.users.byRole.reduce((sum: number, u: any) => sum + u.count, 0);
+		return adminOverview.users.byRole.reduce((sum: number, u: UserRoleCount) => sum + u.count, 0);
+	});
+
+	const totalCollaborations = $derived.by(() => {
+		if (!adminOverview?.collaborations) return 0;
+		return adminOverview.collaborations.reduce((sum: number, collab) => sum + collab.count, 0);
+	});
+
+	const acceptedCollaborations = $derived.by(() => {
+		if (!adminOverview?.collaborations) return 0;
+		return adminOverview.collaborations.find((c) => c.status === 'accepted')?.count ?? 0;
 	});
 	
 	// Chart references
@@ -375,9 +398,20 @@
 
 	async function refreshUserStats() {
 		try {
-			const user = await api.getProfile();
+			const user = await api.getProfile() as ApiUser & { id?: number };
 			// normalize id for authStore consumers
-			authStore.updateUser({ ...user, id: (user as any).id ?? (user as any).userId });
+			const normalizedId = user.id ?? user.userId;
+			authStore.updateUser({
+				id: normalizedId,
+				email: user.email,
+				fullName: user.fullName,
+				role: user.role,
+				avatarUrl: user.avatarUrl,
+				totalXp: user.totalXp,
+				currentStreak: user.currentStreak,
+				longestStreak: user.longestStreak,
+				currentBadge: user.currentBadge
+			});
 		} catch (error) {
 			const msg = error instanceof Error ? error.message : String(error);
 			console.error('Failed to refresh user stats:', msg);
@@ -391,14 +425,14 @@
 			
 			// Fallback: if no meds returned, load from active treatment plans
 			if (!data || data.length === 0) {
-				const plans = await api.getTreatments();
+				const plans = await api.getTreatments() as Treatment[];
 				const medsByPlan = await Promise.all(
-					(plans || []).map((plan: any) => api.getMedicationsForPlan(plan.planId))
+					plans.map((plan) => api.getMedicationsForPlan(plan.planId))
 				);
 				data = medsByPlan
 					.flat()
-					.filter((m: any) => m && m.isActive !== false)
-					.filter((m: any) => {
+					.filter((m): m is Medication => Boolean(m) && m.isActive !== false)
+					.filter((m) => {
 						const start = m.startDate ? new Date(m.startDate) : null;
 						const end = m.endDate ? new Date(m.endDate) : null;
 						const afterStart = !start || start <= today;
@@ -410,8 +444,8 @@
 			todayMedications = data;
 			
 			// Load historical adherence data
-			const history = await api.getMedicationHistoryAdherence(7);
-			adherenceHistory = history.sort((a: any, b: any) => 
+			const history = await api.getMedicationHistoryAdherence(7) as AdherenceRecord[];
+			adherenceHistory = history.sort((a, b) => 
 				new Date(a.date).getTime() - new Date(b.date).getTime()
 			);
 			
@@ -447,13 +481,13 @@
 		const enriched = todayMedications
 			.filter((m) => !isMedicationTaken(m))
 			.map((m) => ({ med: m, when: getMedicationScheduledTime(m, now) }))
-			.filter((x) => x.when instanceof Date) as Array<{ med: any; when: Date }>;
+			.filter((x): x is MedicationScheduleEntry => x.when instanceof Date);
 
 		enriched.sort((a, b) => a.when.getTime() - b.when.getTime());
 
 		const upcomingEntry = enriched.find((x) => x.when.getTime() >= now.getTime()) || null;
 
-		let latestOverdueEntry: { med: any; when: Date } | null = null;
+		let latestOverdueEntry: MedicationScheduleEntry | null = null;
 		if (!upcomingEntry) {
 			const past = enriched.filter((x) => x.when.getTime() < now.getTime());
 			past.sort((a, b) => b.when.getTime() - a.when.getTime());
@@ -483,12 +517,12 @@
 			overdue,
 			snoozed,
 			upcomingLabel: countdownLabel,
-			weeklyAdherence: adherenceHistory.length > 0 ? Math.round(adherenceHistory.reduce((sum: number, d: any) => sum + (d.adherenceRate || 0), 0) / adherenceHistory.length) : (total ? Math.round((taken / total) * 100) : 0)
+			weeklyAdherence: adherenceHistory.length > 0 ? Math.round(adherenceHistory.reduce((sum: number, d) => sum + (d.adherenceRate ?? 0), 0) / adherenceHistory.length) : (total ? Math.round((taken / total) * 100) : 0)
 		};
 	}
 
 	// Countdown state and helpers
-	let nextDose = $state<any | null>(null);
+	let nextDose = $state<Medication | null>(null);
 	let countdownLabel = $state('Nicio doză programată');
 	let countdownText = $state('--:--:--');
 	let countdownTotalSeconds = $state(0);
@@ -571,7 +605,7 @@
 		}
 	}
 
-	async function confirmMedication(medication: any) {
+	async function confirmMedication(medication: Medication) {
 		try {
 			await api.confirmMedication({
 				doseId: medication.doseId,
@@ -585,7 +619,7 @@
 		}
 	}
 
-	async function snoozeMedication(medication: any) {
+	async function snoozeMedication(medication: Medication) {
 		try {
 			await api.snoozeMedication({
 				doseId: medication.doseId,
@@ -610,11 +644,11 @@
 		// Always use historical 7-day data for the timeline chart when available
 		if (adherenceHistory.length > 0) {
 			return {
-				labels: adherenceHistory.map((d: any) => {
+				labels: adherenceHistory.map((d) => {
 					const date = new Date(d.date);
 					return date.toLocaleDateString('ro-RO', { month: 'short', day: 'numeric' });
 				}),
-				data: adherenceHistory.map((d: any) => d.adherenceRate || 0)
+				data: adherenceHistory.map((d) => d.adherenceRate ?? 0)
 			};
 		}
 
@@ -868,12 +902,12 @@
 											<div class="w-full bg-slate-200/70 dark:bg-slate-800 rounded-full h-2 sm:h-2.5 overflow-hidden">
 												<div 
 													class="{c.status === 'accepted' ? 'bg-gradient-to-r from-green-500 to-green-600' : c.status === 'pending' ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' : 'bg-gradient-to-r from-red-500 to-red-600'} h-full transition-all duration-500 rounded-full"
-													style="width: {adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0 ? (c.count / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100 : 0}%"
+													style="width: {totalCollaborations > 0 ? (c.count / totalCollaborations) * 100 : 0}%"
 												></div>
 											</div>
 											<div class="text-xs text-gray-700 dark:text-slate-200">
 												{#if c.status === 'accepted'}
-													{Math.round((c.count / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}% dintre relații
+													{Math.round((c.count / totalCollaborations) * 100)}% dintre relații
 												{:else if c.status === 'pending'}
 													În curs de procesare
 												{:else}
@@ -893,11 +927,11 @@
 									<div class="mt-4 pt-4 border-t border-slate-200/70 dark:border-slate-800/70 space-y-2 text-xs">
 										<div class="flex justify-between">
 											<span class="text-gray-700 dark:text-slate-300">Total colaborări:</span>
-											<span class="font-semibold text-gray-900 dark:text-slate-100">{adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)}</span>
+											<span class="font-semibold text-gray-900 dark:text-slate-100">{totalCollaborations}</span>
 										</div>
 										<div class="flex justify-between">
 											<span class="text-gray-700 dark:text-slate-300">Rata acceptare:</span>
-											<span class="font-semibold {(adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0) > 0.8 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">{Math.round(((adminOverview.collaborations.find((c: any) => c.status === 'accepted')?.count || 0) / adminOverview.collaborations.reduce((sum: any, collab: any) => sum + collab.count, 0)) * 100)}%</span>
+											<span class="font-semibold {totalCollaborations > 0 && (acceptedCollaborations / totalCollaborations) > 0.8 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">{Math.round((acceptedCollaborations / (totalCollaborations || 1)) * 100)}%</span>
 										</div>
 									</div>
 								{/if}
@@ -1101,7 +1135,7 @@
 		loading={loading}
 		medications={todayMedications}
 		isTakenFn={isMedicationTaken}
-		isSnoozedFn={(m: any) => isMedicationSnoozed(m)}
+		isSnoozedFn={(m: Medication) => isMedicationSnoozed(m)}
 		onConfirm={confirmMedication}
 		onSnooze={snoozeMedication}
 		celebrate={allDoneToday}
@@ -1110,7 +1144,7 @@
 		countdownText={countdownText}
 		countdownProgress={countdownProgress}
 		countdownStatus={countdownStatus}
-		nextDoseId={nextDose?.doseId ?? nextDose?.id ?? nextDose?.medicationId ?? null}
+		nextDoseId={nextDose?.doseId ?? null}
 		muted={streakBroken}
 	/>
 
@@ -1123,7 +1157,7 @@
 					<div class="flex items-center justify-between mb-3">
 						<h3 class="font-semibold text-gray-700 dark:text-slate-300 text-sm">{card.title}</h3>
 						{#if adherenceHistory.length >= 2}
-							{@const trend = adherenceHistory[adherenceHistory.length - 1]?.adherenceRate - adherenceHistory[0]?.adherenceRate}
+							{@const trend = (adherenceHistory[adherenceHistory.length - 1]?.adherenceRate ?? 0) - (adherenceHistory[0]?.adherenceRate ?? 0)}
 							<span class="text-xs font-medium px-2 py-1 rounded-full {trend > 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : trend < 0 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'}">
 								{#if trend > 0}↗ +{trend.toFixed(0)}%{:else if trend < 0}↘ {trend.toFixed(0)}%{:else}→ Stabil{/if}
 							</span>

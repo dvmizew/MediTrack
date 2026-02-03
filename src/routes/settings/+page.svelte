@@ -50,31 +50,43 @@
 	let mfaBackupCodes = $state<string[]>([]);
 	let mfaError = $state('');
 
+	type ModalState<T> = {
+		isOpen: boolean;
+		data: T;
+		open: () => void;
+		close: () => void;
+		setData: (newData: Partial<T>) => void;
+		reset: () => void;
+	};
+
+	type PasswordModalData = { password: string; error: string };
+	type TotpModalData = { totp: string };
+
 	// Modal factories
-	const disableMfaModal = $state({
+	const disableMfaModal = $state<ModalState<PasswordModalData>>({
 		isOpen: false,
 		data: { password: '', error: '' },
 		open() { this.isOpen = true; },
 		close() { this.isOpen = false; },
-		setData(newData: any) { this.data = { ...this.data, ...newData }; },
+		setData(newData) { this.data = { ...this.data, ...newData }; },
 		reset() { this.isOpen = false; this.data = { password: '', error: '' }; }
 	});
 
-	const deleteAccountModal = $state({
+	const deleteAccountModal = $state<ModalState<PasswordModalData>>({
 		isOpen: false,
 		data: { password: '', error: '' },
 		open() { this.isOpen = true; },
 		close() { this.isOpen = false; },
-		setData(newData: any) { this.data = { ...this.data, ...newData }; },
+		setData(newData) { this.data = { ...this.data, ...newData }; },
 		reset() { this.isOpen = false; this.data = { password: '', error: '' }; }
 	});
 
-	const regenerateModal = $state({
+	const regenerateModal = $state<ModalState<TotpModalData>>({
 		isOpen: false,
 		data: { totp: '' },
 		open() { this.isOpen = true; },
 		close() { this.isOpen = false; },
-		setData(newData: any) { this.data = { ...this.data, ...newData }; },
+		setData(newData) { this.data = { ...this.data, ...newData }; },
 		reset() { this.isOpen = false; this.data = { totp: '' }; }
 	});
 
@@ -260,7 +272,7 @@
 	];
 
 	function getTabIcon(tabId: TabType) {
-		const iconMap: Record<TabType, any> = {
+		const iconMap: Record<TabType, typeof User> = {
 			general: User,
 			security: Lock,
 			notifications: Bell,
