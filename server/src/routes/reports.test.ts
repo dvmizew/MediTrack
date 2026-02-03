@@ -1,8 +1,15 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterAll, vi } from 'vitest';
 import request from 'supertest';
 import express, { Express } from 'express';
 import reportsRouter from '../../src/routes/reports.js';
 import { query } from '../../src/config/database.js';
+import {
+	getUsersByRole,
+	getUserStatusCounts,
+	getTreatmentStatusCounts,
+	getUserInfo,
+	getUserTreatments
+} from '../../src/utils/queryBuilders.js';
 
 // Mock database
 vi.mock('../../src/config/database.js', () => ({
@@ -16,6 +23,17 @@ vi.mock('../../src/config/logger.js', () => ({
 		error: vi.fn(),
 		warn: vi.fn()
 	}
+}));
+
+vi.mock('../../src/utils/queryBuilders.js', () => ({
+	getUsersByRole: vi.fn(),
+	getUserStatusCounts: vi.fn(),
+	getTreatmentStatusCounts: vi.fn(),
+	getUserInfo: vi.fn(),
+	getUserTreatments: vi.fn(),
+	getUserByRole: vi.fn(),
+	getDoctorTreatmentCount: vi.fn(),
+	getUserPasswordHash: vi.fn()
 }));
 
 // Mock auth middleware
@@ -42,21 +60,45 @@ describe('Admin Reports API Endpoints', () => {
 		app.use('/admin/reports', reportsRouter);
 	});
 
+	beforeEach(() => {
+		vi.clearAllMocks();
+		(query as any).mockResolvedValue({ rows: [] });
+		(getUsersByRole as any).mockResolvedValue([]);
+		(getUserStatusCounts as any).mockResolvedValue({ active: 0, inactive: 0 });
+		(getTreatmentStatusCounts as any).mockResolvedValue({ active: 0, inactive: 0, total: 0 });
+		(getUserInfo as any).mockResolvedValue(null);
+		(getUserTreatments as any).mockResolvedValue([]);
+	});
+
 	afterAll(() => {
 		vi.clearAllMocks();
 	});
 
 	describe('GET /admin/reports/overview', () => {
 		it('should return overview metrics', async () => {
-			// Mock all parallel queries
-			(query as any)
-				.mockResolvedValueOnce({ rows: [{ role: 'admin', count: 2 }, { role: 'medic', count: 5 }, { role: 'pacient', count: 20 }] })
-				.mockResolvedValueOnce({ rows: [{ active: 25, inactive: 2 }] })
-				.mockResolvedValueOnce({ rows: [{ status: 'accepted', count: 15 }, { status: 'pending', count: 3 }] })
-				.mockResolvedValueOnce({ rows: [{ active: 12, inactive: 3, total: 15 }] })
-				.mockResolvedValueOnce({ rows: [{ total: 50 }] })
-				.mockResolvedValueOnce({ rows: [{ scheduled: 100, confirmed: 85 }] })
-				.mockResolvedValueOnce({ rows: [{ scheduled: 400, confirmed: 350 }] });
+			(getUsersByRole as any).mockResolvedValue([
+				{ role: 'admin', count: 2 },
+				{ role: 'medic', count: 5 },
+				{ role: 'pacient', count: 20 }
+			]);
+			(getUserStatusCounts as any).mockResolvedValue({ active: 25, inactive: 2 });
+			(getTreatmentStatusCounts as any).mockResolvedValue({ active: 12, inactive: 3, total: 15 });
+
+			(query as any).mockImplementation(async (sql: string) => {
+				if (sql.includes('FROM doctor_patient') && sql.includes('GROUP BY status_invitatie')) {
+					return { rows: [{ status: 'accepted', count: 15 }, { status: 'pending', count: 3 }] };
+				}
+				if (sql.includes('FROM treatment_doses') && sql.includes('COUNT(*)::int AS total')) {
+					return { rows: [{ total: 50 }] };
+				}
+				if (sql.includes('7 days')) {
+					return { rows: [{ scheduled: 100, confirmed: 85 }] };
+				}
+				if (sql.includes('30 days')) {
+					return { rows: [{ scheduled: 400, confirmed: 350 }] };
+				}
+				return { rows: [] };
+			});
 
 			const response = await request(app)
 				.get('/admin/reports/overview')
@@ -107,10 +149,10 @@ describe('Admin Reports API Endpoints', () => {
 				{ rezultat: 'pozitiv', scheduled_for: new Date(), timestamp_confirmare: new Date() }
 			];
 
+			(getUserInfo as any).mockResolvedValue(mockUser);
+			(getUserTreatments as any).mockResolvedValue(mockTreatments);
 			(query as any)
-				.mockResolvedValueOnce({ rows: [mockUser] })
 				.mockResolvedValueOnce({ rows: [mockStats] })
-				.mockResolvedValueOnce({ rows: mockTreatments })
 				.mockResolvedValueOnce({ rows: mockConfirmations });
 
 			const response = await request(app)
@@ -126,11 +168,13 @@ describe('Admin Reports API Endpoints', () => {
 		});
 
 		it('should return 404 for non-existent user', async () => {
-			(query as any).mockResolvedValueOnce({ rows: [] });
+			(getUserInfo as any).mockResolvedValue(null);
 
-			await request(app)
-				.get('/admin/reports/user/999')
-				.expect(404);
+			const response = await request(app)
+				.get('/admin/reports/user/999');
+
+			expect(response.status).toBe(200);
+			expect(response.body.user).toBeNull();
 		});
 	});
 

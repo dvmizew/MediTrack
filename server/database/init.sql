@@ -136,6 +136,16 @@ CREATE TABLE push_subscriptions (
     UNIQUE(user_id, endpoint)
 );
 
+-- MFA Attempts (for rate limiting and security monitoring)
+CREATE TABLE mfa_attempts (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    ip_address VARCHAR(45),
+    success BOOLEAN DEFAULT false,
+    attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    code_length INTEGER
+);
+
 -- ==================== TRIGGERS & FUNCTIONS ====================
 
 -- Trigger to auto-update updated_at
@@ -207,7 +217,365 @@ INSERT INTO users (email, password_hash, full_name, role, phone_number, date_of_
 ('diana.matei@example.com', '$2b$10$Ev6rrNO/Hxm.SPg2jMHnq.HDCWh9LYaj9FN5h.CdHpwd41tN9tBE6', 'Diana Matei', 'pacient', '+40738901234', '1993-08-14', false)
 ON CONFLICT (email) DO NOTHING;
 
--- Ensure all patients have an empty patient_profile (defaults: 0/bronze)
+-- Create patient profiles first (with defaults)
 INSERT INTO patient_profiles (patient_id)
 SELECT user_id FROM users WHERE role = 'pacient'
 ON CONFLICT (patient_id) DO NOTHING;
+
+-- Update patient profiles with realistic XP, badges, and streaks
+UPDATE patient_profiles
+SET 
+    nivel_xp = 150,
+    current_badge = 'bronze',
+    current_streak = 0,
+    longest_streak = 3
+WHERE patient_id = (SELECT user_id FROM users WHERE email = 'ion.vasile@example.com');
+
+UPDATE patient_profiles
+SET 
+    nivel_xp = 875,
+    current_badge = 'silver',
+    current_streak = 12,
+    longest_streak = 15
+WHERE patient_id = (SELECT user_id FROM users WHERE email = 'ana.mihai@example.com');
+
+UPDATE patient_profiles
+SET 
+    nivel_xp = 1650,
+    current_badge = 'gold',
+    current_streak = 8,
+    longest_streak = 22
+WHERE patient_id = (SELECT user_id FROM users WHERE email = 'george.popa@example.com');
+
+UPDATE patient_profiles
+SET 
+    nivel_xp = 3200,
+    current_badge = 'platinum',
+    current_streak = 45,
+    longest_streak = 67
+WHERE patient_id = (SELECT user_id FROM users WHERE email = 'maria.tudor@example.com');
+
+UPDATE patient_profiles
+SET 
+    nivel_xp = 5800,
+    current_badge = 'diamond',
+    current_streak = 52,
+    longest_streak = 52
+WHERE patient_id = (SELECT user_id FROM users WHERE email = 'alex.costa@example.com');
+
+UPDATE patient_profiles
+SET 
+    nivel_xp = 420,
+    current_badge = 'bronze',
+    current_streak = 5,
+    longest_streak = 8
+WHERE patient_id = (SELECT user_id FROM users WHERE email = 'elena.dumitrescu@example.com');
+
+UPDATE patient_profiles
+SET 
+    nivel_xp = 2100,
+    current_badge = 'gold',
+    current_streak = 18,
+    longest_streak = 30
+WHERE patient_id = (SELECT user_id FROM users WHERE email = 'cristian.ion@example.com');
+
+UPDATE patient_profiles
+SET 
+    nivel_xp = 1890,
+    current_badge = 'gold',
+    current_streak = 14,
+    longest_streak = 19
+WHERE patient_id = (SELECT user_id FROM users WHERE email = 'diana.matei@example.com');
+
+-- Create doctor-patient relationships
+INSERT INTO doctor_patient (doctor_id, patient_id, status_invitatie, invited_at, responded_at)
+SELECT 
+    (SELECT user_id FROM users WHERE email = 'dr.ionescu@meditrack.com'),
+    user_id,
+    'accepted',
+    CURRENT_TIMESTAMP - INTERVAL '30 days',
+    CURRENT_TIMESTAMP - INTERVAL '29 days'
+FROM users 
+WHERE email IN ('ion.vasile@example.com', 'ana.mihai@example.com', 'george.popa@example.com')
+ON CONFLICT (doctor_id, patient_id) DO UPDATE SET status_invitatie = 'accepted';
+
+INSERT INTO doctor_patient (doctor_id, patient_id, status_invitatie, invited_at, responded_at)
+SELECT 
+    (SELECT user_id FROM users WHERE email = 'dr.popescu@meditrack.com'),
+    user_id,
+    'accepted',
+    CURRENT_TIMESTAMP - INTERVAL '25 days',
+    CURRENT_TIMESTAMP - INTERVAL '24 days'
+FROM users 
+WHERE email IN ('maria.tudor@example.com', 'alex.costa@example.com')
+ON CONFLICT (doctor_id, patient_id) DO UPDATE SET status_invitatie = 'accepted';
+
+INSERT INTO doctor_patient (doctor_id, patient_id, status_invitatie, invited_at, responded_at)
+SELECT 
+    (SELECT user_id FROM users WHERE email = 'dr.radu@meditrack.com'),
+    user_id,
+    'accepted',
+    CURRENT_TIMESTAMP - INTERVAL '20 days',
+    CURRENT_TIMESTAMP - INTERVAL '19 days'
+FROM users 
+WHERE email IN ('elena.dumitrescu@example.com', 'cristian.ion@example.com', 'diana.matei@example.com')
+ON CONFLICT (doctor_id, patient_id) DO UPDATE SET status_invitatie = 'accepted';
+
+-- Pending invitations
+INSERT INTO doctor_patient (doctor_id, patient_id, status_invitatie, invited_at)
+SELECT 
+    (SELECT user_id FROM users WHERE email = 'dr.stan@meditrack.com'),
+    (SELECT user_id FROM users WHERE email = 'ion.vasile@example.com'),
+    'pending',
+    CURRENT_TIMESTAMP - INTERVAL '2 days'
+ON CONFLICT (doctor_id, patient_id) DO NOTHING;
+
+-- Create treatment plans
+INSERT INTO treatment_plans (patient_id, doctor_id, diagnoza, descriere, activ, data_creare)
+VALUES
+    (
+        (SELECT user_id FROM users WHERE email = 'ion.vasile@example.com'),
+        (SELECT user_id FROM users WHERE email = 'dr.ionescu@meditrack.com'),
+        'Hipertensiune arterială',
+        'Plan de tratament pentru controlul tensiunii arteriale. Monitorizare zilnică.',
+        true,
+        CURRENT_TIMESTAMP - INTERVAL '28 days'
+    ),
+    (
+        (SELECT user_id FROM users WHERE email = 'ana.mihai@example.com'),
+        (SELECT user_id FROM users WHERE email = 'dr.ionescu@meditrack.com'),
+        'Diabet zaharat tip 2',
+        'Control glicemie și administrare insulină. Dietă strict controlată.',
+        true,
+        CURRENT_TIMESTAMP - INTERVAL '45 days'
+    ),
+    (
+        (SELECT user_id FROM users WHERE email = 'george.popa@example.com'),
+        (SELECT user_id FROM users WHERE email = 'dr.ionescu@meditrack.com'),
+        'Astm bronșic',
+        'Tratament cu corticosteroizi inhalatori pentru control astm.',
+        true,
+        CURRENT_TIMESTAMP - INTERVAL '60 days'
+    ),
+    (
+        (SELECT user_id FROM users WHERE email = 'maria.tudor@example.com'),
+        (SELECT user_id FROM users WHERE email = 'dr.popescu@meditrack.com'),
+        'Hipotiroidism',
+        'Substituție hormonală cu levotiroxină. Control TSH lunar.',
+        true,
+        CURRENT_TIMESTAMP - INTERVAL '90 days'
+    ),
+    (
+        (SELECT user_id FROM users WHERE email = 'alex.costa@example.com'),
+        (SELECT user_id FROM users WHERE email = 'dr.popescu@meditrack.com'),
+        'Alergie sezonieră',
+        'Antihistaminice pentru control alergii. Administrare în perioada martie-iunie.',
+        true,
+        CURRENT_TIMESTAMP - INTERVAL '15 days'
+    ),
+    (
+        (SELECT user_id FROM users WHERE email = 'cristian.ion@example.com'),
+        (SELECT user_id FROM users WHERE email = 'dr.radu@meditrack.com'),
+        'Reflux gastroesofagian',
+        'Inhibitori pompă de protoni pentru protecție gastrică.',
+        true,
+        CURRENT_TIMESTAMP - INTERVAL '40 days'
+    ),
+    (
+        (SELECT user_id FROM users WHERE email = 'diana.matei@example.com'),
+        (SELECT user_id FROM users WHERE email = 'dr.radu@meditrack.com'),
+        'Migrene cronice',
+        'Plan preventiv cu beta-blocante și tratament de criză.',
+        true,
+        CURRENT_TIMESTAMP - INTERVAL '35 days'
+    )
+ON CONFLICT DO NOTHING;
+
+-- Create treatment doses for active plans
+-- Ion Vasile - Hipertensiune (2x/zi)
+INSERT INTO treatment_doses (plan_id, medication_name, detalii_medicament, cantitate, ora, start_date, end_date)
+SELECT 
+    plan_id,
+    'Losartan 50mg',
+    'Tratament pentru hipertensiune arterială',
+    '1 comprimat',
+    '08:00',
+    CURRENT_DATE,
+    CURRENT_DATE + INTERVAL '30 days'
+FROM treatment_plans tp
+WHERE tp.patient_id = (SELECT user_id FROM users WHERE email = 'ion.vasile@example.com')
+    AND tp.activ = true
+ON CONFLICT DO NOTHING;
+
+INSERT INTO treatment_doses (plan_id, medication_name, detalii_medicament, cantitate, ora, start_date, end_date)
+SELECT 
+    plan_id,
+    'Losartan 50mg',
+    'Tratament pentru hipertensiune arterială',
+    '1 comprimat',
+    '20:00',
+    CURRENT_DATE,
+    CURRENT_DATE + INTERVAL '30 days'
+FROM treatment_plans tp
+WHERE tp.patient_id = (SELECT user_id FROM users WHERE email = 'ion.vasile@example.com')
+    AND tp.activ = true
+ON CONFLICT DO NOTHING;
+
+-- Ana Mihai - Diabet (3x/zi before meals)
+INSERT INTO treatment_doses (plan_id, medication_name, detalii_medicament, cantitate, ora, start_date, end_date)
+SELECT 
+    plan_id,
+    'Metformin 850mg',
+    'Control glicemie - administrare înainte de mese',
+    '1 comprimat',
+    time_val::TIME,
+    CURRENT_DATE,
+    CURRENT_DATE + INTERVAL '60 days'
+FROM treatment_plans tp
+CROSS JOIN (VALUES ('07:30'), ('12:30'), ('19:00')) AS t(time_val)
+WHERE tp.patient_id = (SELECT user_id FROM users WHERE email = 'ana.mihai@example.com')
+    AND tp.activ = true
+ON CONFLICT DO NOTHING;
+
+-- George Popa - Astm (2x/zi)
+INSERT INTO treatment_doses (plan_id, medication_name, detalii_medicament, cantitate, ora, start_date, end_date)
+SELECT 
+    plan_id,
+    'Budesonide inhaler',
+    'Corticosteroid inhalator pentru control astm',
+    '2 inhalații',
+    time_val::TIME,
+    CURRENT_DATE,
+    CURRENT_DATE + INTERVAL '90 days'
+FROM treatment_plans tp
+CROSS JOIN (VALUES ('07:00'), ('21:00')) AS t(time_val)
+WHERE tp.patient_id = (SELECT user_id FROM users WHERE email = 'george.popa@example.com')
+    AND tp.activ = true
+ON CONFLICT DO NOTHING;
+
+-- Maria Tudor - Hipotiroidism (1x/zi dimineața)
+INSERT INTO treatment_doses (plan_id, medication_name, detalii_medicament, cantitate, ora, start_date, end_date)
+SELECT 
+    plan_id,
+    'Levotiroxină 75mcg',
+    'Substituție hormonală tiroidă',
+    '1 comprimat',
+    '06:30',
+    CURRENT_DATE,
+    CURRENT_DATE + INTERVAL '90 days'
+FROM treatment_plans tp
+WHERE tp.patient_id = (SELECT user_id FROM users WHERE email = 'maria.tudor@example.com')
+    AND tp.activ = true
+ON CONFLICT DO NOTHING;
+
+-- Note: Dose confirmations will be generated as patients take their medication
+-- Historical data would require application logic to generate scheduled doses
+
+-- Create some chat messages between doctors and patients
+INSERT INTO messages (sender_id, receiver_id, continut, timestamp_mesaj, is_read)
+VALUES
+    (
+        (SELECT user_id FROM users WHERE email = 'dr.ionescu@meditrack.com'),
+        (SELECT user_id FROM users WHERE email = 'ion.vasile@example.com'),
+        'Bună ziua! Cum vă simțiți astăzi? Tensiunea arterială este în parametri normali?',
+        CURRENT_TIMESTAMP - INTERVAL '2 hours',
+        true
+    ),
+    (
+        (SELECT user_id FROM users WHERE email = 'ion.vasile@example.com'),
+        (SELECT user_id FROM users WHERE email = 'dr.ionescu@meditrack.com'),
+        'Bună ziua, doctor! Mă simt bine, am măsurat tensiunea dimineață și era 130/85.',
+        CURRENT_TIMESTAMP - INTERVAL '1 hour 45 minutes',
+        true
+    ),
+    (
+        (SELECT user_id FROM users WHERE email = 'dr.ionescu@meditrack.com'),
+        (SELECT user_id FROM users WHERE email = 'ion.vasile@example.com'),
+        'Perfect! Continuați tratamentul la fel. Ne auzim săptămâna viitoare la control.',
+        CURRENT_TIMESTAMP - INTERVAL '1 hour 30 minutes',
+        false
+    ),
+    (
+        (SELECT user_id FROM users WHERE email = 'ana.mihai@example.com'),
+        (SELECT user_id FROM users WHERE email = 'dr.ionescu@meditrack.com'),
+        'Doctor, glicemia în jejun a fost 110 mg/dl. Este în regulă?',
+        CURRENT_TIMESTAMP - INTERVAL '3 hours',
+        true
+    ),
+    (
+        (SELECT user_id FROM users WHERE email = 'dr.ionescu@meditrack.com'),
+        (SELECT user_id FROM users WHERE email = 'ana.mihai@example.com'),
+        'Da, este un nivel bun. Continuați cu dieta și medicația. Felicitări pentru streak-ul de 12 zile! 🎉',
+        CURRENT_TIMESTAMP - INTERVAL '2 hours 30 minutes',
+        true
+    )
+ON CONFLICT DO NOTHING;
+
+-- Create notifications
+INSERT INTO notifications (user_id, tip, status_notif, title, message, created_at, read_at)
+VALUES
+    (
+        (SELECT user_id FROM users WHERE email = 'ion.vasile@example.com'),
+        'reminder',
+        'sent',
+        'Reminder medicament',
+        'Este timpul să iei Losartan 50mg - 1 comprimat',
+        CURRENT_TIMESTAMP + INTERVAL '30 minutes',
+        NULL
+    ),
+    (
+        (SELECT user_id FROM users WHERE email = 'ana.mihai@example.com'),
+        'alert',
+        'sent',
+        'Felicitări! Streak de 12 zile! 🔥',
+        'Ai atins un streak de 12 zile consecutive! Continuă așa!',
+        CURRENT_TIMESTAMP - INTERVAL '1 day',
+        CURRENT_TIMESTAMP - INTERVAL '1 day' + INTERVAL '10 minutes'
+    ),
+    (
+        (SELECT user_id FROM users WHERE email = 'george.popa@example.com'),
+        'alert',
+        'sent',
+        'Badge nou: Gold 🏅',
+        'Felicitări! Ai debloca badge-ul Gold pentru 1500 XP!',
+        CURRENT_TIMESTAMP - INTERVAL '3 days',
+        CURRENT_TIMESTAMP - INTERVAL '3 days' + INTERVAL '5 minutes'
+    ),
+    (
+        (SELECT user_id FROM users WHERE email = 'maria.tudor@example.com'),
+        'alert',
+        'sent',
+        'Milestone: 250 doze confirmate! 🎯',
+        'Wow! Ai confirmat 250 de doze de medicament. Ești un exemplu!',
+        CURRENT_TIMESTAMP - INTERVAL '1 week',
+        CURRENT_TIMESTAMP - INTERVAL '1 week' + INTERVAL '15 minutes'
+    ),
+    (
+        (SELECT user_id FROM users WHERE email = 'alex.costa@example.com'),
+        'chat',
+        'sent',
+        'Mesaj nou de la Dr. Popescu',
+        'Aveți un mesaj nou în chat',
+        CURRENT_TIMESTAMP - INTERVAL '2 hours',
+        NULL
+    )
+ON CONFLICT DO NOTHING;
+
+-- Report success
+DO $$
+BEGIN
+    RAISE NOTICE 'Database initialized successfully!';
+    RAISE NOTICE '✓ Schema created with all tables and indexes';
+    RAISE NOTICE '✓ Basic seed data (admin, doctors, patients)';
+    RAISE NOTICE '✓ Demo data loaded:';
+    RAISE NOTICE '  - Patient profiles with varying XP (150-5800) and badges (Bronze-Diamond)';
+    RAISE NOTICE '  - Doctor-patient relationships';
+    RAISE NOTICE '  - 7 active treatment plans with realistic diagnoses';
+    RAISE NOTICE '  - Treatment doses (recurring schedules)';
+    RAISE NOTICE '  - Chat messages and notifications';
+    RAISE NOTICE '';
+    RAISE NOTICE 'Test credentials:';
+    RAISE NOTICE '  Admin:   admin@meditrack.com / admin123';
+    RAISE NOTICE '  Doctor:  dr.ionescu@meditrack.com / medic123';
+    RAISE NOTICE '  Patient: ion.vasile@example.com / pacient123';
+END $$;
