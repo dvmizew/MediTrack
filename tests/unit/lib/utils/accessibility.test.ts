@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getContrastRatio, meetsWCAGAA, validateColorContrast } from '$lib/utils/contrastChecker';
+import { getContrastRatio, meetsWCAGAA, validateColorContrast } from '$lib/utils/accessibility';
 
 describe('Color Contrast (WCAG 2.1 AA)', () => {
 	it('should calculate contrast ratio correctly', () => {

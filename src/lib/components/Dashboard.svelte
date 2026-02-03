@@ -5,6 +5,7 @@
 	import { authStore, isPacient, isMedic } from '$lib/stores/auth';
 	import { themeStore } from '$lib/stores/theme';
 	import { goto } from '$app/navigation';
+	import { isMedicationTaken, isMedicationSnoozed, getMedicationScheduledTime } from '$lib/utils/medications';
 	import {
 		Users,
 		ClipboardList,
@@ -188,6 +189,12 @@
 			accent: 'text-orange-600 dark:text-orange-400'
 		}
 	] : []);
+
+	// Compute total users by role for progress bar calculations
+	const totalUsersByRole = $derived.by(() => {
+		if (!adminOverview?.users?.byRole) return 0;
+		return adminOverview.users.byRole.reduce((sum: number, u: any) => sum + u.count, 0);
+	});
 	
 	// Chart references
 	let weeklyChartCanvas = $state<HTMLCanvasElement | null>(null);
@@ -240,8 +247,9 @@
 			adminError = null;
 			adminOverview = await adminReportsApi.getOverview();
 			setTimeout(renderAdminCharts, 0);
-		} catch (e: any) {
-			adminError = e.message || 'Failed to load admin overview';
+		} catch (e) {
+			const message = e instanceof Error ? e.message : 'Failed to load admin overview';
+			adminError = message;
 		} finally {
 			adminLoading = false;
 		}
@@ -358,7 +366,8 @@
 				pendingInvites: invites.length
 			};
 		} catch (error) {
-			console.error('Failed to load dashboard data:', error);
+			const msg = error instanceof Error ? error.message : String(error);
+			console.error('Failed to load dashboard data:', msg);
 		} finally {
 			loading = false;
 		}
@@ -370,7 +379,8 @@
 			// normalize id for authStore consumers
 			authStore.updateUser({ ...user, id: (user as any).id ?? (user as any).userId });
 		} catch (error) {
-			console.error('Failed to refresh user stats:', error);
+			const msg = error instanceof Error ? error.message : String(error);
+			console.error('Failed to refresh user stats:', msg);
 		}
 	}
 
@@ -409,7 +419,8 @@
 			updateStats();
 			updateCharts();
 		} catch (error) {
-			console.error('Failed to load medications:', error);
+			const msg = error instanceof Error ? error.message : String(error);
+			console.error('Failed to load medications:', msg);
 		} finally {
 			loading = false;
 		}
@@ -569,7 +580,8 @@
 			await loadMedications();
 			await refreshUserStats();
 		} catch (error) {
-			console.error('Failed to confirm medication:', error);
+			const msg = error instanceof Error ? error.message : String(error);
+			console.error('Failed to confirm medication:', msg);
 		}
 	}
 
@@ -581,7 +593,8 @@
 			});
 			await loadMedications();
 		} catch (error) {
-			console.error('Failed to snooze medication:', error);
+			const msg = error instanceof Error ? error.message : String(error);
+			console.error('Failed to snooze medication:', msg);
 		}
 	}
 
@@ -591,27 +604,6 @@
 
 	function viewTreatment(planId: number) {
 		goto(`/treatments/${planId}`);
-	}
-
-	function isMedicationTaken(med: any) {
-		return med.result === 'pozitiv';
-	}
-
-	function isMedicationSnoozed(med: any, now = new Date()) {
-		return !isMedicationTaken(med) && med.snoozedUntil && new Date(med.snoozedUntil) > now;
-	}
-
-	// Determine the effective scheduled Date for a medication today
-	function getMedicationScheduledTime(med: any, now = new Date()): Date | null {
-		if (isMedicationTaken(med)) return null;
-		if (isMedicationSnoozed(med, now)) {
-			return new Date(med.snoozedUntil);
-		}
-		if (!med.time) return null;
-		const [hours, minutes] = String(med.time).split(':').map(Number);
-		const scheduled = new Date();
-		scheduled.setHours(hours, minutes, 0, 0);
-		return scheduled;
 	}
 
 	function buildTodayTimeline() {
@@ -817,11 +809,11 @@
 											<div class="w-full bg-slate-200/70 dark:bg-slate-700 rounded-full h-2 sm:h-2.5 overflow-hidden">
 												<div 
 													class="{r.role === 'admin' ? 'bg-gradient-to-r from-purple-500 to-purple-600' : r.role === 'medic' ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 'bg-gradient-to-r from-green-500 to-green-600'} h-full transition-all duration-500 rounded-full"
-													style="width: {adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0) > 0 ? (r.count / adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0)) * 100 : 0}%"
+													style="width: {totalUsersByRole > 0 ? (r.count / totalUsersByRole) * 100 : 0}%"
 												></div>
 											</div>
 											<div class="text-xs text-gray-600 dark:text-slate-300 mt-1.5">
-												{Math.round((r.count / adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0)) * 100)}% din total
+												{Math.round((r.count / totalUsersByRole) * 100)}% din total
 											</div>
 										</div>
 									{/each}
@@ -830,7 +822,7 @@
 									<div class="mt-4 pt-3 border-t border-slate-200/70 dark:border-slate-800/70">
 										<div class="flex items-center justify-between text-sm">
 											<span class="text-gray-700 dark:text-slate-100">Total utilizatori:</span>
-											<span class="font-bold text-gray-900 dark:text-slate-100">{adminOverview.users.byRole.reduce((sum: any, u: any) => sum + u.count, 0)}</span>
+											<span class="font-bold text-gray-900 dark:text-slate-100">{totalUsersByRole}</span>
 										</div>
 									</div>
 								{:else}

@@ -82,14 +82,60 @@
 	let pushSubscribed = $state(false);
 	let pushPermission = $state<NotificationPermission>('default');
 
+	// Cookie preferences state
+	const cookiePreferencesKey = 'cookiePreferences';
+	const defaultCookiePreferences = {
+		essential: true,
+		preferences: true,
+		analytics: false
+	};
+	let cookiePreferences = $state({ ...defaultCookiePreferences });
+
+	function loadCookiePreferences() {
+		if (typeof window === 'undefined') return;
+		try {
+			const stored = localStorage.getItem(cookiePreferencesKey);
+			if (stored) {
+				const parsed = JSON.parse(stored);
+				cookiePreferences = { ...defaultCookiePreferences, ...parsed, essential: true };
+				return;
+			}
+
+			const consent = localStorage.getItem('cookieConsent');
+			if (consent === 'rejected') {
+				cookiePreferences = { ...defaultCookiePreferences, preferences: false, analytics: false };
+			} else if (consent === 'accepted') {
+				cookiePreferences = { ...defaultCookiePreferences, preferences: true };
+			}
+		} catch {
+			cookiePreferences = { ...defaultCookiePreferences };
+		}
+	}
+
+	function saveCookiePreferences() {
+		if (typeof window === 'undefined') return;
+		localStorage.setItem(cookiePreferencesKey, JSON.stringify(cookiePreferences));
+		localStorage.setItem(
+			'cookieConsent',
+			cookiePreferences.preferences || cookiePreferences.analytics ? 'accepted' : 'rejected'
+		);
+		localStorage.setItem('cookieConsentDate', new Date().toISOString());
+		toast.success('Preferințele cookie au fost salvate');
+	}
+
+	function resetCookiePreferences() {
+		cookiePreferences = { ...defaultCookiePreferences };
+		saveCookiePreferences();
+	}
+
 	async function startMfaSetup() {
 		try {
 			ui.mfaWorking = true; mfaError = '';
 			const data = await mfaApi.startSetup();
 			mfaQr = data.qrCode; mfaSecret = data.secret; mfaTotp = '';
 			mfaStep = 'verify';
-		} catch (e: any) {
-			mfaError = e?.message || 'Nu s-a putut iniția 2FA';
+		} catch (e) {
+			mfaError = e instanceof Error ? e.message : 'Nu s-a putut iniția 2FA';
 		} finally {
 			ui.mfaWorking = false;
 		}
@@ -103,8 +149,8 @@
 			mfaBackupCodes = res.backupCodes || [];
 			mfaStep = 'done';
 			try { const updated = await api.getProfile(); /* keep local state in sync */ } catch {}
-		} catch (e: any) {
-			mfaError = e?.message || 'Cod invalid';
+		} catch (e) {
+			mfaError = e instanceof Error ? e.message : 'Cod invalid';
 		} finally {
 			ui.mfaWorking = false;
 		}
@@ -118,8 +164,9 @@
 			mfaStep = 'idle'; mfaQr = ''; mfaSecret=''; mfaTotp=''; mfaBackupCodes=[];
 			disableMfaModal.close();
 			try { const updated = await api.getProfile(); /* keep local state in sync */ } catch {}
-		} catch (e: any) {
-			disableMfaModal.setData({ error: e?.message || 'Nu s-a putut dezactiva 2FA' });
+		} catch (e) {
+			const msg = e instanceof Error ? e.message : 'Nu s-a putut dezactiva 2FA';
+			disableMfaModal.setData({ error: msg });
 		} finally {
 			ui.mfaWorking = false;
 		}
@@ -148,8 +195,8 @@
 			mfaError = '';
 			// Open inline modal for TOTP entry instead of separate modal
 			regenerateModal.open();
-		} catch (e: any) {
-			mfaError = e?.message || 'Nu s-au putut regenera codurile';
+		} catch (e) {
+			mfaError = e instanceof Error ? e.message : 'Nu s-au putut regenera codurile';
 		} finally {
 			ui.mfaWorking = false;
 		}
@@ -163,8 +210,8 @@
 			const res = await mfaApi.generateBackupCodes(regenerateModal.data.totp);
 			mfaBackupCodes = res.backupCodes || [];
 			regenerateModal.close();
-		} catch (e: any) {
-			mfaError = e?.message || 'Nu s-au putut regenera codurile';
+		} catch (e) {
+			mfaError = e instanceof Error ? e.message : 'Nu s-au putut regenera codurile';
 		} finally {
 			ui.mfaWorking = false;
 		}
@@ -229,6 +276,7 @@
 				window.location.href = '/';
 				return;
 			}
+			loadCookiePreferences();
 			await loadProfile();
 			await checkPushStatus();
 		} catch (error) {
@@ -284,8 +332,9 @@
 			
 			const updatedUser = await api.getProfile();
 			authStore.updateUser(updatedUser);
-		} catch (error: any) {
-			toast.error(error.message || 'Nu s-au putut salva modificările');
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : 'Nu s-au putut salva modificările';
+			toast.error(msg);
 		} finally {
 			ui.savingProfile = false;
 		}
@@ -324,8 +373,9 @@
 			newPassword = '';
 			confirmPassword = '';
 			toast.success('Parola a fost schimbată cu succes');
-		} catch (error: any) {
-			toast.error(error.message || 'Nu s-a putut schimba parola');
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : 'Nu s-a putut schimba parola';
+			toast.error(msg);
 		} finally {
 			ui.savingPassword = false;
 		}
@@ -357,9 +407,10 @@
 				pushPermission = getNotificationPermission();
 				toast.success('Notificările push au fost activate!');
 			}
-		} catch (error: any) {
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : 'Eroare la configurarea notificărilor';
 			console.error('Toggle push error:', error);
-			toast.error(error.message || 'Eroare la configurarea notificărilor');
+			toast.error(msg);
 		} finally {
 			ui.pushLoading = false;
 		}
@@ -377,9 +428,10 @@
 			} else {
 				toast.warning('Nu s-au putut trimite notificări. Verifică dacă ești abonat.');
 			}
-		} catch (error: any) {
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : 'Eroare la trimiterea notificării de test';
 			console.error('Test push error:', error);
-			toast.error(error.message || 'Eroare la trimiterea notificării de test');
+			toast.error(msg);
 		} finally {
 			ui.testingPush = false;
 		}
@@ -400,9 +452,10 @@
 			window.URL.revokeObjectURL(url);
 
 			toast.success('Datele tale personale au fost descărcate');
-		} catch (error: any) {
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : 'Eroare la descărcarea datelor';
 			console.error('Download personal data error:', error);
-			toast.error(error.message || 'Eroare la descărcarea datelor');
+			toast.error(msg);
 		} finally {
 			ui.downloadingData = false;
 		}
@@ -436,9 +489,10 @@
 				authStore.logout();
 				window.location.href = '/';
 			}, 2000);
-		} catch (error: any) {
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : 'Eroare la ștergerea contului';
 			console.error('Delete account error:', error);
-			deleteAccountModal.setData({ error: error.message || 'Eroare la ștergerea contului' });
+			deleteAccountModal.setData({ error: msg });
 		} finally {
 			ui.deletingAccount = false;
 		}
@@ -1044,22 +1098,54 @@
 							</div>
 							<div class="flex-1">
 								<h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-2">Cookies și tracking</h3>
-								<p class="text-sm text-gray-600 dark:text-slate-400 mb-3">
-									MediTrack folosește doar cookies esențiale pentru autentificare și preferințe UI (tema dark/light).
+								<p class="text-sm text-gray-600 dark:text-slate-400 mb-4">
+									Poți controla ce tipuri de cookies sunt folosite. Cookies esențiale sunt necesare pentru autentificare și preferințe UI.
 								</p>
-								<div class="space-y-2 text-sm">
-									<div class="flex items-center gap-2">
-										<CheckCircle2 class="w-4 h-4 text-green-600 dark:text-green-400" />
-										<span class="text-gray-700 dark:text-slate-300">Fără tracking de terțe părți</span>
-									</div>
-									<div class="flex items-center gap-2">
-										<CheckCircle2 class="w-4 h-4 text-green-600 dark:text-green-400" />
-										<span class="text-gray-700 dark:text-slate-300">Fără publicitate</span>
-									</div>
-									<div class="flex items-center gap-2">
-										<CheckCircle2 class="w-4 h-4 text-green-600 dark:text-green-400" />
-										<span class="text-gray-700 dark:text-slate-300">Datele medicale rămân confidențiale</span>
-									</div>
+
+								<div class="space-y-3 text-sm">
+									<label class="flex items-center justify-between gap-4 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60 bg-slate-50/70 dark:bg-slate-900/40">
+										<div>
+											<p class="font-semibold text-gray-900 dark:text-slate-100">Esențiale (obligatorii)</p>
+											<p class="text-xs text-gray-600 dark:text-slate-400">Login, sesiune securizată, preferințe UI.</p>
+										</div>
+										<input type="checkbox" class="h-5 w-5 accent-purple-600 opacity-50 cursor-not-allowed" checked disabled />
+									</label>
+
+									<label class="flex items-center justify-between gap-4 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+										<div>
+											<p class="font-semibold text-gray-900 dark:text-slate-100">Preferințe</p>
+											<p class="text-xs text-gray-600 dark:text-slate-400">Tema, layout, filtre salvate.</p>
+										</div>
+										<input type="checkbox" class="h-5 w-5 accent-purple-600" bind:checked={cookiePreferences.preferences} />
+									</label>
+
+									<label class="flex items-center justify-between gap-4 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+										<div>
+											<p class="font-semibold text-gray-900 dark:text-slate-100">Analitice (opționale)</p>
+											<p class="text-xs text-gray-600 dark:text-slate-400">Ne ajută să îmbunătățim produsul. Fără date medicale.</p>
+										</div>
+										<input type="checkbox" class="h-5 w-5 accent-purple-600" bind:checked={cookiePreferences.analytics} />
+									</label>
+								</div>
+
+								<div class="flex flex-wrap gap-3 mt-4">
+									<button
+										onclick={saveCookiePreferences}
+										class="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 hover:shadow-md text-white rounded-lg transition-all duration-200 font-medium"
+									>
+										Salvează preferințele
+									</button>
+									<button
+										onclick={resetCookiePreferences}
+										class="px-4 py-2.5 border border-slate-300 dark:border-slate-600 text-gray-800 dark:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 font-medium"
+									>
+										Resetează la implicit
+									</button>
+								</div>
+
+								<div class="mt-3 flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+									<CheckCircle2 class="w-4 h-4 text-green-600 dark:text-green-400" />
+									<span>Fără publicitate și fără tracking de terțe părți.</span>
 								</div>
 							</div>
 						</div>

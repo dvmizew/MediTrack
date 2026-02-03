@@ -9,6 +9,16 @@ import bcrypt from 'bcrypt';
 import {
 	generatePersonalDataExportCSV
 } from '../utils/csv-export.js';
+import {
+	getUserInfo,
+	getUserByRole,
+	getUserTreatments,
+	getDoctorTreatmentCount,
+	getUsersByRole,
+	getUserPasswordHash,
+	getUserStatusCounts,
+	getTreatmentStatusCounts
+} from '../utils/queryBuilders.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,19 +87,12 @@ router.get('/metrics', authenticate, authorize('admin'), (req: Request, res: Res
 router.get('/overview', authenticate, authorize('admin'), async (req: Request, res: Response) => {
   const startTime = Date.now();
   try {
-    const [usersByRole, usersActive, collabCounts, treatmentCounts, doseCounts, adherence7, adherence30] = await Promise.all([
-      query(`SELECT role, COUNT(*)::int as count FROM users GROUP BY role`),
-      query(`SELECT 
-                COALESCE(SUM(CASE WHEN is_active THEN 1 ELSE 0 END), 0)::int AS active,
-                COALESCE(SUM(CASE WHEN NOT is_active THEN 1 ELSE 0 END), 0)::int AS inactive
-             FROM users`),
+    const [usersByRoleResult, usersActiveResult, collabCounts, treatmentCountsResult, doseCounts, adherence7, adherence30] = await Promise.all([
+      Promise.resolve({ rows: await getUsersByRole() }),
+      Promise.resolve({ rows: [await getUserStatusCounts()] }),
       query(`SELECT status_invitatie as status, COUNT(*)::int as count FROM doctor_patient GROUP BY status_invitatie`),
-      query(`SELECT 
-                COALESCE(SUM(CASE WHEN activ THEN 1 ELSE 0 END), 0)::int AS active,
-                COALESCE(SUM(CASE WHEN NOT activ THEN 1 ELSE 0 END), 0)::int AS inactive,
-                COUNT(*)::int AS total
-              FROM treatment_plans WHERE is_deleted = false`),
-            query(`SELECT COUNT(*)::int AS total FROM treatment_doses WHERE is_deleted = false`),
+      Promise.resolve({ rows: [await getTreatmentStatusCounts()] }),
+      query(`SELECT COUNT(*)::int AS total FROM treatment_doses WHERE is_deleted = false`),
       // adherence last 7 days
       query(`WITH scheduled AS (
                 SELECT COUNT(*) AS cnt
@@ -122,9 +125,9 @@ router.get('/overview', authenticate, authorize('admin'), async (req: Request, r
       },
       collaborations: collabCounts.rows,
       treatments: {
-        active: treatmentCounts.rows[0]?.active ?? 0,
-        inactive: treatmentCounts.rows[0]?.inactive ?? 0,
-        total: treatmentCounts.rows[0]?.total ?? 0,
+        active: treatmentCountsResult.rows[0]?.active ?? 0,
+        inactive: treatmentCountsResult.rows[0]?.inactive ?? 0,
+        total: treatmentCountsResult.rows[0]?.total ?? 0,
       },
       doses: {
         total: doseCounts.rows[0]?.total ?? 0,
@@ -162,9 +165,9 @@ router.get('/user/:userId', authenticate, authorize('admin'), async (req: Reques
   try {
     const { userId } = req.params;
     const [user, stats, treatments, confirmations] = await Promise.all([
-      query(`SELECT user_id, email, full_name, role, is_active, created_at FROM users WHERE user_id = $1`, [userId]),
+      Promise.resolve({ rows: [await getUserInfo(userId, true)] }),
       query(`SELECT nivel_xp, current_streak, longest_streak, current_badge FROM patient_profiles WHERE patient_id = $1`, [userId]),
-      query(`SELECT plan_id, diagnoza, activ, data_creare FROM treatment_plans WHERE patient_id = $1 AND is_deleted = false ORDER BY data_creare DESC LIMIT 50`, [userId]),
+      Promise.resolve({ rows: await getUserTreatments(userId, 50) }),
       query(`SELECT rezultat, scheduled_for, timestamp_confirmare FROM dose_confirmations dc
              JOIN treatment_doses td ON dc.dose_id = td.dose_id
              JOIN treatment_plans tp ON td.plan_id = tp.plan_id

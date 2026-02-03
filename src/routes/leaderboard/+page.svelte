@@ -203,7 +203,7 @@
 
 		<!-- Current User Position (if patient) -->
 		{#if $isPacient && currentUserPosition >= 0}
-			<div class="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-2xl p-8 mb-8 shadow-2xl transform hover:scale-105 transition-all duration-300">
+			<div class="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-2xl p-8 mb-8 shadow-2xl transition-all duration-300">
 				<div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
 				<div class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
 				<div class="relative flex items-center justify-between">

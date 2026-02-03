@@ -81,17 +81,6 @@ export function generateTreatmentsCSV(treatments: any[], isAnonymous: boolean = 
 	return arrayToCSV(data);
 }
 
-export function generateCollaborationsCSV(collaborations: any[]): string {
-	const data = collaborations.map(c => ({
-		'Pacient': c.patient_full_name,
-		'Medic': c.doctor_full_name,
-		'Status': c.status_invitatie,
-		'Data': formatRoDate(c.created_at),
-	}));
-
-	return arrayToCSV(data);
-}
-
 export function generateAdherenceCSV(adherenceData: any[], isAnonymous: boolean = false): string {
 	const data = adherenceData.map(a => {
 		const row: any = {
@@ -110,18 +99,6 @@ export function generateAdherenceCSV(adherenceData: any[], isAnonymous: boolean 
 
 		return row;
 	});
-
-	return arrayToCSV(data);
-}
-
-export function generateActivityReportCSV(activities: any[]): string {
-	const data = activities.map(a => ({
-		'Data': formatRoDate(a.timestamp),
-		'Ora': formatRoTime(a.timestamp),
-		'Utilizator': a.user_name,
-		'Activitate': a.activity,
-		'Detalii': a.details || '-',
-	}));
 
 	return arrayToCSV(data);
 }

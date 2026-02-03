@@ -24,9 +24,33 @@ async function ensureReportsDir() {
 	}
 }
 
+/**
+ * Generic report processor
+ * @param jobId - Job ID for filename
+ * @param sqlQuery - SQL query to execute
+ * @param csvGenerator - Function to generate CSV from query results
+ * @param reportType - Type of report for filename
+ * @param isAnonymous - Whether to anonymize data
+ */
+async function processReport(
+	jobId: number,
+	sqlQuery: string,
+	csvGenerator: (data: any[], isAnonymous: boolean) => string,
+	reportType: string,
+	isAnonymous: boolean = false
+): Promise<{ filePath: string; fileSize: number }> {
+	const result = await query(sqlQuery);
+	const csv = csvGenerator(result.rows, isAnonymous);
+	const fileName = `${reportType}_export_${jobId}_${Date.now()}${isAnonymous ? '_anon' : ''}.csv`;
+	const filePath = path.join(REPORTS_DIR, fileName);
+	await fs.writeFile(filePath, csv, 'utf-8');
+	const stats = await fs.stat(filePath);
+	return { filePath: fileName, fileSize: stats.size };
+}
+
 // Process users export
 async function processUsersReport(jobId: number, isAnonymous: boolean = false): Promise<{ filePath: string; fileSize: number }> {
-	const result = await query(`
+	const sqlQuery = `
 		SELECT 
 			u.user_id,
 			u.email,
@@ -40,22 +64,13 @@ async function processUsersReport(jobId: number, isAnonymous: boolean = false): 
 		FROM users u
 		LEFT JOIN patient_profiles pp ON u.user_id = pp.patient_id
 		ORDER BY u.created_at DESC
-	`);
-
-	let csv: string;
-	csv = generateUsersCSV(result.rows, isAnonymous);
-
-	const fileName = `users_export_${jobId}_${Date.now()}${isAnonymous ? '_anon' : ''}.csv`;
-	const filePath = path.join(REPORTS_DIR, fileName);
-	await fs.writeFile(filePath, csv, 'utf-8');
-	
-	const stats = await fs.stat(filePath);
-	return { filePath: fileName, fileSize: stats.size };
+	`;
+	return processReport(jobId, sqlQuery, generateUsersCSV, 'users', isAnonymous);
 }
 
 // Process treatments export
 async function processTreatmentsReport(jobId: number, isAnonymous: boolean = false): Promise<{ filePath: string; fileSize: number }> {
-	const result = await query(`
+	const sqlQuery = `
 		SELECT 
 			tp.plan_id,
 			tp.patient_id,
@@ -75,22 +90,13 @@ async function processTreatmentsReport(jobId: number, isAnonymous: boolean = fal
 		WHERE tp.is_deleted = false
 		GROUP BY tp.plan_id, u_patient.user_id, u_doctor.user_id
 		ORDER BY tp.data_creare DESC
-	`);
-
-	let csv: string;
-	csv = generateTreatmentsCSV(result.rows, isAnonymous);
-
-	const fileName = `treatments_export_${jobId}_${Date.now()}${isAnonymous ? '_anon' : ''}.csv`;
-	const filePath = path.join(REPORTS_DIR, fileName);
-	await fs.writeFile(filePath, csv, 'utf-8');
-	
-	const stats = await fs.stat(filePath);
-	return { filePath: fileName, fileSize: stats.size };
+	`;
+	return processReport(jobId, sqlQuery, generateTreatmentsCSV, 'treatments', isAnonymous);
 }
 
 // Process doses export
 async function processDosesReport(jobId: number, isAnonymous: boolean = false): Promise<{ filePath: string; fileSize: number }> {
-	const result = await query(`
+	const sqlQuery = `
 		SELECT 
 			td.dose_id,
 			tp.patient_id,
@@ -108,17 +114,8 @@ async function processDosesReport(jobId: number, isAnonymous: boolean = false): 
 		WHERE tp.is_deleted = false
 		ORDER BY td.ora DESC
 		LIMIT 10000
-	`);
-
-	let csv: string;
-	csv = generateAdherenceCSV(result.rows, isAnonymous);
-
-	const fileName = `doses_export_${jobId}_${Date.now()}${isAnonymous ? '_anon' : ''}.csv`;
-	const filePath = path.join(REPORTS_DIR, fileName);
-	await fs.writeFile(filePath, csv, 'utf-8');
-	
-	const stats = await fs.stat(filePath);
-	return { filePath: fileName, fileSize: stats.size };
+	`;
+	return processReport(jobId, sqlQuery, generateAdherenceCSV, 'doses', isAnonymous);
 }
 
 // Process full system report
