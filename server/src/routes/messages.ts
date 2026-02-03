@@ -44,11 +44,10 @@ router.post('/send', authenticate, sanitizeBody, [
 
       // Get sender info for notification
       const senderInfo = await query(
-        'SELECT full_name, avatar_url FROM users WHERE user_id = $1',
+        'SELECT full_name FROM users WHERE user_id = $1',
         [senderId]
       );
       const senderName = senderInfo.rows[0]?.full_name || 'Un utilizator';
-      const senderAvatar = senderInfo.rows[0]?.avatar_url;
 
       // Create notification for receiver
       await query(
@@ -63,7 +62,7 @@ router.post('/send', authenticate, sanitizeBody, [
         await sendPushToUser(receiverId, {
           title: `💬 ${senderName}`,
           body: continut.length > 100 ? continut.substring(0, 100) + '...' : continut,
-          icon: senderAvatar || '/icon-192.png',
+          icon: '/icon-192.png',
           badge: '/icon-192.png',
           tag: `chat-${senderId}`,
           data: {
@@ -100,8 +99,8 @@ router.get('/conversation/:userId', authenticate, async (req: Request, res: Resp
 
     const result = await query(
       `SELECT m.*, 
-              s.full_name as sender_name, s.avatar_url as sender_avatar,
-              r.full_name as receiver_name, r.avatar_url as receiver_avatar
+              s.full_name as sender_name,
+              r.full_name as receiver_name
        FROM messages m
        JOIN users s ON m.sender_id = s.user_id
        JOIN users r ON m.receiver_id = r.user_id
@@ -126,9 +125,7 @@ router.get('/conversation/:userId', authenticate, async (req: Request, res: Resp
       timestamp_mesaj: m.timestamp_mesaj,
       is_read: m.is_read,
       senderName: m.sender_name,
-      senderAvatar: m.sender_avatar,
-      receiverName: m.receiver_name,
-      receiverAvatar: m.receiver_avatar
+      receiverName: m.receiver_name
     })));
   } catch (error) {
     logger.error('Get conversation error', { error });
@@ -154,7 +151,6 @@ router.get('/conversations', authenticate, async (req: Request, res: Response) =
          SELECT 
            CASE WHEN m.sender_id = $1 THEN m.receiver_id ELSE m.sender_id END as other_user_id,
            CASE WHEN m.sender_id = $1 THEN r.full_name ELSE s.full_name END as other_user_name,
-           CASE WHEN m.sender_id = $1 THEN r.avatar_url ELSE s.avatar_url END as other_user_avatar,
            CASE WHEN m.sender_id = $1 THEN r.role ELSE s.role END as other_user_role,
            m.continut as last_message,
            m.timestamp_mesaj as last_message_time,

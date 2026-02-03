@@ -161,7 +161,7 @@ describe('Users API Endpoints', () => {
 				email: 'admin@test.com',
 				full_name: 'Admin User',
 				role: 'admin',
-				avatar_url: null,
+
 				mfa_enabled: false,
 				created_at: new Date(),
 				total_xp: 100,
@@ -197,7 +197,7 @@ describe('Users API Endpoints', () => {
 				email: 'user@test.com',
 				full_name: 'Test User',
 				role: 'pacient',
-				avatar_url: null,
+
 				created_at: new Date(),
 				total_xp: 50,
 				current_streak: 3,

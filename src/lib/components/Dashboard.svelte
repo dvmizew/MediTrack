@@ -413,7 +413,6 @@
 				email: user.email,
 				fullName: user.fullName,
 				role: user.role,
-				avatarUrl: user.avatarUrl,
 				totalXp: user.totalXp,
 				currentStreak: user.currentStreak,
 				longestStreak: user.longestStreak,

@@ -40,7 +40,6 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
 					SELECT 
 						u.user_id,
 						u.full_name,
-						u.avatar_url,
 						COALESCE(pp.nivel_xp, 0) as xp,
 						COALESCE(pp.current_streak, 0) as streak,
 						COALESCE(pp.longest_streak, 0) as longest_streak,
@@ -62,7 +61,6 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
 					SELECT 
 						u.user_id,
 						u.full_name,
-						u.avatar_url,
 						COALESCE(SUM(CASE 
 							WHEN dc.rezultat = 'pozitiv' 
 								AND DATE(dc.scheduled_for) >= CURRENT_DATE - INTERVAL '1 day' * $1 
@@ -77,7 +75,7 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
 					LEFT JOIN treatment_doses td ON td.plan_id = tp.plan_id AND td.is_deleted = false
 					LEFT JOIN dose_confirmations dc ON dc.dose_id = td.dose_id
 					WHERE u.role = 'pacient'
-					GROUP BY u.user_id, u.full_name, u.avatar_url, pp.nivel_xp, pp.current_streak, pp.longest_streak, pp.current_badge, pp.progres_total
+					GROUP BY u.user_id, u.full_name, pp.nivel_xp, pp.current_streak, pp.longest_streak, pp.current_badge, pp.progres_total
 					ORDER BY xp DESC, COALESCE(pp.current_streak, 0) DESC, COALESCE(pp.longest_streak, 0) DESC
 					LIMIT 100
 					`,
@@ -89,7 +87,6 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
 				rank: index + 1,
 				userId: row.user_id,
 				name: row.full_name,
-				avatar: row.avatar_url,
 				xp: parseInt(row.xp),
 				streak: parseInt(row.streak),
 				longestStreak: parseInt(row.longest_streak),

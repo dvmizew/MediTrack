@@ -6,7 +6,6 @@ export interface User {
 	email: string;
 	fullName: string;
 	role: 'admin' | 'medic' | 'pacient';
-	avatarUrl?: string;
 	totalXp?: number;
 	currentStreak?: number;
 	longestStreak?: number;

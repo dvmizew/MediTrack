@@ -101,7 +101,7 @@ export const setupSocketHandlers = (io: Server) => {
 
         // Get sender info
         const userInfo = await query(
-          'SELECT full_name, avatar_url FROM users WHERE user_id = $1',
+          'SELECT full_name FROM users WHERE user_id = $1',
           [userId]
         );
 
@@ -113,8 +113,7 @@ export const setupSocketHandlers = (io: Server) => {
           continut: savedMessage.continut,
           timestamp_mesaj: savedMessage.timestamp_mesaj,
           is_read: savedMessage.is_read,
-          sender_name: userInfo.rows[0]?.full_name,
-          sender_avatar: userInfo.rows[0]?.avatar_url,
+          sender_name: userInfo.rows[0]?.full_name
         };
 
         // Send confirmation to sender with real message_id
@@ -146,7 +145,7 @@ export const setupSocketHandlers = (io: Server) => {
           await sendPushToUser(receiverId, {
             title: `💬 ${senderName}`,
             body: continut.length > 100 ? continut.substring(0, 100) + '...' : continut,
-            icon: userInfo.rows[0]?.avatar_url || '/icon-192.png',
+            icon: '/icon-192.png',
             badge: '/icon-192.png',
             tag: `chat-${userId}`,
             data: {

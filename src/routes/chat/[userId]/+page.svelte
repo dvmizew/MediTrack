@@ -152,8 +152,7 @@
 		return {
 			user_id: otherUserId,
 			name: isSender ? sample?.receiverName || sample?.receiver_name : sample?.senderName || sample?.sender_name || 'Utilizator',
-			role: assumedRole,
-			avatar: isSender ? sample?.receiverAvatar : sample?.senderAvatar
+			role: assumedRole
 		};
 	}
 
@@ -225,8 +224,7 @@
 						collaborationUser.email ||
 						collaborationUser.medicEmail ||
 						collaborationUser.pacientEmail,
-					role: collaborationUser.role,
-					avatar: collaborationUser.medicAvatar || collaborationUser.pacientAvatar
+					role: collaborationUser.role
 				};
 			} else {
 				const derivedUser = deriveUserFromConversation(conversationData);
@@ -239,8 +237,7 @@
 							user_id: profile.user_id ?? otherUserId,
 							name: profile.fullName || profile.name || profile.email || 'Utilizator',
 							email: profile.email,
-							role: profile.role || ($isMedic ? 'pacient' : 'medic'),
-							avatar: profile.avatarUrl
+						role: profile.role || ($isMedic ? 'pacient' : 'medic')
 						};
 					} catch (profileErr) {
 						console.error('Failed to load user profile:', profileErr);

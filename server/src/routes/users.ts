@@ -309,7 +309,7 @@ router.get('/me', authenticate, async (req: Request, res: Response) => {
     logger.info('GET /me - Fetching profile for user', { userId });
     
     const result = await query(
-            `SELECT u.user_id, u.email, u.full_name, u.role, u.avatar_url, u.mfa_enabled, u.created_at,
+            `SELECT u.user_id, u.email, u.full_name, u.role, u.mfa_enabled, u.created_at,
               p.nivel_xp as total_xp, p.current_streak, p.longest_streak, p.current_badge
        FROM users u
        LEFT JOIN patient_profiles p ON u.user_id = p.patient_id
@@ -330,7 +330,6 @@ router.get('/me', authenticate, async (req: Request, res: Response) => {
       email: user.email,
       fullName: user.full_name,
       role: user.role,
-      avatarUrl: user.avatar_url,
       mfaEnabled: user.mfa_enabled,
       createdAt: user.created_at,
       totalXp: user.total_xp || 0,
@@ -350,7 +349,7 @@ router.get('/:userId', authenticate, async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     const result = await query(
-      `SELECT u.user_id, u.email, u.full_name, u.role, u.avatar_url, u.created_at,
+      `SELECT u.user_id, u.email, u.full_name, u.role, u.created_at,
               p.nivel_xp as total_xp, p.current_streak, p.longest_streak, p.current_badge
        FROM users u
        LEFT JOIN patient_profiles p ON u.user_id = p.patient_id
@@ -368,7 +367,6 @@ router.get('/:userId', authenticate, async (req: Request, res: Response) => {
       email: user.email,
       fullName: user.full_name,
       role: user.role,
-      avatarUrl: user.avatar_url,
       createdAt: user.created_at,
       totalXp: user.total_xp || 0,
       currentStreak: user.current_streak || 0,

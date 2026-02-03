@@ -225,7 +225,7 @@ router.get('/my', authenticate, async (req: Request, res: Response) => {
     let queryText;
     if (role === 'medic') {
       queryText = `
-        SELECT c.*, u.email as pacient_email, u.full_name as pacient_name, u.avatar_url as pacient_avatar, u.role as pacient_role
+        SELECT c.*, u.email as pacient_email, u.full_name as pacient_name, u.role as pacient_role
         FROM doctor_patient c
         JOIN users u ON c.patient_id = u.user_id
         WHERE c.doctor_id = $1 AND c.status_invitatie = 'accepted'
@@ -233,7 +233,7 @@ router.get('/my', authenticate, async (req: Request, res: Response) => {
       `;
     } else {
       queryText = `
-        SELECT c.*, u.email as medic_email, u.full_name as medic_name, u.avatar_url as medic_avatar, u.role as medic_role
+        SELECT c.*, u.email as medic_email, u.full_name as medic_name, u.role as medic_role
         FROM doctor_patient c
         JOIN users u ON c.doctor_id = u.user_id
         WHERE c.patient_id = $1 AND c.status_invitatie = 'accepted'
@@ -251,10 +251,8 @@ router.get('/my', authenticate, async (req: Request, res: Response) => {
       respondedAt: c.responded_at,
       pacientEmail: c.pacient_email,
       pacientName: c.pacient_name,
-      pacientAvatar: c.pacient_avatar,
       medicEmail: c.medic_email,
       medicName: c.medic_name,
-      medicAvatar: c.medic_avatar,
       created_at: c.invited_at,
       // Unified fields for easier frontend access
       name: role === 'medic' ? c.pacient_name : c.medic_name,

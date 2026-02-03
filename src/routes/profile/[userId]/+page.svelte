@@ -127,11 +127,7 @@
 			<div class="flex items-center justify-between gap-6">
 				<div class="flex items-center gap-6">
 					<div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-						{#if user.avatarUrl}
-							<img src={user.avatarUrl} alt={user.fullName} class="w-full h-full rounded-full object-cover" />
-						{:else}
-							<span class="text-white text-4xl font-bold">{user.fullName?.charAt(0).toUpperCase()}</span>
-						{/if}
+					<span class="text-white text-4xl font-bold">{user.fullName?.charAt(0).toUpperCase()}</span>
 					</div>
 					<div>
 						<h1 class="text-4xl font-bold text-gray-900 dark:text-slate-100">{user.fullName}</h1>
