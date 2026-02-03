@@ -17,11 +17,23 @@
 
 	type TabType = 'general' | 'security' | 'notifications' | 'stats' | 'privacy';
 
-	let loading = $state(true);
-	let savingProfile = $state(false);
-	let savingPassword = $state(false);
+	// Consolidated UI state
+	let ui = $state({
+		loading: true,
+		savingProfile: false,
+		savingPassword: false,
+		mfaWorking: false,
+		copiedCode: false,
+		pushLoading: false,
+		testingPush: false,
+		deletingAccount: false,
+		downloadingData: false,
+		showPasswords: false
+	});
+
 	let activeTab = $state<TabType>('general');
 	
+	// User profile data
 	let fullName = $state('');
 	let email = $state('');
 	let avatarUrl = $state('');
@@ -29,52 +41,63 @@
 	let currentPassword = $state('');
 	let newPassword = $state('');
 	let confirmPassword = $state('');
-	let showPasswords = $state(false);
-	
-	// MFA disable modal state
-	let showDisableMfaDialog = $state(false);
-	let disableMfaPassword = $state('');
 
+	// MFA state
 	let mfaStep = $state<'idle' | 'setup' | 'verify' | 'done'>('idle');
 	let mfaQr = $state('');
 	let mfaSecret = $state('');
 	let mfaTotp = $state('');
 	let mfaBackupCodes = $state<string[]>([]);
-	let mfaWorking = $state(false);
 	let mfaError = $state('');
-	let copiedCode = $state(false);
-	let showRegenerateModal = $state(false);
-	let regenerateTotp = $state('');
+
+	// Modal factories
+	const disableMfaModal = $state({
+		isOpen: false,
+		data: { password: '', error: '' },
+		open() { this.isOpen = true; },
+		close() { this.isOpen = false; },
+		setData(newData: any) { this.data = { ...this.data, ...newData }; },
+		reset() { this.isOpen = false; this.data = { password: '', error: '' }; }
+	});
+
+	const deleteAccountModal = $state({
+		isOpen: false,
+		data: { password: '', error: '' },
+		open() { this.isOpen = true; },
+		close() { this.isOpen = false; },
+		setData(newData: any) { this.data = { ...this.data, ...newData }; },
+		reset() { this.isOpen = false; this.data = { password: '', error: '' }; }
+	});
+
+	const regenerateModal = $state({
+		isOpen: false,
+		data: { totp: '' },
+		open() { this.isOpen = true; },
+		close() { this.isOpen = false; },
+		setData(newData: any) { this.data = { ...this.data, ...newData }; },
+		reset() { this.isOpen = false; this.data = { totp: '' }; }
+	});
 
 	// Push notifications state
 	let pushSubscribed = $state(false);
-	let pushLoading = $state(false);
 	let pushPermission = $state<NotificationPermission>('default');
-	let testingPush = $state(false);
-
-	// GDPR state
-	let showDeleteAccountDialog = $state(false);
-	let deleteAccountPassword = $state('');
-	let deletingAccount = $state(false);
-	let deleteAccountError = $state('');
-	let downloadingData = $state(false);
 
 	async function startMfaSetup() {
 		try {
-			mfaWorking = true; mfaError = '';
+			ui.mfaWorking = true; mfaError = '';
 			const data = await mfaApi.startSetup();
 			mfaQr = data.qrCode; mfaSecret = data.secret; mfaTotp = '';
 			mfaStep = 'verify';
 		} catch (e: any) {
 			mfaError = e?.message || 'Nu s-a putut iniția 2FA';
 		} finally {
-			mfaWorking = false;
+			ui.mfaWorking = false;
 		}
 	}
 
 	async function verifyMfaSetup() {
 		try {
-			mfaWorking = true; mfaError = '';
+			ui.mfaWorking = true; mfaError = '';
 			if (!/^\d{6}$/.test(mfaTotp)) { mfaError = 'Cod invalid'; return; }
 			const res = await mfaApi.verifySetup(mfaSecret, mfaTotp);
 			mfaBackupCodes = res.backupCodes || [];
@@ -83,72 +106,67 @@
 		} catch (e: any) {
 			mfaError = e?.message || 'Cod invalid';
 		} finally {
-			mfaWorking = false;
+			ui.mfaWorking = false;
 		}
 	}
 
 	async function disableMfa(password: string) {
 		try {
-			mfaWorking = true; mfaError = '';
+			ui.mfaWorking = true;
+			disableMfaModal.setData({ error: '' });
 			await mfaApi.disable(password);
 			mfaStep = 'idle'; mfaQr = ''; mfaSecret=''; mfaTotp=''; mfaBackupCodes=[];
-			showDisableMfaDialog = false;
-			disableMfaPassword = '';
+			disableMfaModal.close();
 			try { const updated = await api.getProfile(); /* keep local state in sync */ } catch {}
 		} catch (e: any) {
-			mfaError = e?.message || 'Nu s-a putut dezactiva 2FA';
+			disableMfaModal.setData({ error: e?.message || 'Nu s-a putut dezactiva 2FA' });
 		} finally {
-			mfaWorking = false;
+			ui.mfaWorking = false;
 		}
 	}
 	
 	function openDisableMfaDialog() {
-		showDisableMfaDialog = true;
-		disableMfaPassword = '';
-		mfaError = '';
+		disableMfaModal.reset();
+		disableMfaModal.open();
 	}
 	
 	function closeDisableMfaDialog() {
-		showDisableMfaDialog = false;
-		disableMfaPassword = '';
-		mfaError = '';
+		disableMfaModal.close();
 	}
 	
 	async function confirmDisableMfa() {
-		if (!disableMfaPassword.trim()) {
-			mfaError = 'Introdu parola';
+		if (!disableMfaModal.data.password.trim()) {
+			disableMfaModal.setData({ error: 'Introdu parola' });
 			return;
 		}
-		await disableMfa(disableMfaPassword);
+		await disableMfa(disableMfaModal.data.password);
 	}
 
 	async function regenerateBackupCodes() {
 		try {
-			mfaWorking = true;
+			ui.mfaWorking = true;
 			mfaError = '';
 			// Open inline modal for TOTP entry instead of separate modal
-			showRegenerateModal = true;
-			regenerateTotp = '';
+			regenerateModal.open();
 		} catch (e: any) {
 			mfaError = e?.message || 'Nu s-au putut regenera codurile';
 		} finally {
-			mfaWorking = false;
+			ui.mfaWorking = false;
 		}
 	}
 
 	async function confirmRegenerateBackupCodes() {
 		try {
-			mfaWorking = true; 
+			ui.mfaWorking = true; 
 			mfaError = '';
-			if (!/^\d{6}$/.test(regenerateTotp)) { throw new Error('Cod TOTP invalid'); }
-			const res = await mfaApi.generateBackupCodes(regenerateTotp);
+			if (!/^\d{6}$/.test(regenerateModal.data.totp)) { throw new Error('Cod TOTP invalid'); }
+			const res = await mfaApi.generateBackupCodes(regenerateModal.data.totp);
 			mfaBackupCodes = res.backupCodes || [];
-			showRegenerateModal = false;
-			regenerateTotp = '';
+			regenerateModal.close();
 		} catch (e: any) {
 			mfaError = e?.message || 'Nu s-au putut regenera codurile';
 		} finally {
-			mfaWorking = false;
+			ui.mfaWorking = false;
 		}
 	}
 
@@ -156,8 +174,8 @@
 		if (mfaBackupCodes.length === 0) return;
 		const text = mfaBackupCodes.join('\n');
 		navigator.clipboard.writeText(text).then(() => {
-			copiedCode = true;
-			setTimeout(() => copiedCode = false, 2000);
+			ui.copiedCode = true;
+			setTimeout(() => ui.copiedCode = false, 2000);
 		}).catch(() => {
 			mfaError = 'Nu s-au putut copia codurile';
 		});
@@ -216,7 +234,7 @@
 		} catch (error) {
 			console.error('Settings initialization error:', error);
 		} finally {
-			loading = false;
+			ui.loading = false;
 		}
 	});
 
@@ -256,7 +274,7 @@
 			return;
 		}
 
-		savingProfile = true;
+		ui.savingProfile = true;
 		try {
 			await api.updateProfile({
 				fullName: fullName.trim(),
@@ -269,7 +287,7 @@
 		} catch (error: any) {
 			toast.error(error.message || 'Nu s-au putut salva modificările');
 		} finally {
-			savingProfile = false;
+			ui.savingProfile = false;
 		}
 	}
 
@@ -294,7 +312,7 @@
 	}
 	
 	async function confirmPasswordChange() {
-		savingPassword = true;
+		ui.savingPassword = true;
 		
 		try {
 			await api.updatePassword({
@@ -305,11 +323,11 @@
 			currentPassword = '';
 			newPassword = '';
 			confirmPassword = '';
-		toast.success('Parola a fost schimbată cu succes');
-	} catch (error: any) {
-		toast.error(error.message || 'Nu s-a putut schimba parola');
+			toast.success('Parola a fost schimbată cu succes');
+		} catch (error: any) {
+			toast.error(error.message || 'Nu s-a putut schimba parola');
 		} finally {
-			savingPassword = false;
+			ui.savingPassword = false;
 		}
 	}
 
@@ -322,10 +340,10 @@
 	}
 
 	async function handleTogglePushNotifications() {
-		if (pushLoading) return;
+		if (ui.pushLoading) return;
 
 		try {
-			pushLoading = true;
+			ui.pushLoading = true;
 
 			if (pushSubscribed) {
 				// Unsubscribe
@@ -343,15 +361,15 @@
 			console.error('Toggle push error:', error);
 			toast.error(error.message || 'Eroare la configurarea notificărilor');
 		} finally {
-			pushLoading = false;
+			ui.pushLoading = false;
 		}
 	}
 
 	async function handleTestPushNotification() {
-		if (testingPush) return;
+		if (ui.testingPush) return;
 
 		try {
-			testingPush = true;
+			ui.testingPush = true;
 			const result = await sendTestPushNotification();
 			
 			if (result.success && result.sent > 0) {
@@ -363,15 +381,15 @@
 			console.error('Test push error:', error);
 			toast.error(error.message || 'Eroare la trimiterea notificării de test');
 		} finally {
-			testingPush = false;
+			ui.testingPush = false;
 		}
 	}
 
 	async function handleDownloadPersonalData() {
-		if (downloadingData) return;
+		if (ui.downloadingData) return;
 
 		try {
-			downloadingData = true;
+			ui.downloadingData = true;
 			const blob = await adminReportsApi.exportPersonalData();
 			
 			const url = window.URL.createObjectURL(blob);
@@ -386,33 +404,30 @@
 			console.error('Download personal data error:', error);
 			toast.error(error.message || 'Eroare la descărcarea datelor');
 		} finally {
-			downloadingData = false;
+			ui.downloadingData = false;
 		}
 	}
 
 	function openDeleteAccountDialog() {
-		showDeleteAccountDialog = true;
-		deleteAccountPassword = '';
-		deleteAccountError = '';
+		deleteAccountModal.reset();
+		deleteAccountModal.open();
 	}
 
 	function closeDeleteAccountDialog() {
-		showDeleteAccountDialog = false;
-		deleteAccountPassword = '';
-		deleteAccountError = '';
+		deleteAccountModal.close();
 	}
 
 	async function confirmDeleteAccount() {
-		if (!deleteAccountPassword.trim()) {
-			deleteAccountError = 'Introdu parola pentru confirmare';
+		if (!deleteAccountModal.data.password.trim()) {
+			deleteAccountModal.setData({ error: 'Introdu parola pentru confirmare' });
 			return;
 		}
 
 		try {
-			deletingAccount = true;
-			deleteAccountError = '';
+			ui.deletingAccount = true;
+			deleteAccountModal.setData({ error: '' });
 
-			await adminReportsApi.deleteAccount(deleteAccountPassword);
+			await adminReportsApi.deleteAccount(deleteAccountModal.data.password);
 
 			toast.success('Contul tău a fost șters. Vei fi deconectat.');
 			
@@ -423,15 +438,15 @@
 			}, 2000);
 		} catch (error: any) {
 			console.error('Delete account error:', error);
-			deleteAccountError = error.message || 'Eroare la ștergerea contului';
+			deleteAccountModal.setData({ error: error.message || 'Eroare la ștergerea contului' });
 		} finally {
-			deletingAccount = false;
+			ui.deletingAccount = false;
 		}
 	}
 </script>
 
 <main class="page-transition max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-	{#if loading}
+	{#if ui.loading}
 		<div class="flex items-center justify-center min-h-[400px]">
 			<div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
 		</div>
@@ -539,10 +554,10 @@
 							<div class="flex justify-end pt-4 border-t border-gray-200 dark:border-slate-700">
 								<button
 									type="submit"
-									disabled={savingProfile}
+									disabled={ui.savingProfile}
 									class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
 								>
-									{#if savingProfile}
+									{#if ui.savingProfile}
 										<Loader class="animate-spin h-4 w-4" />
 										Se salvează...
 									{:else}
@@ -564,7 +579,7 @@
 									Parola curentă
 								</label>
 								<input
-									type={showPasswords ? 'text' : 'password'}
+									type={ui.showPasswords ? 'text' : 'password'}
 									id="currentPassword"
 									bind:value={currentPassword}
 									class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
@@ -578,7 +593,7 @@
 									Parola nouă
 								</label>
 								<input
-									type={showPasswords ? 'text' : 'password'}
+									type={ui.showPasswords ? 'text' : 'password'}
 									id="newPassword"
 									bind:value={newPassword}
 									class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
@@ -592,7 +607,7 @@
 									Confirmă parola nouă
 								</label>
 								<input
-									type={showPasswords ? 'text' : 'password'}
+									type={ui.showPasswords ? 'text' : 'password'}
 									id="confirmPassword"
 									bind:value={confirmPassword}
 									class="w-full px-4 py-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-slate-100"
@@ -605,7 +620,7 @@
 								<input
 									type="checkbox"
 									id="showPasswords"
-									bind:checked={showPasswords}
+									bind:checked={ui.showPasswords}
 									class="w-4 h-4 text-blue-600 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-slate-300 dark:border-slate-600 rounded focus:ring-blue-500"
 								/>
 								<label for="showPasswords" class="ml-2 text-sm text-gray-700 dark:text-slate-300">
@@ -616,10 +631,10 @@
 							<div class="flex justify-end pt-4 border-t border-gray-200 dark:border-slate-700">
 								<button
 									type="submit"
-									disabled={savingPassword}
+									disabled={ui.savingPassword}
 									class="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 hover:shadow-xl hover:shadow-purple-500/50 hover:scale-105 active:scale-95 disabled:bg-gray-400 disabled:hover:scale-100 disabled:hover:shadow-none text-white rounded-lg transition-all duration-300 ease-in-out flex items-center gap-2"
 								>
-									{#if savingPassword}
+									{#if ui.savingPassword}
 										<Loader class="animate-spin h-4 w-4" />
 										Se schimbă...
 									{:else}
@@ -653,7 +668,7 @@
 								</div>
 								<button 
 									class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 text-white rounded-lg transition-all duration-200 flex items-center gap-2" 
-									disabled={mfaWorking} 
+									disabled={ui.mfaWorking} 
 									onclick={startMfaSetup}
 								>
 									<Shield class="w-5 h-5" />
@@ -707,10 +722,10 @@
 								<div class="flex gap-3">
 									<button 
 										class="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-medium" 
-										disabled={mfaWorking || mfaTotp.length!==6} 
+										disabled={ui.mfaWorking || mfaTotp.length!==6} 
 										onclick={verifyMfaSetup}
 									>
-										{#if mfaWorking}
+										{#if ui.mfaWorking}
 											<Loader class="animate-spin h-5 w-5" />
 											Se verifică...
 										{:else}
@@ -754,9 +769,9 @@
 													<button 
 														class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm font-medium hover:shadow-lg hover:scale-105 active:scale-95"
 														onclick={copyAllBackupCodes}
-														disabled={copiedCode}
+														disabled={ui.copiedCode}
 													>
-														{#if copiedCode}
+														{#if ui.copiedCode}
 															<CheckCircle2 class="w-4 h-4" />
 															Copiat!
 														{:else}
@@ -781,7 +796,7 @@
 									<button 
 										class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 text-white rounded-lg transition-all duration-200 flex items-center gap-2 font-medium" 
 										onclick={regenerateBackupCodes} 
-										disabled={mfaWorking}
+										disabled={ui.mfaWorking}
 									>
 										<RotateCcw class="w-4 h-4" />
 										Generează coduri noi
@@ -854,7 +869,7 @@
 								</div>
 								<button
 									onclick={handleTogglePushNotifications}
-									disabled={pushLoading || pushPermission === 'denied'}
+									disabled={ui.pushLoading || pushPermission === 'denied'}
 									aria-label={pushSubscribed ? 'Dezactivează notificările push' : 'Activează notificările push'}
 									class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed {pushSubscribed ? 'bg-blue-600' : 'bg-gray-200 dark:bg-slate-700'}"
 								>
@@ -872,10 +887,10 @@
 											<p class="text-sm text-purple-700 dark:text-purple-300 mb-3">Trimite o notificare de test pentru a verifica configurarea</p>
 											<button
 												onclick={handleTestPushNotification}
-												disabled={testingPush || !pushSubscribed}
+												disabled={ui.testingPush || !pushSubscribed}
 												class="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 flex items-center gap-2 text-sm font-medium hover:shadow-lg hover:scale-105 active:scale-95"
 											>
-												{#if testingPush}
+												{#if ui.testingPush}
 													<Loader class="animate-spin h-4 w-4" />
 													Se trimite...
 												{:else}
@@ -1006,10 +1021,10 @@
 								</p>
 								<button
 									onclick={handleDownloadPersonalData}
-									disabled={downloadingData}
+									disabled={ui.downloadingData}
 									class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 flex items-center gap-2 font-medium"
 								>
-									{#if downloadingData}
+									{#if ui.downloadingData}
 										<Loader class="animate-spin h-4 w-4" />
 										Se descarcă...
 									{:else}
@@ -1087,17 +1102,17 @@
 
 <!-- Regenerate Backup Codes Modal -->
 <Modal
-	isOpen={showRegenerateModal}
+	isOpen={regenerateModal.isOpen}
 	title="Generează coduri noi"
 	type="warning"
 	size="md"
 	showCancel={true}
-	confirmText={mfaWorking ? 'Procesează...' : 'Generează'}
+	confirmText={ui.mfaWorking ? 'Procesează...' : 'Generează'}
 	cancelText="Anulează"
-	isLoading={mfaWorking}
+	isLoading={ui.mfaWorking}
 	onConfirm={confirmRegenerateBackupCodes}
-	onCancel={() => { showRegenerateModal = false; regenerateTotp = ''; mfaError = ''; }}
-	onClose={() => { showRegenerateModal = false; regenerateTotp = ''; mfaError = ''; }}
+	onCancel={() => { regenerateModal.close(); mfaError = ''; }}
+	onClose={() => { regenerateModal.close(); mfaError = ''; }}
 >
 	<div class="space-y-4">
 		<p class="text-sm text-gray-600 dark:text-slate-400">
@@ -1111,7 +1126,7 @@
 				id="regenerateTotp" 
 				type="text"
 				class="w-full px-4 py-2.5 text-lg tracking-widest text-center border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all font-mono" 
-				bind:value={regenerateTotp} 
+				bind:value={regenerateModal.data.totp} 
 				maxlength={6} 
 				placeholder="000000"
 				autocomplete="off"
@@ -1130,14 +1145,14 @@
 
 <!-- Disable MFA Modal -->
 <Modal
-	isOpen={showDisableMfaDialog}
+	isOpen={disableMfaModal.isOpen}
 	title="Dezactivează 2FA"
 	type="error"
 	size="md"
 	showCancel={true}
-	confirmText={mfaWorking ? 'Procesează...' : 'Dezactivează 2FA'}
+	confirmText={ui.mfaWorking ? 'Procesează...' : 'Dezactivează 2FA'}
 	cancelText="Anulează"
-	isLoading={mfaWorking}
+	isLoading={ui.mfaWorking}
 	onConfirm={confirmDisableMfa}
 	onCancel={closeDisableMfaDialog}
 	onClose={closeDisableMfaDialog}
@@ -1154,16 +1169,16 @@
 				id="disableMfaPassword" 
 				type="password"
 				class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" 
-				bind:value={disableMfaPassword} 
+				bind:value={disableMfaModal.data.password} 
 				placeholder="Introdu parola"
 				autocomplete="current-password"
-				aria-describedby={mfaError ? 'mfa-error-disable' : undefined}
+				aria-describedby={disableMfaModal.data.error ? 'mfa-error-disable' : undefined}
 			/>
 		</div>
-		{#if mfaError}
+		{#if disableMfaModal.data.error}
 			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
 				<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-				<p id="mfa-error-disable" class="text-sm text-red-700 dark:text-red-300">{mfaError}</p>
+				<p id="mfa-error-disable" class="text-sm text-red-700 dark:text-red-300">{disableMfaModal.data.error}</p>
 			</div>
 		{/if}
 	</div>
@@ -1171,14 +1186,14 @@
 
 <!-- Delete Account Confirmation Modal -->
 <Modal
-	isOpen={showDeleteAccountDialog}
+	isOpen={deleteAccountModal.isOpen}
 	title="Șterge cont definitiv"
 	type="error"
 	size="md"
 	showCancel={true}
-	confirmText={deletingAccount ? 'Se șterge...' : 'Șterge contul definitiv'}
+	confirmText={ui.deletingAccount ? 'Se șterge...' : 'Șterge contul definitiv'}
 	cancelText="Anulează"
-	isLoading={deletingAccount}
+	isLoading={ui.deletingAccount}
 	onConfirm={confirmDeleteAccount}
 	onCancel={closeDeleteAccountDialog}
 	onClose={closeDeleteAccountDialog}
@@ -1213,17 +1228,17 @@
 				id="deleteAccountPassword" 
 				type="password"
 				class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" 
-				bind:value={deleteAccountPassword} 
+				bind:value={deleteAccountModal.data.password} 
 				placeholder="Introdu parola pentru confirmare"
 				autocomplete="current-password"
-				aria-describedby={deleteAccountError ? 'delete-account-error' : undefined}
+				aria-describedby={deleteAccountModal.data.error ? 'delete-account-error' : undefined}
 			/>
 		</div>
 		
-		{#if deleteAccountError}
+		{#if deleteAccountModal.data.error}
 			<div class="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
 				<XCircle class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-				<p id="delete-account-error" class="text-sm text-red-700 dark:text-red-300">{deleteAccountError}</p>
+				<p id="delete-account-error" class="text-sm text-red-700 dark:text-red-300">{deleteAccountModal.data.error}</p>
 			</div>
 		{/if}
 	</div>

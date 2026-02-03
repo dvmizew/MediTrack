@@ -5,11 +5,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import {
 	generateUsersCSV,
-	generateUsersCSVAnonymous,
 	generateTreatmentsCSV,
-	generateTreatmentsCSVAnonymous,
-	generateAdherenceCSV,
-	generateAdherenceCSVAnonymous
+	generateAdherenceCSV
 } from '../utils/csv-export.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -46,11 +43,7 @@ async function processUsersReport(jobId: number, isAnonymous: boolean = false): 
 	`);
 
 	let csv: string;
-	if (isAnonymous) {
-		csv = generateUsersCSVAnonymous(result.rows);
-	} else {
-		csv = generateUsersCSV(result.rows);
-	}
+	csv = generateUsersCSV(result.rows, isAnonymous);
 
 	const fileName = `users_export_${jobId}_${Date.now()}${isAnonymous ? '_anon' : ''}.csv`;
 	const filePath = path.join(REPORTS_DIR, fileName);
@@ -85,11 +78,7 @@ async function processTreatmentsReport(jobId: number, isAnonymous: boolean = fal
 	`);
 
 	let csv: string;
-	if (isAnonymous) {
-		csv = generateTreatmentsCSVAnonymous(result.rows);
-	} else {
-		csv = generateTreatmentsCSV(result.rows);
-	}
+	csv = generateTreatmentsCSV(result.rows, isAnonymous);
 
 	const fileName = `treatments_export_${jobId}_${Date.now()}${isAnonymous ? '_anon' : ''}.csv`;
 	const filePath = path.join(REPORTS_DIR, fileName);
@@ -122,11 +111,7 @@ async function processDosesReport(jobId: number, isAnonymous: boolean = false): 
 	`);
 
 	let csv: string;
-	if (isAnonymous) {
-		csv = generateAdherenceCSVAnonymous(result.rows);
-	} else {
-		csv = generateAdherenceCSV(result.rows);
-	}
+	csv = generateAdherenceCSV(result.rows, isAnonymous);
 
 	const fileName = `doses_export_${jobId}_${Date.now()}${isAnonymous ? '_anon' : ''}.csv`;
 	const filePath = path.join(REPORTS_DIR, fileName);

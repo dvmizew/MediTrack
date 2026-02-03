@@ -31,55 +31,50 @@ export function arrayToCSV(data: any[], headers?: string[]): string {
 	return [headerRow, ...dataRows].join('\n');
 }
 
-export function generateUsersCSV(users: any[]): string {
-	const data = users.map(u => ({
-		'ID': u.user_id,
-		'Nume': u.full_name,
-		'Email': u.email,
-		'Rol': u.role,
-		'Status': u.is_active ? 'Activ' : 'Inactiv',
-		'Data Creării': new Date(u.created_at).toLocaleDateString('ro-RO'),
-	}));
+export function generateUsersCSV(users: any[], isAnonymous: boolean = false): string {
+	const data = users.map(u => {
+		const row: any = {
+			'Rol': u.role,
+			'Status': u.is_active ? 'Activ' : 'Inactiv',
+			'Data Creării': new Date(u.created_at).toLocaleDateString('ro-RO'),
+		};
+
+		if (isAnonymous) {
+			row['ID'] = `USER_${u.user_id}`;
+			row['Nume'] = `Utilizator #${u.user_id}`;
+		} else {
+			row['ID'] = u.user_id;
+			row['Nume'] = u.full_name;
+			row['Email'] = u.email;
+		}
+
+		return row;
+	});
 
 	return arrayToCSV(data);
 }
 
-export function generateUsersCSVAnonymous(users: any[]): string {
-	const data = users.map(u => ({
-		'ID': `USER_${u.user_id}`,
-		'Nume': `Utilizator #${u.user_id}`,
-		'Rol': u.role,
-		'Status': u.is_active ? 'Activ' : 'Inactiv',
-		'Data Creării': new Date(u.created_at).toLocaleDateString('ro-RO'),
-	}));
+export function generateTreatmentsCSV(treatments: any[], isAnonymous: boolean = false): string {
+	const data = treatments.map(t => {
+		const row: any = {
+			'Diagnostic': t.diagnosis || t.diagnoza,
+			'Status': (t.is_active ?? t.activ) ? 'Activ' : 'Inactiv',
+			'Data Creare': new Date(t.created_at || t.data_creare).toLocaleDateString('ro-RO'),
+			'Medicamente': t.total_doses || t.medication_count || 0,
+		};
 
-	return arrayToCSV(data);
-}
+		if (isAnonymous) {
+			row['ID Plan'] = `PLAN_${t.plan_id}`;
+			row['Pacient'] = `Pacient #${t.patient_id}`;
+			row['Medic'] = `Medic #${t.doctor_id}`;
+		} else {
+			row['ID Plan'] = t.plan_id;
+			row['Pacient'] = t.patient_name || t.patient_full_name;
+			row['Medic'] = t.doctor_name || t.doctor_full_name;
+		}
 
-export function generateTreatmentsCSV(treatments: any[]): string {
-	const data = treatments.map(t => ({
-		'ID Plan': t.plan_id,
-		'Pacient': t.patient_name || t.patient_full_name,
-		'Medic': t.doctor_name || t.doctor_full_name,
-		'Diagnostic': t.diagnosis || t.diagnoza,
-		'Status': (t.is_active ?? t.activ) ? 'Activ' : 'Inactiv',
-		'Data Creare': new Date(t.created_at || t.data_creare).toLocaleDateString('ro-RO'),
-		'Medicamente': t.total_doses || t.medication_count || 0,
-	}));
-
-	return arrayToCSV(data);
-}
-
-export function generateTreatmentsCSVAnonymous(treatments: any[]): string {
-	const data = treatments.map(t => ({
-		'ID Plan': `PLAN_${t.plan_id}`,
-		'Pacient': `Pacient #${t.patient_id}`,
-		'Medic': `Medic #${t.doctor_id}`,
-		'Diagnostic': t.diagnosis || t.diagnoza,
-		'Status': (t.is_active ?? t.activ) ? 'Activ' : 'Inactiv',
-		'Data Creare': new Date(t.created_at || t.data_creare).toLocaleDateString('ro-RO'),
-		'Medicamente': t.total_doses || t.medication_count || 0,
-	}));
+		return row;
+	});
 
 	return arrayToCSV(data);
 }
@@ -95,28 +90,24 @@ export function generateCollaborationsCSV(collaborations: any[]): string {
 	return arrayToCSV(data);
 }
 
-export function generateAdherenceCSV(adherenceData: any[]): string {
-	const data = adherenceData.map(a => ({
-		'Utilizator': a.full_name || a.patient_name,
-		'Data': a.date || new Date(a.scheduled_time).toLocaleDateString('ro-RO'),
-		'Medicament': a.medication || a.medication_name,
-		'Status': a.taken ? 'Luat' : (a.status === 'pozitiv' ? 'Luat' : 'Neconfirmat'),
-		'Ora Programată': a.scheduled_time,
-		'Ora Confirmării': a.confirmed_time || a.confirmed_at || '-',
-	}));
+export function generateAdherenceCSV(adherenceData: any[], isAnonymous: boolean = false): string {
+	const data = adherenceData.map(a => {
+		const row: any = {
+			'Data': a.date || new Date(a.scheduled_time).toLocaleDateString('ro-RO'),
+			'Medicament': a.medication || a.medication_name,
+			'Status': a.taken ? 'Luat' : (a.status === 'pozitiv' ? 'Luat' : 'Neconfirmat'),
+			'Ora Programată': a.scheduled_time,
+			'Ora Confirmării': a.confirmed_time || a.confirmed_at || '-',
+		};
 
-	return arrayToCSV(data);
-}
+		if (isAnonymous) {
+			row['Utilizator'] = `Utilizator #${a.user_id || a.patient_id}`;
+		} else {
+			row['Utilizator'] = a.full_name || a.patient_name;
+		}
 
-export function generateAdherenceCSVAnonymous(adherenceData: any[]): string {
-	const data = adherenceData.map(a => ({
-		'Utilizator': `Utilizator #${a.user_id || a.patient_id}`,
-		'Data': a.date || new Date(a.scheduled_time).toLocaleDateString('ro-RO'),
-		'Medicament': a.medication || a.medication_name,
-		'Status': a.taken ? 'Luat' : (a.status === 'pozitiv' ? 'Luat' : 'Neconfirmat'),
-		'Ora Programată': a.scheduled_time,
-		'Ora Confirmării': a.confirmed_time || a.confirmed_at || '-',
-	}));
+		return row;
+	});
 
 	return arrayToCSV(data);
 }
