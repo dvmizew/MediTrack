@@ -395,7 +395,7 @@
 			</Alert>
 		{:else if treatment}
 			<!-- Treatment Header -->
-			<Card renderCustom unstyled containerClass="mb-6">
+			<Card renderCustom unstyled containerClass="mb-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm">
 				<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
 					<div class="flex-1 min-w-0">
 						<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-slate-100 mb-2 break-words">{treatment.diagnosis}</h1>
@@ -458,7 +458,7 @@
 			</Card>
 
 			<!-- Medications Section -->
-			<Card renderCustom unstyled containerClass="">
+			<Card renderCustom unstyled containerClass="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm">
 				<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
 					<h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
 						<Pill class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
