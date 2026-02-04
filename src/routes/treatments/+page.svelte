@@ -58,6 +58,19 @@
 		}
 	});
 
+	// Refresh treatments when returning to this page (e.g., after deleting a treatment)
+	$effect(() => {
+		// Watch for page changes - when user navigates back to /treatments
+		const currentPath = $page.url.pathname;
+		if (currentPath === '/treatments' && !loading && $authStore.isAuthenticated) {
+			// Small delay to ensure navigation is complete
+			const timeoutId = setTimeout(() => {
+				loadTreatments();
+			}, 100);
+			return () => clearTimeout(timeoutId);
+		}
+	});
+
 	async function loadTreatments() {
 		try {
 			loading = true;

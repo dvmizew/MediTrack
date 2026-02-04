@@ -93,9 +93,14 @@ app.use(globalLimiter);
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 20,
-  message: 'Too many auth requests, try again later',
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Too many auth requests, try again later',
+      retryAfter: Math.ceil(15 * 60) // seconds
+    });
+  }
 });
 app.use('/auth/login', authLimiter);
 app.use('/auth/register', authLimiter);

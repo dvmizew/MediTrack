@@ -18,8 +18,21 @@ export interface AuthState {
 	isAuthenticated: boolean;
 }
 
+function safeParseUser(): User | null {
+	if (!browser) return null;
+	try {
+		const stored = localStorage.getItem('user');
+		return stored ? JSON.parse(stored) : null;
+	} catch (err) {
+		console.warn('Failed to parse user from localStorage:', err);
+		// Clear corrupted data
+		localStorage.removeItem('user');
+		return null;
+	}
+}
+
 const initialState: AuthState = {
-	user: browser ? (localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null) : null,
+	user: safeParseUser(),
 	token: browser ? localStorage.getItem('token') : null,
 	isAuthenticated: browser ? !!localStorage.getItem('token') : false
 };
